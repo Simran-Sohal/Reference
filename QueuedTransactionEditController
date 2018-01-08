@@ -1,0 +1,222 @@
+public with sharing class QueuedTransactionEditController extends TransactionControllerBase{
+    private static final String CLASS_NAME = 'QueuedTransactionEditController';
+
+    public Transaction_Processing_Queue__c mTransaction {get; set;}
+    public List<QueuedTransactionParamObject> mTxnParamObjectList {get; set;}
+    
+    private TransactionSetupObject mTxnSetupObject;
+    
+    private String  mTxnCode;
+    private Boolean mIsRedirect;
+    private PageReference mRedirectPage;
+    private Boolean mHasError;
+
+    private Map<String, RecordType> mTxnQueueRecordTypeMap;
+    
+    public QueuedTransactionEditController(ApexPages.StandardController pStdController){
+        super();
+        mTransaction = (Transaction_Processing_Queue__c)pStdController.getRecord();
+        init();
+    }
+
+    private void init(){
+        if (mTransaction.Id != null){
+            mTransaction = (Transaction_Processing_Queue__c) fsCore.SObjectQueryUtil.getSObjectRecord(mTransaction.Id);
+            setTransactionCategory(mTransaction.Transaction_Category__c);
+            setPageSubtitle(Transaction_Processing_Queue__c.Name.getDescribe().getLabel() + mTransaction.Name);
+        } else {
+            setAllTransactionCategories();
+            setPageSubtitle(Label.New_Contract_Transaction_Record_Title);
+        }
+
+        mTxnParamObjectList = new List<QueuedTransactionParamObject>();
+        mTxnCode = Constants.BLANK_STRING;
+        mIsRedirect = false;
+        mHasError = false;
+        
+        Map<String,String> pageURLParamMap = ApexPages.currentPage().getParameters();
+        //get contract Id
+        Id contractId = null;
+        if (pageURLParamMap.containsKey('parentId')){
+            contractId = Id.valueOf(pageURLParamMap.get('parentId'));
+        }
+        else if (mTransaction.Lending_Contract_Number__c != null){
+            contractId = mTransaction.Lending_Contract_Number__c;
+        } 
+        else {
+            throw new ServicingException(Label.Parent_Contract_Id_Missing);
+        }
+        
+        //get transaction code
+        if (pageURLParamMap.containsKey('txnCode')){
+            mTxnCode = pageURLParamMap.get('txnCode');
+        } 
+        else if (mTransaction.Id != null && String.IsNotBlank(mTransaction.Transaction_Code__c)){
+            mTxnCode = mTransaction.Transaction_Code__c;
+        }
+        
+        //redirect to select transaction screen if transaction code is not found
+        if (String.IsBlank(mTxnCode)) {
+            mIsRedirect = true;
+            mRedirectPage = getNewTransactionPage();
+            mRedirectPage.getParameters().put('Id', contractId);
+        }
+        else {
+            setLendingContract(contractId);
+            setPageTitle(getLendingContract().Name);
+            setAvailableTransactions();
+                
+            if (!isTransactionAccessible(mTxnCode)){
+                throw new ServicingException(Label.Transaction_Not_Accessible);
+            }
+
+            mTxnSetupObject = getTransactionObject(mTxnCode);
+
+            if (!TransactionPostingPageFactory.hasDefaultPostingPage(mTxnSetupObject)){
+                mIsRedirect = true;
+                mRedirectPage = TransactionPostingPageFactory.getTransactionPostingPage(mTxnSetupObject, contractId, mTransaction.Id);
+            }
+            else {
+                //populate record type map
+                mTxnQueueRecordTypeMap = fsCore.RecordTypeUtil.getInstance()
+                                                    .getRecordTypeMapByName(Schema.SObjectType.Transaction_Processing_Queue__c.getName());
+                
+                //cannot edit processed transactions
+                if (mTransaction.RecordTypeId == mTxnQueueRecordTypeMap.get(Constants.RECORD_TYPE_PROCESSED).Id){
+                    throw new ServicingException(Label.Processed_Txn_Edit_Not_Allowed);
+                }
+    
+                setTransactionDetails();
+            }
+        }
+    }
+    
+    public PageReference onLoad(){
+        if (mIsRedirect && mRedirectPage != null){
+            mRedirectPage.setRedirect(true);
+            return mRedirectPage;
+        }
+        return null;
+    }
+    
+    private void setTransactionDetails(){
+        if (mTransaction.Id == null){
+            mTransaction = new Transaction_Processing_Queue__c();
+            mTransaction.RecordTypeId = mTxnQueueRecordTypeMap.get(Constants.RECORD_TYPE_OPEN).Id;
+            mTransaction.Lending_Contract_Number__c = getLendingContract().Id;
+            mTransaction.Transaction_Date__c = getBusinessDate();
+            mTransaction.Transaction_Name__c = mTxnSetupObject.mTransactionId;
+            mTransaction.Transaction_Operation_Type__c = mTxnSetupObject.mOperationType;
+            mTransaction.Processing_User__c = UserInfo.getUserId();
+        }
+        
+        mTxnParamObjectList = QueuedTransactionParamUtil.getParameterObjectList(mTransaction, mTxnSetupObject);
+    }
+
+    private void validateTransaction(){
+        if (mTransaction.Transaction_Date__c == null){
+            mHasError = true;
+            addErrorToPage(Label.Transaction_Processing_Date_Blank);
+        }
+        
+        if (mTransaction.Processing_User__c == null){
+            mHasError = true;
+            addErrorToPage(Label.Transaction_Processing_User_Blank);
+        }
+
+        for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
+            if(QueuedTransactionParamUtil.isRequiredParamBlank(txnParamObj)){
+            mHasError = true;
+                addErrorToPage(String.format(Label.Transaction_Processing_Required_Parameter_Blank, new String[]{txnParamObj.getTxnParam().Name}));
+            }
+        }
+    }
+
+    private void saveTransaction(String pTxnQueueStatus){
+        mHasError = false;
+        validateTransaction();
+            
+        if (mHasError){ return; }
+        
+        Savepoint sp = Database.setSavepoint();
+        
+        mTransaction.Processing_Status__c = pTxnQueueStatus;
+        mTransaction.Processing_Result__c = Constants.BLANK_STRING;
+
+        fsCore.DMLResult txnQueueSaveRslt = QueuedTransactionDMLWrapper.getInstance().upsertData(new List<Transaction_Processing_Queue__c>{mTransaction});
+        if (txnQueueSaveRslt.hasErrors()){
+            mHasError = true;
+            addErrorsToPage(txnQueueSaveRslt.getErrorList());
+            Database.rollback(sp);
+        }
+        
+        if (mHasError){ return; }
+
+        List<Transaction_Processing_Parameter__c> queuedTxnParamList = new List<Transaction_Processing_Parameter__c>();
+        for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
+            Transaction_Processing_Parameter__c txnParam = txnParamObj.getTxnParam();
+            if (txnParam.Transaction_Queue_Name__c == null){
+                txnParam.Transaction_Queue_Name__c = mTransaction.Id;
+            }
+            queuedTxnParamList.add(txnParam);
+        }                 
+
+        fsCore.DMLResult txnParamSaveRslt = QueuedTransactionParamDMLWrapper.getInstance().upsertData(queuedTxnParamList);
+        if (txnParamSaveRslt.hasErrors()){
+            mHasError = true;
+            addErrorsToPage(txnParamSaveRslt.getErrorList());
+            Database.rollback(sp);
+        }
+    }
+
+    private void postTransaction(){
+        TransactionProcessingObjectBuilder tpObject = new TransactionProcessingObjectBuilder();
+        tpObject.addQueuedTransaction(mTransaction.Id);
+        tpObject.build();
+        
+        List<TransactionProcessingObject> processRslt = TransactionProcessingGateway.processTransactions(tpObject.getTransactionProcessingObjectList(),false);
+        for(TransactionProcessingObject txnProcessObj : processRslt){
+            if (!txnProcessObj.mIsSuccess){
+                mHasError = true;
+                for(String errMsg : txnProcessObj.mErrorStack){
+                    addErrorToPage(errMsg);
+                }
+            }
+        }
+
+        if (mHasError){
+            mTransaction = processRslt.get(0).mTransactionQueueRecord;
+            mTxnParamObjectList = QueuedTransactionParamUtil.getParameterObjectList(processRslt.get(0).mTransactionParameterList);
+        }
+    }
+
+    public PageReference onSaveAsDraft(){
+        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_DRAFT);
+        if (mHasError){ return null; }
+
+        return getRecordPage(mTransaction.Id);
+    }
+    
+    public PageReference onPostTxn(){
+        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_PROCESSING);
+        if (!mHasError){
+            postTransaction();
+        }
+
+        if (mHasError){ return null; }
+
+        return getContractRecordPage();
+    }
+    
+    public PageReference onQueueTxn(){
+        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_READY);
+        if (mHasError){ return null; }
+
+        return getRecordPage(mTransaction.Id);
+    }
+    
+    public PageReference onCancel(){
+        return (mTransaction.Id == null ? getContractRecordPage() : getRecordPage(mTransaction.Id));
+    }
+    
+}
