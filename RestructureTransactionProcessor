@@ -1,14 +1,3 @@
-/*
- * Copyright (c) 2017 FinancialSpectra Pty Ltd
- * All rights reserved.
- * 
- * Class Name   - RestructureTransactionProcessor
- *
- * Description  - This class extends TransactionProcessorBase and provides implementation for Restructuring
- *                It contains methods for all operations (Post, Reverse) needed for Restructure Transaction Processing.
- *
- * Developer(s) - ADagur
- */
 public with sharing class RestructureTransactionProcessor extends TransactionProcessorBase {
     private static final String CLASS_NAME = 'RestructureTransactionProcessor';
     private final static Integer CALCULATION_PRECISION = 5;
