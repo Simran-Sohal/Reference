@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2017 FinancialSpectra Pty Ltd
+ * All rights reserved.
+ * 
+ * Class Name   - RestructureTransactionProcessor
+ *
+ * Description  - This class extends TransactionProcessorBase and provides implementation for Restructuring
+ *                It contains methods for all operations (Post, Reverse) needed for Restructure Transaction Processing.
+ *
+ * Developer(s) - ADagur
+ */
 public with sharing class RestructureTransactionProcessor extends TransactionProcessorBase {
     private static final String CLASS_NAME = 'RestructureTransactionProcessor';
     private final static Integer CALCULATION_PRECISION = 5;
@@ -90,12 +101,12 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
         Logger.exit(CLASS_NAME, 'beforePostTransaction');
     }
 
-    private void processDueDayChangeReversal(TransactionProcessingObject pTransactionInput
+    private void processDueDateChangeReversal(TransactionProcessingObject pTransactionInput
                                            , TransactionProcessingDataObject pTransactionData
                                            , Contract_Transaction__c pContractTransaction) {
-        Logger.enter(CLASS_NAME, 'processDueDayChangeReversal');
+        Logger.enter(CLASS_NAME, 'processDueDateChangeReversal');
         processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
-        Logger.exit(CLASS_NAME, 'processDueDayChangeReversal');
+        Logger.exit(CLASS_NAME, 'processDueDateChangeReversal');
     }
     
     private void processDueDateExtensionReversal(TransactionProcessingObject pTransactionInput
@@ -269,7 +280,7 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
             String transactionCode = pContractTransaction.Transaction_Code__c;
 
             if (TransactionConstants.DUE_DATE_CHANGE_REVERSED.equals(transactionCode)) {
-                processDueDayChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
+                processDueDateChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
             } else if (TransactionConstants.DUE_DATE_EXTENSION_REVERSED.equals(transactionCode)) {
                 processDueDateExtensionReversal(pTransactionInput, pTransactionData, pContractTransaction);
             } else if (TransactionConstants.PAYMENT_AMOUNT_CHANGED.equals(transactionCode)) {
@@ -640,17 +651,90 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
         return pAllocAmtDlq;
     }
     
-    private void processDueDayChange(TransactionProcessingObject pTransactionInput
+    private void processDueDateChange(TransactionProcessingObject pTransactionInput
                                    , TransactionProcessingDataObject pTransactionData
                                    , Contract_Transaction__c pContractTransaction) {
-        Logger.enter(CLASS_NAME, 'processDueDayChange');
-        Logger.exit(CLASS_NAME, 'processDueDayChange');
+        Logger.enter(CLASS_NAME, 'processDueDateChange');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_BALLOON);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+        //TO DO
+        //calcBuilder.setPaymentStartDate(pContractTransaction.Transaction_Date_Value__c);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+
+        Logger.exit(CLASS_NAME, 'processDueDateChange');
     }
 
     private void processDueDateExtension(TransactionProcessingObject pTransactionInput
                                        , TransactionProcessingDataObject pTransactionData
                                        , Contract_Transaction__c pContractTransaction) {
         Logger.enter(CLASS_NAME, 'processDueDateExtension');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+
+        Date nextPaymentDueDate;
+        //TO DO
+        //Integer extensionPeriod = pContractTransaction.Transaction_Number_Value__c;
+        /*nextPaymentDueDate = fsCore.DateUtilGlobal.adjustDateByBillingCycle(
+                                                                lendingContract.Next_Payment_Due_Date__c
+                                                              , lendingContract.Next_Payment_Due_Date__c.day()
+                                                              , lendingContract.Current_Payment_Frequency__c
+                                                              , extensionPeriod
+                                                              , branch.fsCore__Holiday_Adjustment_Direct_Debit__c
+                                                              , bizHours
+                                                              , branchHolidays
+                                                              , true);
+        */
+        
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_BALLOON);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+        calcBuilder.setPaymentStartDate(nextPaymentDueDate);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+
         Logger.exit(CLASS_NAME, 'processDueDateExtension');
     }
 
@@ -699,7 +783,7 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
         Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
 
         Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
-        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+        Integer remainingTerms = (Integer)lendingContract.Current_Term__c - completedTerm;
 
         CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
         calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
@@ -707,7 +791,7 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
         setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
         calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
         calcBuilder.setTerm(remainingTerms);
-        calcBuilder.setRate(pContractTransaction.Transaction_Amount__c);
+        calcBuilder.setRate(pContractTransaction.Transaction_Percent_Value__c);
 
         fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
 
@@ -735,14 +819,15 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
         Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
 
         Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
-        Integer remainingTerms = (Integer) pContractTransaction.Transaction_Amount__c - completedTerm;
+        Integer remainingTerms = (Integer)lendingContract.Current_Term__c - completedTerm;
+        Integer newTerms = (Integer)pContractTransaction.Transaction_Number_Value__c;
 
         CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
         calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
         calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
         setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
         calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
-        calcBuilder.setTerm(remainingTerms);
+        calcBuilder.setTerm(newTerms);
 
         fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
 
@@ -851,7 +936,7 @@ public with sharing class RestructureTransactionProcessor extends TransactionPro
             String transactionCode = pContractTransaction.Transaction_Code__c;
 
             if (TransactionConstants.DUE_DATE_CHANGED.equals(transactionCode)) {
-                processDueDayChange(pTransactionInput, pTransactionData, pContractTransaction);
+                processDueDateChange(pTransactionInput, pTransactionData, pContractTransaction);
             } else if (TransactionConstants.DUE_DATE_EXTENSION_APPLIED.equals(transactionCode)) {
                 processDueDateExtension(pTransactionInput, pTransactionData, pContractTransaction);
             } else if (TransactionConstants.PAYMENT_AMOUNT_CHANGED.equals(transactionCode)) {
