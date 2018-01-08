@@ -1,0 +1,68 @@
+public class TransactionProcessingDataObject {
+
+    public TransactionProcessingDataObject() {
+        mLendingContractMap                    = new Map<Id, Lending_Contract__c>();
+        mContractStageMap                      = new Map<Id, List<Contract_Stage__c>>();
+        mContractAssignmentMap                 = new Map<Id, List<Contract_Assignment__c>>();
+        mContractBalanceMap                    = new Map<Id, List<Contract_Balance__c>>();
+        mContractRepaymentMap                  = new Map<Id, List<Contract_Repayment__c>>();
+        /* Added by adagur */
+        mContractDirectDebitMap                = new Map<Id, List<Contract_Direct_Debit__c>>();
+        mContractItemizationsMap               = new Map<Id, List<Contract_Itemization__c>>();
+        mContractRepaymentScheduleMap          = new Map<Id, List<Contract_Repayment_Schedule__c>>();
+        mContractRepaymentDeleteMap            = new Map<Id, List<Contract_Repayment__c>>();
+        mContractRepaymentScheduleDeleteMap    = new Map<Id, List<Contract_Repayment_Schedule__c>>();
+        /* End by adagur */
+        mReverseContractTransactionMap         = new Map<Id, List<Contract_Transaction__c>>();
+        mCreateContractTransactionMap          = new Map<Id, List<Contract_Transaction__c>>();
+        mUpdateContractTransactionMap          = new Map<Id, List<Contract_Transaction__c>>();
+        mCreateTransactionBalanceAllocationMap = new Map<Id, List<Contract_Transaction_Balance_Allocation__c>>();
+        mTransactionSetupMap                   = new Map<Id, TransactionSetupObject>();
+        /* Added by adagur */
+        mDependentTransactionSetupMap          = new Map<String, Id>();
+        mRepostTransactionSetKeyMap            = new Map<String, String>();
+        /* End by adagur */
+        mBranchDateMap                         = new Map<String, Date>();
+        mRepostTransactionIdMap                = new Map<Id, TransactionProcessingObject>();
+        mTransactionFailedContractIdMap        = new Map<Id, List<String>>();
+        mContractFeeTransactionMappingMap      = new Map<Id, Map<Id, Id>>();
+        mFeeCalculationObjectMap               = new Map<Id, fsCore.FeeCalculationObject>();
+        mPaymentAllocationSetupObjectMap       = new Map<Id, PaymentAllocationMethodSetupObject>();
+    }
+
+    public  Map<Id, Lending_Contract__c>                   mLendingContractMap                 {get; set;}
+    public  Map<Id, List<Contract_Stage__c>>               mContractStageMap                   {get; set;}
+    public  Map<Id, List<Contract_Assignment__c>>          mContractAssignmentMap              {get; set;}
+    public  Map<Id, List<Contract_Balance__c>>             mContractBalanceMap                 {get; set;}
+    public  Map<Id, List<Contract_Repayment__c>>           mContractRepaymentMap               {get; set;}
+    /* Added by adagur */
+    public  Map<Id, List<Contract_Direct_Debit__c>>        mContractDirectDebitMap             {get; set;}
+    public  Map<Id, List<Contract_Itemization__c>>         mContractItemizationsMap            {get; set;}
+    public  Map<Id, List<Contract_Repayment_Schedule__c>>  mContractRepaymentScheduleMap       {get; set;}
+    public  Map<Id, List<Contract_Repayment__c>>           mContractRepaymentDeleteMap         {get; set;}
+    public  Map<Id, List<Contract_Repayment_Schedule__c>>  mContractRepaymentScheduleDeleteMap {get; set;}
+    /* End by adagur */
+    public  Map<Id, List<Contract_Transaction__c>>         mReverseContractTransactionMap      {get; set;}
+    public  Map<Id, List<Contract_Transaction__c>>         mCreateContractTransactionMap       {get; set;}
+    public  Map<Id, List<Contract_Transaction__c>>         mUpdateContractTransactionMap       {get; set;}
+    
+    public  Map<Id, List<Contract_Transaction_Balance_Allocation__c>> 
+                                                      mCreateTransactionBalanceAllocationMap   {get; set;}
+    
+    public  Map<Id, TransactionSetupObject>                mTransactionSetupMap                {get; set;}
+    public  Map<String, Id>                                mDependentTransactionSetupMap       {get; set;} //adagur
+    
+    public  Map<String, Date>                              mBranchDateMap                      {get; set;} 
+    public  Map<Id, TransactionProcessingObject>           mRepostTransactionIdMap             {get; set;}
+    public  Map<String, String>                            mRepostTransactionSetKeyMap         {get; set;}
+    public  Map<Id, List<String>>                          mTransactionFailedContractIdMap     {get; set;}
+    // OUTER ID => LENDING CONTRACT ID, VALUE => MAP<TXN ID, CONTRACT FEE ID/FEE SETUP ID> (SEE INNER COMMENT ON NEXT LINE)
+    // INNER ID => TRANSACTION QUEUE ID, VALUE => EITHER CONTRACT FEE ID OR FEE SETUP ID 
+    //             BUT ONLY ONE IS STORED PER TRANSACTION QUEUE ID. CONTRACT FEE ID HAS HIGHER PRIORITY
+    public  Map<Id, Map<Id, Id>>                           mContractFeeTransactionMappingMap {get; set;}
+    // ID => EITHER CONTRACT FEE ID OR FEE SETUP ID VALUE => FEE CALCULATION OBJECT IN THE FORM OF FEE RULE
+    // THIS IS CREATED FOR TRANSACTION QUEUE RECORD AS WELL AS FEE TRANSACTION GETTING INTERNALLY REVERSED AND REPOSTED
+    public  Map<Id, fsCore.FeeCalculationObject>           mFeeCalculationObjectMap          {get; set;}
+    public  Map<Id, PaymentAllocationMethodSetupObject>    mPaymentAllocationSetupObjectMap  {get; set;}
+        
+}
