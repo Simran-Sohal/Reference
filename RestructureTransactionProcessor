@@ -1,0 +1,958 @@
+public with sharing class RestructureTransactionProcessor extends TransactionProcessorBase {
+    private static final String CLASS_NAME = 'RestructureTransactionProcessor';
+    private final static Integer CALCULATION_PRECISION = 5;
+
+    public override void validateTransaction(TransactionProcessingObject pTransactionInput
+                                           , TransactionProcessingDataObject pTransactionData
+                                           , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'validateTransaction');
+
+        if (pTransactionInput != null && pContractTransaction != null && pTransactionData != null) {
+            Id lendingContractId = pTransactionInput.mLendingContractId;
+            String lendingContractNbr = pTransactionInput.mLendingContractNumber;
+            Id transactionId = pTransactionInput.mTransactionId;
+            Id transactionSetupId = pTransactionInput.mTransactionSetupId;
+            String transactionCode = pContractTransaction.Transaction_Code__c;
+
+            Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(lendingContractId);
+
+            Logger.enter(CLASS_NAME, 'is Contract Open' + lendingContract.Is_Open__c);
+
+            if (!lendingContract.Is_Open__c) {
+                pTransactionInput.mIsSuccess = false;
+                List <String> errorList = new List <String> {
+                    String.format(Label.Transaction_Processing_Contract_Status_Not_Allowed, new List <String> {
+                        transactionCode,
+                        lendingContract.Contract_Status__c
+                    })
+                };
+
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, errorList);
+                pContractTransaction = null;
+                return;
+            }
+            //if (pContractTransaction.Transaction_Amount__c <= 0) {
+            //    pTransactionInput.mIsSuccess = false;
+            //    List < String > errorList = new List < String > {
+            //        String.format('Transaction Amount must be greater than 0', new List < String > {
+            //            transactionCode,
+            //            lendingContract.Contract_Status__c
+            //        })
+            //    };
+            //
+            //    pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, errorList);
+            //    pContractTransaction = null;
+            //    return;
+            //}
+        }
+        else {
+            logMessage('Transaction Processing Failed! Transaction Input NULL');
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(Label.Transaction_Processing_System_Error_Input_Missing);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        }
+
+        Logger.exit(CLASS_NAME, 'validateTransaction');
+    }
+
+    public override void beforePostTransaction(TransactionProcessingObject pTransactionInput
+                                             , TransactionProcessingDataObject pTransactionData
+                                             , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'beforePostTransaction');
+
+        String transactionCode = pContractTransaction.Transaction_Code__c;
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        logMessage('transactionCode : ' + transactionCode);
+
+        List < TransactionSetupObject.DependentTransactionSetup > dependentTxnSetupList = new List < TransactionSetupObject.DependentTransactionSetup > ();
+        TransactionSetupObject.DependentTransactionSetup dependentTxnSetup = new TransactionSetupObject.DependentTransactionSetup();
+        dependentTxnSetup.mDependentTransactionCode = 'INTEREST_ACCRUED';
+        dependentTxnSetup.mDependentTransactionId = pTransactionData.mDependentTransactionSetupMap.get(dependentTxnSetup.mDependentTransactionCode);
+        //Interest accrual at restructuring only happens for loans/line
+        dependentTxnSetup.mIsLoan = true;
+        dependentTxnSetup.mIsLease = false;
+        dependentTxnSetup.mIsLine = true;
+        dependentTxnSetup.mTransactionTriggerTime = Constants.DEPENDENT_TRANSACTION_TRIGGER_TIME_BEFORE;
+        dependentTxnSetupList.add(dependentTxnSetup);
+        Map <String, Object> transactionValuesMap = new Map <String, Object>();
+
+        processDependentTransaction(pTransactionInput
+                                  , pTransactionData
+                                  , pContractTransaction
+                                  , Constants.DEPENDENT_TRANSACTION_TRIGGER_TIME_BEFORE
+                                  , dependentTxnSetupList
+                                  , transactionValuesMap);
+
+        Logger.exit(CLASS_NAME, 'beforePostTransaction');
+    }
+
+    private void processDueDayChangeReversal(TransactionProcessingObject pTransactionInput
+                                           , TransactionProcessingDataObject pTransactionData
+                                           , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processDueDayChangeReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processDueDayChangeReversal');
+    }
+    
+    private void processDueDateExtensionReversal(TransactionProcessingObject pTransactionInput
+                                               , TransactionProcessingDataObject pTransactionData
+                                               , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processDueDateExtensionReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processDueDateExtensionReversal');
+    }
+    
+    private void processPaymentAmountChangeReversal(TransactionProcessingObject pTransactionInput
+                                                  , TransactionProcessingDataObject pTransactionData
+                                                  , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processPaymentAmountChangeReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processPaymentAmountChangeReversal');
+    }
+    
+    private void processRateChangeReversal(TransactionProcessingObject pTransactionInput
+                                         , TransactionProcessingDataObject pTransactionData
+                                         , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processRateChangeReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processRateChangeReversal');
+    }
+    
+    private void processTermChangeReversal(TransactionProcessingObject pTransactionInput
+                                         , TransactionProcessingDataObject pTransactionData
+                                         , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processTermChangeReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processTermChangeReversal');
+    }
+    
+    private void processBalloonAmountChangeReversal(TransactionProcessingObject pTransactionInput
+                                                  , TransactionProcessingDataObject pTransactionData
+                                                  , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processBalloonAmountChangeReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processBalloonAmountChangeReversal');
+    }
+    
+    private void processAdditionalDisbursalReversal(TransactionProcessingObject pTransactionInput
+                                                  , TransactionProcessingDataObject pTransactionData
+                                                  , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processAdditionalDisbursalReversal');
+        processRepaymentReversal(pTransactionInput, pTransactionData, pContractTransaction);
+        Logger.exit(CLASS_NAME, 'processAdditionalDisbursalReversal');
+    }
+
+    private void processRepaymentReversal(TransactionProcessingObject pTransactionInput
+                                        , TransactionProcessingDataObject pTransactionData
+                                        , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processRepaymentReversal');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+        List < Contract_Repayment__c > contractRepaymentList = pTransactionData.mContractRepaymentMap.get(pTransactionInput.mLendingContractId);
+        List < Contract_Repayment__c > contractRepaymentDeleteList = new List < Contract_Repayment__c > ();
+        List < Contract_Repayment__c > contractRepaymentNewList = new List < Contract_Repayment__c > ();
+
+        Decimal fInterestCollected = Constants.DECIMAL_ZERO;
+        Decimal fPeriodicFeeCollected = Constants.DECIMAL_ZERO;
+        Decimal fPrincipalCollected = Constants.DECIMAL_ZERO;
+        Decimal fDelinquencyCollected = Constants.DECIMAL_ZERO;
+
+        for (Contract_Repayment__c contractRepayment: contractRepaymentList) {
+            if (contractRepayment.Transaction_Posting_Set_Key__c == pContractTransaction.Transaction_Posting_Set_Key__c) {
+                //ADAGUR Because if ID is null that means those records do not exist in DB
+                // So no need to delete them
+                if (contractRepayment.Id != null) {
+                    contractRepaymentDeleteList.add(contractRepayment);
+                }
+
+                fInterestCollected += contractRepayment.Interest_Collected__c;
+                fPeriodicFeeCollected += contractRepayment.Periodic_Fee_Collected__c;
+                fPrincipalCollected += contractRepayment.Principal_Collected__c;
+                fDelinquencyCollected += contractRepayment.Delinquency_Amount_Collected__c;
+
+            } else {
+                contractRepaymentNewList.add(contractRepayment);
+            }
+        }
+
+        Decimal allocatedAmountDelinquency = fDelinquencyCollected;
+        List < Contract_Repayment__c > contractRepaymentRestoreList = new List < Contract_Repayment__c > ();
+        if (pContractTransaction.Contract_Repayment_Snapshot_1__c != null) {
+            for (Contract_Repayment__c cRepayment: (List < Contract_Repayment__c > ) SObjectJSONUtil.getSObjectRecordList(pContractTransaction.Contract_Repayment_Snapshot_1__c)) {
+
+                cRepayment.Interest_Collected__c = Constants.DECIMAL_ZERO;
+                cRepayment.Periodic_Fee_Collected__c = Constants.DECIMAL_ZERO;
+                cRepayment.Principal_Collected__c = Constants.DECIMAL_ZERO;
+
+                cRepayment.Interest_Collected__c = (fInterestCollected > cRepayment.Interest_Due_Current__c) ? cRepayment.Interest_Due_Current__c : fInterestCollected;
+                fInterestCollected = (fInterestCollected > cRepayment.Interest_Due_Current__c) ? (fInterestCollected - cRepayment.Interest_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+                cRepayment.Periodic_Fee_Collected__c = (fPeriodicFeeCollected > cRepayment.Periodic_Fee_Due_Current__c) ? cRepayment.Periodic_Fee_Due_Current__c : fPeriodicFeeCollected;
+                fPeriodicFeeCollected = (fPeriodicFeeCollected > cRepayment.Periodic_Fee_Due_Current__c) ? (fPeriodicFeeCollected - cRepayment.Periodic_Fee_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+                cRepayment.Principal_Collected__c = (fPrincipalCollected > cRepayment.Principal_Due_Current__c) ? cRepayment.Principal_Due_Current__c : fPrincipalCollected;
+                fPrincipalCollected = (fPrincipalCollected > cRepayment.Principal_Due_Current__c) ? (fPrincipalCollected - cRepayment.Principal_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+                allocatedAmountDelinquency = setDueFlags(cRepayment, lendingContract, allocatedAmountDelinquency);
+
+                contractRepaymentRestoreList.add(cRepayment);
+            }
+        }
+        if (pContractTransaction.Contract_Repayment_Snapshot_2__c != null) {
+            for (Contract_Repayment__c cRepayment: (List < Contract_Repayment__c > ) SObjectJSONUtil.getSObjectRecordList(pContractTransaction.Contract_Repayment_Snapshot_2__c)) {
+                cRepayment.Interest_Collected__c = Constants.DECIMAL_ZERO;
+                cRepayment.Periodic_Fee_Collected__c = Constants.DECIMAL_ZERO;
+                cRepayment.Principal_Collected__c = Constants.DECIMAL_ZERO;
+
+                cRepayment.Interest_Collected__c = (fInterestCollected > cRepayment.Interest_Due_Current__c) ? cRepayment.Interest_Due_Current__c : fInterestCollected;
+                fInterestCollected = (fInterestCollected > cRepayment.Interest_Due_Current__c) ? (fInterestCollected - cRepayment.Interest_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+                cRepayment.Periodic_Fee_Collected__c = (fPeriodicFeeCollected > cRepayment.Periodic_Fee_Due_Current__c) ? cRepayment.Periodic_Fee_Due_Current__c : fPeriodicFeeCollected;
+                fPeriodicFeeCollected = (fPeriodicFeeCollected > cRepayment.Periodic_Fee_Due_Current__c) ? (fPeriodicFeeCollected - cRepayment.Periodic_Fee_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+                cRepayment.Principal_Collected__c = (fPrincipalCollected > cRepayment.Principal_Due_Current__c) ? cRepayment.Principal_Due_Current__c : fPrincipalCollected;
+                fPrincipalCollected = (fPrincipalCollected > cRepayment.Principal_Due_Current__c) ? (fPrincipalCollected - cRepayment.Principal_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+                allocatedAmountDelinquency = setDueFlags(cRepayment, lendingContract, allocatedAmountDelinquency);
+
+                contractRepaymentRestoreList.add(cRepayment);
+            }
+        }
+
+        if (allocatedAmountDelinquency > 0) {
+            contractRepaymentRestoreList.get(contractRepaymentRestoreList.size() - 1).Delinquency_Amount_Collected__c += allocatedAmountDelinquency;
+            allocatedAmountDelinquency = 0;
+        }
+        contractRepaymentNewList.addAll(contractRepaymentRestoreList);
+
+        //RESTORING Contract_Repayment__c
+        pTransactionData.mContractRepaymentDeleteMap.put(lendingContract.Id, contractRepaymentDeleteList);
+        pTransactionData.mContractRepaymentMap.put(lendingContract.Id, contractRepaymentNewList);
+
+        List < Contract_Repayment_Schedule__c > contractRepaymentScheduleList = pTransactionData.mContractRepaymentScheduleMap.get(pTransactionInput.mLendingContractId);
+        List < Contract_Repayment_Schedule__c > contractRepaymentScheduleDeleteList = new List < Contract_Repayment_Schedule__c > ();
+        List < Contract_Repayment_Schedule__c > contractRepaymentScheduleNewList = new List < Contract_Repayment_Schedule__c > ();
+        for (Contract_Repayment_Schedule__c contractRepaymentSchedule: contractRepaymentScheduleList) {
+            if (contractRepaymentSchedule.Id != null) {
+                contractRepaymentScheduleDeleteList.add(contractRepaymentSchedule);
+            }
+        }
+        if (pContractTransaction.Contract_Repayment_Schedule_Snapshot__c != null) {
+            contractRepaymentScheduleNewList.addAll((List < Contract_Repayment_Schedule__c > ) SObjectJSONUtil.getSObjectRecordList(pContractTransaction.Contract_Repayment_Schedule_Snapshot__c));
+        }
+
+        //RESTORING Contract_Repayment_Schedule__c
+        pTransactionData.mContractRepaymentScheduleDeleteMap.put(lendingContract.Id, contractRepaymentScheduleDeleteList);
+        pTransactionData.mContractRepaymentScheduleMap.put(lendingContract.Id, contractRepaymentScheduleNewList);
+
+        Logger.exit(CLASS_NAME, 'processRepaymentReversal');
+    }
+
+    public override void mainReverseTransaction(TransactionProcessingObject pTransactionInput
+                                              , TransactionProcessingDataObject pTransactionData
+                                              , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'mainReverseTransaction');
+        if (pContractTransaction != null) {
+            logMessage('Payment Txn Reversal : Lending Contract : ' + pContractTransaction.Lending_Contract_Number__r.Name +
+                ' :: Transaction Code : ' + pContractTransaction.Transaction_Code__c +
+                ' :: Date : ' + pContractTransaction.Transaction_Date__c +
+                ' :: Amount : ' + pContractTransaction.Transaction_Amount__c);
+
+            Id lendingContractId = pTransactionInput.mLendingContractId;
+            String lendingContractNbr = pTransactionInput.mLendingContractNumber;
+            Id transactionId = pTransactionInput.mTransactionId;
+            Id transactionSetupId = pTransactionInput.mTransactionSetupId;
+            String transactionCode = pContractTransaction.Transaction_Code__c;
+
+            if (TransactionConstants.DUE_DATE_CHANGE_REVERSED.equals(transactionCode)) {
+                processDueDayChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.DUE_DATE_EXTENSION_REVERSED.equals(transactionCode)) {
+                processDueDateExtensionReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.PAYMENT_AMOUNT_CHANGED.equals(transactionCode)) {
+                processPaymentAmountChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.RATE_CHANGED.equals(transactionCode)) {
+                processRateChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.TERM_CHANGED.equals(transactionCode)) {
+                processTermChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.BALLOON_AMOUNT_CHANGED.equals(transactionCode)) {
+                processBalloonAmountChangeReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.ADDITIONAL_DISBURSAL.equals(transactionCode)) {
+                processAdditionalDisbursalReversal(pTransactionInput, pTransactionData, pContractTransaction);
+            }
+
+        } else {
+            logMessage('Transaction Processing Failed! Contract Transaction NULL');
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(Label.Transaction_Processing_System_Error_Input_Missing);
+            pTransactionData.mTransactionFailedContractIdMap.put(pTransactionInput.mLendingContractId, pTransactionInput.mErrorStack);
+            pContractTransaction = null;
+        }
+        Logger.exit(CLASS_NAME, 'mainReverseTransaction');
+    }
+
+    private Integer getCompletedTerms(TransactionProcessingObject pTransactionInput
+                                    , TransactionProcessingDataObject pTransactionData
+                                    , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'getCompletedTerms');
+        Integer completedTerms = 0;
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+        completedTerms = (Integer) fsCore.DateUtilGlobal.getCycleDifference(
+                                        lendingContract.Contract_Date__c
+                                      , pContractTransaction.Transaction_Date__c
+                                      , lendingContract.Contract_Payment_Frequency__c);
+
+        Logger.exit(CLASS_NAME, 'getCompletedTerms');
+        return completedTerms;
+    }
+
+    private decimal getUnpaidInterest(TransactionProcessingObject pTransactionInput
+                                    , TransactionProcessingDataObject pTransactionData
+                                    , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'getUnpaidInterest');
+
+        Decimal unpaidInterestBalance = Constants.DECIMAL_ZERO;
+        List < Contract_Balance__c > contractBalanceList = pTransactionData.mContractBalanceMap.get(pTransactionInput.mLendingContractId);
+        for (Contract_Balance__c contractBalance: contractBalanceList) {
+            if (contractBalance.Balance_Family__c == fsCore.Constants.BALANCE_FAMILY_INTEREST) {
+                unpaidInterestBalance += contractBalance.Opening_Amount__c + contractBalance.Posted_Amount__c +
+                    contractBalance.Adjusted_Plus_Amount__c - contractBalance.Paid_Amount__c -
+                    contractBalance.Adjusted_Minus_Amount__c - contractBalance.Waived_Amount__c -
+                    contractBalance.ChargedOff_Amount__c;
+
+            }
+
+        }
+
+        Logger.exit(CLASS_NAME, 'getUnpaidInterest');
+        return unpaidInterestBalance;
+    }
+
+    private decimal getOddDaysInterest(Decimal pSourceAmount
+                                     , Decimal pRate
+                                     , String pFrequency
+                                     , Date pFromDate
+                                     , Date pToDate
+                                     , String pDaysInYear
+                                     , String pDaysCountMethod
+                                     , String pDayCalendarMethod360) {
+        Logger.enter(CLASS_NAME, 'getOddDaysInterest');
+
+        System.RoundingMode roundingMode = fsCore.FinancialUtil.getRoundingMode();
+        fsCore.InterestCalculationObject interestParams = new fsCore.InterestCalculationObject();
+        interestParams.setRate(pRate);
+        interestParams.setAmount(pSourceAmount);
+        interestParams.setFrequency(pFrequency);
+        interestParams.setFromDate(pFromDate);
+        interestParams.setToDate(pToDate);
+        interestParams.setFirstPeriodDayCountMethod(null);
+        interestParams.setDaysBasis(pDaysCountMethod);
+        interestParams.setDaysInYear(pDaysInYear);
+        interestParams.setDayCalendarMethod360(pDayCalendarMethod360);
+        interestParams.setRoundingMode(roundingMode);
+        interestParams.setFirstPeriodFlag(false);
+        interestParams.setCalculationPrecision(CALCULATION_PRECISION);
+
+        interestParams = fsCore.InterestCalculationUtil.calculateInterest(interestParams);
+
+        Logger.exit(CLASS_NAME, 'getUnpaidInterest');
+        return interestParams.getInterestAmount();
+    }
+
+    /*
+     *  This method perform the below tasks
+     *  1) Delete the future Repayment Records
+     *  2) Set pContractTransaction.Contract_Repayment_Schedule_Snapshot__c
+     *  3) Set Contract_Repayment_Snapshot_1__c & Contract_Repayment_Snapshot_2__c
+     *  4) Set pCalcBuilder.setPaymentStartDate(nextDueDate); --next due date in Contract_Repayment__c.
+     *  5) Set pCalcBuilder.setFinancedAmount(principalBalance); Closing_Balance_Current__c of last Contract_Repayment__c record.
+     *  6) Set pCalcBuilder.setPaymentAmount(paymentAmount); - From the payment amount of next due date.
+     *  7) Set pCalcBuilder.setSupplementaryInterest(suppInterestAmount); - Interest from Last due date in Contract_Repayment__c to Txn Date
+     */
+    private void setPaymentDateAndBalance(TransactionProcessingObject pTransactionInput
+                                        , TransactionProcessingDataObject pTransactionData
+                                        , Contract_Transaction__c pContractTransaction
+                                        , CalculatorBuilder pCalcBuilder) {
+        Logger.enter(CLASS_NAME, 'setPaymentDateAndBalance');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Date nextDueDate = pContractTransaction.Transaction_Date__c;
+        Decimal principalBalance = Constants.DECIMAL_ZERO;
+        Decimal paymentAmount = Constants.DECIMAL_ZERO;
+
+        List <Contract_Repayment__c> contractRepaymentDeleteList = new List <Contract_Repayment__c>();
+        List <Contract_Repayment__c> contractRepaymentSnapShot1List = new List <Contract_Repayment__c>();
+        List <Contract_Repayment__c> contractRepaymentSnapShot2List = new List <Contract_Repayment__c>();
+
+        List <Contract_Repayment__c> contractRepaymentList = pTransactionData.mContractRepaymentMap.get(lendingContract.Id);
+        List <Contract_Repayment_Schedule__c> contractRepaymentScheduleList = pTransactionData.mContractRepaymentScheduleMap.get(lendingContract.Id);
+
+        Date lastInterestAccrualDateFromSchedule = pContractTransaction.Transaction_Date__c;
+        Decimal suppInterestAmount = Constants.DECIMAL_ZERO;
+        Integer iterationCounter = 0;
+
+        for (Contract_Repayment__c contractRepayment: contractRepaymentList) {
+            if (contractRepayment.Due_Date__c > pContractTransaction.Transaction_Date__c) {
+                if (iterationCounter == 0) {
+                    nextDueDate = contractRepayment.Due_Date__c;
+                    paymentAmount = contractRepayment.Due_Amount_Contract__c;
+                }
+                iterationCounter += 1;
+                if (contractRepayment.Id != null) {
+                    contractRepaymentDeleteList.add(contractRepayment);
+                }
+                if (iterationCounter < 101) {
+                    contractRepaymentSnapShot1List.add(contractRepayment);
+                } else {
+                    contractRepaymentSnapShot2List.add(contractRepayment);
+                }
+
+            } else {
+                principalBalance = contractRepayment.Closing_Balance_Current__c;
+                lastInterestAccrualDateFromSchedule = contractRepayment.Due_Date__c;
+            }
+        }
+        
+        List<Contract_Repayment_Schedule__c> contractRepaymentSchSnapShotList = new List<Contract_Repayment_Schedule__c>();
+        List<Contract_Repayment_Schedule__c> contractRepaymentSchDeleteList = new List<Contract_Repayment_Schedule__c>();
+
+        for (Contract_Repayment_Schedule__c contractRepaymentSchedule: contractRepaymentScheduleList) {
+            if (contractRepaymentSchedule.Id != null) {
+                contractRepaymentSchDeleteList.add(contractRepaymentSchedule);
+            }
+            contractRepaymentSchSnapShotList.add(contractRepaymentSchedule);
+        }
+        if (contractRepaymentSchSnapShotList.size() > 0) {
+            pContractTransaction.Contract_Repayment_Schedule_Snapshot__c = SObjectJSONUtil.getJSONString(contractRepaymentSchSnapShotList);
+        }
+
+        pTransactionData.mContractRepaymentScheduleDeleteMap.put(lendingContract.Id, contractRepaymentSchDeleteList);
+        pTransactionData.mContractRepaymentDeleteMap.put(lendingContract.Id, contractRepaymentDeleteList);
+
+        if (contractRepaymentSnapShot1List.size() > 0) {
+            pContractTransaction.Contract_Repayment_Snapshot_1__c = SObjectJSONUtil.getJSONString(contractRepaymentSnapShot1List);
+        }
+        if (contractRepaymentSnapShot2List.size() > 0) {
+            pContractTransaction.Contract_Repayment_Snapshot_2__c = SObjectJSONUtil.getJSONString(contractRepaymentSnapShot2List);
+        }
+
+        if (pContractTransaction.Transaction_Date__c > lastInterestAccrualDateFromSchedule) {
+            String daysInYear = fsCore.Constants.ACCRUAL_DAYS_COUNT_METHOD_366;
+            String daysCountMethod = fsCore.Constants.ACCRUAL_DAYS_COUNT_METHOD_366;
+            if (String.isNotBlank(lendingContract.Interest_Accrual_Base_Method__c)) {
+                daysInYear = lendingContract.Interest_Accrual_Base_Method__c.substringBefore('-');
+                daysCountMethod = lendingContract.Interest_Accrual_Base_Method__c.substringAfter('-');
+            }
+            if (daysInYear == fsCore.Constants.ACCRUAL_DAYS_COUNT_METHOD_ACTUAL) {
+                daysInYear = fsCore.Constants.ACCRUAL_DAYS_COUNT_METHOD_366;
+            }
+            if (daysCountMethod == fsCore.Constants.ACCRUAL_DAYS_COUNT_METHOD_ACTUAL) {
+                daysCountMethod = fsCore.Constants.ACCRUAL_DAYS_COUNT_METHOD_366;
+            }
+            
+            suppInterestAmount = getOddDaysInterest(principalBalance
+                                                  , lendingContract.Current_Rate__c
+                                                  , lendingContract.Current_Payment_Frequency__c
+                                                  , lastInterestAccrualDateFromSchedule
+                                                  , pContractTransaction.Transaction_Date__c
+                                                  , daysInYear
+                                                  , daysCountMethod
+                                                  , lendingContract.Day_Calendar_Method_360__c);
+        }
+
+        pCalcBuilder.setPaymentStartDate(nextDueDate);
+        pCalcBuilder.setFinancedAmount(principalBalance);
+        pCalcBuilder.setPaymentAmount(paymentAmount);
+        pCalcBuilder.setSupplementaryInterest(suppInterestAmount);
+
+        Logger.exit(CLASS_NAME, 'setPaymentDateAndBalance');
+    }
+
+    private void setRepaymentSchedule(TransactionProcessingObject pTransactionInput
+                                    , TransactionProcessingDataObject pTransactionData
+                                    , Contract_Transaction__c pContractTransaction
+                                    , fsCore.CalculatorObject pCalcObj) {
+        Logger.enter(CLASS_NAME, 'setRepaymentSchedule');
+
+        List <Contract_Repayment__c> contractRepaymentList = pTransactionData.mContractRepaymentMap.get(pTransactionInput.mLendingContractId);
+        List <Contract_Repayment__c> contractNewRepaymentList = new List <Contract_Repayment__c>();
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+        Integer paymentCounter = 0;
+
+        Decimal fInterestCollected = Constants.DECIMAL_ZERO;
+        Decimal fPeriodicFeeCollected = Constants.DECIMAL_ZERO;
+        Decimal fPrincipalCollected = Constants.DECIMAL_ZERO;
+        Decimal fDelinquencyCollected = Constants.DECIMAL_ZERO;
+
+        for (Contract_Repayment__c contractRepayment: contractRepaymentList) {
+            if (contractRepayment.Due_Date__c <= pContractTransaction.Transaction_Date__c) {
+                paymentCounter += 1;
+                contractNewRepaymentList.add(contractRepayment);
+            } else {
+                break;
+            }
+        }
+
+        if (pContractTransaction.Contract_Repayment_Snapshot_1__c != null) {
+            for (Contract_Repayment__c contractRepayment: (List < Contract_Repayment__c > ) SObjectJSONUtil.getSObjectRecordList(pContractTransaction.Contract_Repayment_Snapshot_1__c)) {
+                fInterestCollected += contractRepayment.Interest_Collected__c;
+                fPeriodicFeeCollected += contractRepayment.Periodic_Fee_Collected__c;
+                fPrincipalCollected += contractRepayment.Principal_Collected__c;
+                fDelinquencyCollected += contractRepayment.Delinquency_Amount_Collected__c;
+            }
+        }
+        
+        if (pContractTransaction.Contract_Repayment_Snapshot_2__c != null) {
+            for (Contract_Repayment__c contractRepayment: (List < Contract_Repayment__c > ) SObjectJSONUtil.getSObjectRecordList(pContractTransaction.Contract_Repayment_Snapshot_2__c)) {
+                fInterestCollected += contractRepayment.Interest_Collected__c;
+                fPeriodicFeeCollected += contractRepayment.Periodic_Fee_Collected__c;
+                fPrincipalCollected += contractRepayment.Principal_Collected__c;
+                fDelinquencyCollected += contractRepayment.Delinquency_Amount_Collected__c;
+            }
+        }
+        
+        Decimal allocatedAmountDelinquency = fDelinquencyCollected;
+        for (fsCore__Calculator_Repayment_Detail__c cs: pCalcObj.getRepaymentDetails()) {
+            paymentCounter += 1;
+
+            Contract_Repayment__c contractRepayment = new Contract_Repayment__c();
+            contractRepayment.Lending_Contract_Number__c = pTransactionInput.mLendingContractId;
+            contractRepayment.Due_Amount_Current__c = cs.fsCOre__Payment_Amount__c;
+            contractRepayment.Due_Date__c = cs.fsCore__Payment_Date__c;
+            contractRepayment.Due_Fulfillment_Date__c = null;
+            contractRepayment.Interest_Due_Current__c = cs.fsCore__Interest_Amount__c;
+            contractRepayment.Is_Delinquency_Fulfilled__c = false;
+            contractRepayment.Is_Due_Fulfilled__c = false;
+            contractRepayment.Opening_Balance_Actual__c = cs.fsCore__Opening_Balance_Amount__c;
+            contractRepayment.Opening_Balance_Current__c = cs.fsCore__Opening_Balance_Amount__c;
+            contractRepayment.Payment_Number__c = paymentCounter;
+            contractRepayment.Periodic_Fee_Due_Current__c = Constants.DECIMAL_ZERO;
+            contractRepayment.Principal_Due_Current__c = cs.fsCore__Principal_Amount__c;
+            contractRepayment.Due_Amount_Contract__c = cs.fsCore__Payment_Amount__c;
+            contractRepayment.Is_Active__c = true;
+            contractRepayment.Transaction_Posting_Set_Key__c = pContractTransaction.Transaction_Posting_Set_Key__c;
+
+            contractRepayment.Interest_Collected__c = (fInterestCollected > contractRepayment.Interest_Due_Current__c) ? contractRepayment.Interest_Due_Current__c : fInterestCollected;
+            fInterestCollected = (fInterestCollected > contractRepayment.Interest_Due_Current__c) ? (fInterestCollected - contractRepayment.Interest_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+            contractRepayment.Periodic_Fee_Collected__c = (fPeriodicFeeCollected > contractRepayment.Periodic_Fee_Due_Current__c) ? contractRepayment.Periodic_Fee_Due_Current__c : fPeriodicFeeCollected;
+            fPeriodicFeeCollected = (fPeriodicFeeCollected > contractRepayment.Periodic_Fee_Due_Current__c) ? (fPeriodicFeeCollected - contractRepayment.Periodic_Fee_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+            contractRepayment.Principal_Collected__c = (fPrincipalCollected > contractRepayment.Principal_Due_Current__c) ? contractRepayment.Principal_Due_Current__c : fPrincipalCollected;
+            fPrincipalCollected = (fPrincipalCollected > contractRepayment.Principal_Due_Current__c) ? (fPrincipalCollected - contractRepayment.Principal_Due_Current__c) : Constants.DECIMAL_ZERO;
+
+            allocatedAmountDelinquency = setDueFlags(contractRepayment, lendingContract, allocatedAmountDelinquency);
+
+            contractNewRepaymentList.add(contractRepayment);
+        }
+        
+        if (allocatedAmountDelinquency > 0) {
+            contractNewRepaymentList.get(contractNewRepaymentList.size() - 1).Delinquency_Amount_Collected__c += allocatedAmountDelinquency;
+            allocatedAmountDelinquency = 0;
+        }
+        pTransactionData.mContractRepaymentMap.put(pTransactionInput.mLendingContractId, contractNewRepaymentList);
+
+        List <Contract_Repayment_Schedule__c> repaymentScheduleList;
+        Boolean isFirstIteration = true;
+        Integer samePaymentCount = 0;
+        Contract_Repayment_Schedule__c repaymentSchedule;
+        Decimal finalPaymentAmount = Constants.DECIMAL_ZERO;
+        Date dateInSchedule;
+        
+        for (Contract_Repayment__c cRepayment: contractNewRepaymentList) {
+            //THIS IS TO SET THE REPAYMENT SCHEDULE.
+            dateInSchedule = cRepayment.Due_Date__c;
+            if (isFirstIteration ||
+                (repaymentSchedule != null &&
+                    (repaymentSchedule.Payment_Amount__c != cRepayment.Due_Amount_Current__c))) {
+                if (!isFirstIteration) {
+                    repaymentSchedule.Number_Of_Payments__c = samePaymentCount;
+                    repaymentScheduleList.add(repaymentSchedule);
+                    samePaymentCount = 0;
+                    dateInSchedule = cRepayment.Due_Date__c;
+                }
+                repaymentSchedule = new Contract_Repayment_Schedule__c();
+                repaymentSchedule.Payment_Amount__c = cRepayment.Due_Amount_Current__c;
+                repaymentSchedule.Start_Date__c = dateInSchedule;
+                repaymentSchedule.Lending_Contract_Number__c = pTransactionInput.mLendingContractId;
+
+                isFirstIteration = false;
+            }
+            finalPaymentAmount = cRepayment.Due_Amount_Current__c;
+        }
+        
+        if (samePaymentCount > 0) {
+            logMessage(Logginglevel.FINEST, 'Adding Final Payment : ' + finalPaymentAmount);
+            repaymentSchedule = new Contract_Repayment_Schedule__c();
+            repaymentSchedule.Payment_Amount__c = finalPaymentAmount;
+            repaymentSchedule.Number_Of_Payments__c = samePaymentCount;
+            repaymentSchedule.Start_Date__c = dateInSchedule;
+            repaymentSchedule.Lending_Contract_Number__c = pTransactionInput.mLendingContractId;
+
+
+            repaymentScheduleList.add(repaymentSchedule);
+        }
+        pTransactionData.mContractRepaymentScheduleMap.put(pTransactionInput.mLendingContractId, repaymentScheduleList);
+
+        Logger.exit(CLASS_NAME, 'setRepaymentSchedule');
+    }
+
+    private Decimal setDueFlags(Contract_Repayment__c pContractRepayment
+                              , Lending_Contract__c plendingContract
+                              , Decimal pAllocAmtDlq) {
+
+        Logger.enter(CLASS_NAME, 'setDueFlags');
+        
+        Decimal paymentShortageAmount = pContractRepayment.Due_Amount_Current__c - (pContractRepayment.Principal_Collected__c + pContractRepayment.Interest_Collected__c);
+        if (paymentShortageAmount == 0) {
+            pContractRepayment.Is_Due_Fulfilled__c = true;
+            //TODO NEED TO SET THE EXACT Transaction_Date__c
+            pContractRepayment.Due_Fulfillment_Date__c = pContractRepayment.Due_Fulfillment_Date__c;
+        }
+        
+        if (!pContractRepayment.Is_Delinquency_Fulfilled__c && pAllocAmtDlq > 0) {
+
+            Decimal delinquencySatisfiedPerAmt = (plendingContract.Payment_Shortage_Percent__c * pContractRepayment.Due_Amount_Current__c) / 100;
+            Decimal delinquencySatisfiedAmount = (plendingContract.Payment_Shortage_Amount__c > delinquencySatisfiedPerAmt) ? plendingContract.Payment_Shortage_Amount__c : delinquencySatisfiedPerAmt;
+
+            if ((pAllocAmtDlq < (pContractRepayment.Due_Amount_Current__c -
+                    (pContractRepayment.Delinquency_Amount_Collected__c +
+                        delinquencySatisfiedAmount)))) {
+
+                pContractRepayment.Delinquency_Amount_Collected__c += pAllocAmtDlq;
+                pAllocAmtDlq = 0;
+            } else {
+
+                pAllocAmtDlq -= (pContractRepayment.Due_Amount_Current__c -
+                    (pContractRepayment.Delinquency_Amount_Collected__c +
+                        (delinquencySatisfiedAmount)));
+                pContractRepayment.Delinquency_Amount_Collected__c += (pContractRepayment.Due_Amount_Current__c -
+                    (pContractRepayment.Delinquency_Amount_Collected__c + delinquencySatisfiedAmount));
+
+            }
+        }
+
+        Logger.exit(CLASS_NAME, 'setDueFlags');
+        return pAllocAmtDlq;
+    }
+    
+    private void processDueDayChange(TransactionProcessingObject pTransactionInput
+                                   , TransactionProcessingDataObject pTransactionData
+                                   , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processDueDayChange');
+        Logger.exit(CLASS_NAME, 'processDueDayChange');
+    }
+
+    private void processDueDateExtension(TransactionProcessingObject pTransactionInput
+                                       , TransactionProcessingDataObject pTransactionData
+                                       , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processDueDateExtension');
+        Logger.exit(CLASS_NAME, 'processDueDateExtension');
+    }
+
+    private void processPaymentAmountChange(TransactionProcessingObject pTransactionInput
+                                          , TransactionProcessingDataObject pTransactionData
+                                          , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processPaymentAmountChange');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_BALLOON);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+        calcBuilder.setPaymentAmount(pContractTransaction.Transaction_Amount__c);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+
+        Logger.exit(CLASS_NAME, 'processPaymentAmountChange');
+    }
+    
+    private void processRateChange(TransactionProcessingObject pTransactionInput
+                                 , TransactionProcessingDataObject pTransactionData
+                                 , Contract_Transaction__c pContractTransaction) {
+
+        Logger.enter(CLASS_NAME, 'processRateChange');
+        
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+        calcBuilder.setRate(pContractTransaction.Transaction_Amount__c);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+        
+        Logger.exit(CLASS_NAME, 'processRateChange');
+    }
+    
+    private void processTermChange(TransactionProcessingObject pTransactionInput
+                                 , TransactionProcessingDataObject pTransactionData
+                                 , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processTermChange');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) pContractTransaction.Transaction_Amount__c - completedTerm;
+
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+        
+        Logger.exit(CLASS_NAME, 'processTermChange');
+    }
+    
+    private void processBalloonAmountChange(TransactionProcessingObject pTransactionInput
+                                          , TransactionProcessingDataObject pTransactionData
+                                          , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processBalloonAmountChange');
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(pTransactionInput.mLendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+        calcBuilder.setBalloonAmount(pContractTransaction.Transaction_Amount__c);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+        
+        Logger.exit(CLASS_NAME, 'processBalloonAmountChange');
+    }
+
+    private void processAdditionalDisbursal(TransactionProcessingObject pTransactionInput
+                                          , TransactionProcessingDataObject pTransactionData
+                                          , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'processAdditionalDisbursal');
+        Id lendingContractId = pTransactionInput.mLendingContractId;
+        String lendingContractNbr = pTransactionInput.mLendingContractNumber;
+        Id transactionId = pTransactionInput.mTransactionId;
+        Id transactionSetupId = pTransactionInput.mTransactionSetupId;
+        String transactionCode = pContractTransaction.Transaction_Code__c;
+
+        Lending_Contract__c lendingContract = pTransactionData.mLendingContractMap.get(lendingContractId);
+
+        Integer completedTerm = getCompletedTerms(pTransactionInput, pTransactionData, pContractTransaction);
+        Integer remainingTerms = (Integer) lendingContract.Current_Term__c - completedTerm;
+
+        CalculatorBuilder calcBuilder = new CalculatorBuilder(lendingContract);
+        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
+        calcBuilder.setBalloonMethod(fsCore.Constants.BALLOON_METHOD_END_OF_TERM);
+        setPaymentDateAndBalance(pTransactionInput, pTransactionData, pContractTransaction, calcBuilder);
+        calcBuilder.setInterestStartDate(pContractTransaction.Transaction_Date__c);
+        calcBuilder.setTerm(remainingTerms);
+
+        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+
+        calcObj = fsCore.Calculator.calculate(calcObj);
+        if (!calcObj.getIsSuccess()) {
+            logMessage(calcObj.getErrorStack()[0]);
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(calcObj.getErrorStack()[0]);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        } else {
+            setRepaymentSchedule(pTransactionInput, pTransactionData, pContractTransaction, calcObj);
+        }
+
+        Logger.exit(CLASS_NAME, 'processAdditionalDisbursal');
+    }
+
+    public override void mainPostTransaction(TransactionProcessingObject pTransactionInput
+                                           , TransactionProcessingDataObject pTransactionData
+                                           , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'mainPostTransaction');
+        if (pTransactionInput != null && pContractTransaction != null && pTransactionData != null) {
+
+            Id lendingContractId = pTransactionInput.mLendingContractId;
+            String lendingContractNbr = pTransactionInput.mLendingContractNumber;
+            Id transactionId = pTransactionInput.mTransactionId;
+            Id transactionSetupId = pTransactionInput.mTransactionSetupId;
+            String transactionCode = pContractTransaction.Transaction_Code__c;
+
+            if (TransactionConstants.DUE_DATE_CHANGED.equals(transactionCode)) {
+                processDueDayChange(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.DUE_DATE_EXTENSION_APPLIED.equals(transactionCode)) {
+                processDueDateExtension(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.PAYMENT_AMOUNT_CHANGED.equals(transactionCode)) {
+                processPaymentAmountChange(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.RATE_CHANGED.equals(transactionCode)) {
+                processRateChange(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.TERM_CHANGED.equals(transactionCode)) {
+                processTermChange(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.BALLOON_AMOUNT_CHANGED.equals(transactionCode)) {
+                processBalloonAmountChange(pTransactionInput, pTransactionData, pContractTransaction);
+            } else if (TransactionConstants.ADDITIONAL_DISBURSAL.equals(transactionCode)) {
+                processAdditionalDisbursal(pTransactionInput, pTransactionData, pContractTransaction);
+            }
+
+        } else {
+            logMessage('Transaction Processing Failed! Transaction Input NULL');
+            pTransactionInput.mIsSuccess = false;
+            pTransactionInput.mErrorStack.add(Label.Transaction_Processing_System_Error_Input_Missing);
+            if (pContractTransaction != null) {
+                pTransactionData.mTransactionFailedContractIdMap.put(pContractTransaction.Lending_Contract_Number__c, pTransactionInput.mErrorStack);
+            }
+            pContractTransaction = null;
+        }
+        Logger.exit(CLASS_NAME, 'mainPostTransaction');
+    }
+
+    public override void mainWaiveTransaction(TransactionProcessingObject pTransactionInput
+                                            , TransactionProcessingDataObject pTransactionData
+                                            , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'mainWaiveTransaction');
+        logMessage('Restructure Transaction does not support Waive operation.');
+        pTransactionInput.mIsSuccess = false;
+        pTransactionInput.mErrorStack.add(String.format(Label.Transaction_Processing_Payment_Transaction_Operation_Not_Supported, new List < String > {
+            pContractTransaction.Transaction_Operation_Type__c
+        }));
+        pTransactionData.mTransactionFailedContractIdMap.put(pTransactionInput.mLendingContractId, pTransactionInput.mErrorStack);
+        pContractTransaction = null;
+
+        Logger.exit(CLASS_NAME, 'mainWaiveTransaction');
+    }
+
+    public override void mainAdjustPlusTransaction(TransactionProcessingObject pTransactionInput
+                                                 , TransactionProcessingDataObject pTransactionData
+                                                 , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'mainAdjustPlusTransaction');
+        logMessage('Restructure Transaction does not support AdjustPlus operation.');
+        pTransactionInput.mIsSuccess = false;
+        pTransactionInput.mErrorStack.add(String.format(Label.Transaction_Processing_Payment_Transaction_Operation_Not_Supported, new List < String > {
+            pContractTransaction.Transaction_Operation_Type__c
+        }));
+        pTransactionData.mTransactionFailedContractIdMap.put(pTransactionInput.mLendingContractId, pTransactionInput.mErrorStack);
+        pContractTransaction = null;
+        Logger.exit(CLASS_NAME, 'mainAdjustPlusTransaction');
+    }
+
+    public override void mainAdjustMinusTransaction(TransactionProcessingObject pTransactionInput
+                                                  , TransactionProcessingDataObject pTransactionData
+                                                  , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'mainAdjustMinusTransaction');
+        logMessage('Restructure Transaction does not support AdjustMinus operation.');
+        pTransactionInput.mIsSuccess = false;
+        pTransactionInput.mErrorStack.add(String.format(Label.Transaction_Processing_Payment_Transaction_Operation_Not_Supported, new List < String > {
+            pContractTransaction.Transaction_Operation_Type__c
+        }));
+        pTransactionData.mTransactionFailedContractIdMap.put(pTransactionInput.mLendingContractId, pTransactionInput.mErrorStack);
+        pContractTransaction = null;
+        Logger.exit(CLASS_NAME, 'mainAdjustMinusTransaction');
+    }
+
+    public override void mainChargeOffTransaction(TransactionProcessingObject pTransactionInput
+                                                , TransactionProcessingDataObject pTransactionData
+                                                , Contract_Transaction__c pContractTransaction) {
+        Logger.enter(CLASS_NAME, 'mainChargeOffTransaction');
+        logMessage('Restructure Transaction does not support ChargeOff operation.');
+        pTransactionInput.mIsSuccess = false;
+        pTransactionInput.mErrorStack.add(String.format(Label.Transaction_Processing_Payment_Transaction_Operation_Not_Supported, new List < String > {
+            pContractTransaction.Transaction_Operation_Type__c
+        }));
+        pTransactionData.mTransactionFailedContractIdMap.put(pTransactionInput.mLendingContractId, pTransactionInput.mErrorStack);
+        pContractTransaction = null;
+        Logger.exit(CLASS_NAME, 'mainChargeOffTransaction');
+    }
+
+    public override void afterPostTransaction(TransactionProcessingObject pTransactionInput
+                                            , TransactionProcessingDataObject pTransactionData
+                                            , Contract_Transaction__c pContractTransaction) {
+        //do nothing
+    }
+
+    public override void mainBillTransaction(TransactionProcessingObject pTransactionInput
+                                           , TransactionProcessingDataObject pTransactionData
+                                           , Contract_Transaction__c pContractTransaction) {
+        //do nothing
+    }
+
+    private void logMessage(String pMessage) {
+        //Logger.logMessage(pMessage);
+        System.debug(Logginglevel.ERROR, pMessage);
+    }
+    private void logMessage(Logginglevel pLogLevel, String pMessage) {
+        //Logger.logMessage(pLogLevel, pMessage);
+        System.debug(Logginglevel.ERROR, pMessage);
+    }
+}
