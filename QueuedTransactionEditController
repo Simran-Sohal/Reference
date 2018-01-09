@@ -113,19 +113,20 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
     }
 
     //TO DO : move to base class
-    private Boolean isTransactionValid(){
+    private Boolean isTransactionValid(Transaction_Processing_Queue__c pTransaction
+                                     , List<QueuedTransactionParamObject> pTxnParamObjectList){
         Boolean isValid = true;
-        if (mTransaction.Transaction_Date__c == null){
+        if (pTransaction.Transaction_Date__c == null){
             isValid = false;
             addErrorToPage(Label.Transaction_Processing_Date_Blank);
         }
         
-        if (mTransaction.Processing_User__c == null){
+        if (pTransaction.Processing_User__c == null){
             isValid = false;
             addErrorToPage(Label.Transaction_Processing_User_Blank);
         }
 
-        for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
+        for(QueuedTransactionParamObject txnParamObj : pTxnParamObjectList){
             if(QueuedTransactionParamUtil.isRequiredParamBlank(txnParamObj)){
                 isValid = false;
                 addErrorToPage(String.format(Label.Transaction_Processing_Required_Parameter_Blank, new String[]{txnParamObj.getTxnParam().Name}));
