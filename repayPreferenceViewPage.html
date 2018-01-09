@@ -1,0 +1,55 @@
+<apex:page id="repayPreferenceViewPage" standardController="Lending_Application__c"
+           extensions="LendingAppRepayPrefViewController" showHeader="false" sidebar="false" 
+           applyHtmlTag="false" applyBodyTag="false" 
+           docType="html-5.0" tabStyle="Lending_Application__c">   
+  <html>
+    <head>
+        <apex:stylesheet value="{!URLFOR($Resource.fs_slds, 'assets/styles/salesforce-lightning-design-system-vf.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.fs_style, 'fs-style.css')}"/>
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <script src="{!URLFOR($Resource.fs_svg, 'svg4everybody.js')}"></script>
+        <script>svg4everybody();</script>
+    </head>   
+
+    <body>   
+        <!-- REQUIRED SLDS WRAPPER -->
+        <div class="fs-core-slds">
+            <apex:form id="repayPrefForm" styleClass="fs-data-form">
+                <div class="slds-theme--default slds-container--fluid slds-p-around--small">
+                    <div class="slds-grid slds-grid--align-center slds-m-bottom--small">
+                        <h3 class="slds-section-title slds-text-heading--small slds-truncate"
+                            style="color: #16325c;">
+                            <strong>{!$Label.Advance_Preferences_Title}</strong>
+                        </h3>
+                    </div>
+                    <c:horizontalLine styleClass="slds-m-bottom--small"/>
+                    <apex:pageBlock id="repayPrefPageBlock" mode="mainDetail" html-class="fs-data-block">
+                        <div class="slds-m-bottom--large">
+                            <c:lendingAppRatePreference applicationId="{!applicationId}"
+                                                        ratePreferenceList="{!ratePreferences}"
+                                                        readonly="true"
+                                                        titleStyleClass="slds-text-body--regular"/>
+                        </div>
+                    
+                        <div class="slds-m-bottom--large">
+                            <c:lendingAppPaymentPreference applicationId="{!applicationId}"
+                                                           paymentPreferenceList="{!paymentPreferences}"
+                                                           readonly="true"
+                                                           titleStyleClass="slds-text-body--regular"/>
+                        </div>
+                    
+                        <!--
+                        <div class="slds-m-bottom--large">
+                            <c:lendingAppHolidayPreference applicationId="{!applicationId}"
+                                                           holidayPreferenceList="{!holidayPreferences}"
+                                                           readonly="true"
+                                                           titleStyleClass="slds-text-body--regular"/>
+                        </div>
+                        -->
+                    </apex:pageBlock>
+                </div>
+            </apex:form>
+        </div>
+    </body>
+  </html> 
+</apex:page>
