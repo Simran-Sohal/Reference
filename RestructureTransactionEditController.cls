@@ -242,14 +242,16 @@ public with sharing class RestructureTransactionEditController extends Transacti
     }
     
     public class RestructuredField{
-        public String mFieldName  {get; set;}
-        public String mOldValue   {get; set;}
-        public String mNewValue   {get; set;}
+        public String mFieldName    {get; set;}
+        public String mOldValue     {get; set;}
+        public String mNewValue     {get; set;}
+        public String mIsDifferent  {get; set;}
         
         public RestructuredField(String pFieldName, String pOldValue, String pNewValue){
             mFieldName = pFieldName;
             mOldValue = pOldValue;
             mNewValue = pNewValue;
+            mIsDifferent = (mOldValue != mNewValue);
         }
     }
 }
