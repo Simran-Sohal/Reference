@@ -170,8 +170,8 @@ public with sharing class RestructureTransactionEditController extends Transacti
         mRestructureResult = new List<RestructuredField>();
         
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Next_Payment_Due_Date__c.getDescribe().getLabel()
-                                                   , dateToString(pCurrContract.Next_Payment_Due_Date__c)
-                                                   , dateToString(pNewContract.Next_Payment_Due_Date__c)));
+                                                   , getFormattedDate(pCurrContract.Next_Payment_Due_Date__c)
+                                                   , getFormattedDate(pNewContract.Next_Payment_Due_Date__c)));
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Term__c.getDescribe().getLabel()
                                                    , String.valueOf(pCurrContract.Current_Term__c)
                                                    , String.valueOf(pNewContract.Current_Term__c)));
@@ -182,8 +182,8 @@ public with sharing class RestructureTransactionEditController extends Transacti
                                                    , String.valueOf(pCurrContract.Current_Payment_Frequency__c)
                                                    , String.valueOf(pNewContract.Current_Payment_Frequency__c)));
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Maturity_Date__c.getDescribe().getLabel()
-                                                   , dateToString(pCurrContract.Current_Maturity_Date__c)
-                                                   , dateToString(pNewContract.Current_Maturity_Date__c)));
+                                                   , getFormattedDate(pCurrContract.Current_Maturity_Date__c)
+                                                   , getFormattedDate(pNewContract.Current_Maturity_Date__c)));
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Payment_Due_Day__c.getDescribe().getLabel()
                                                    , String.valueOf(pCurrContract.Current_Payment_Due_Day__c)
                                                    , String.valueOf(pNewContract.Current_Payment_Due_Day__c)));
@@ -201,8 +201,9 @@ public with sharing class RestructureTransactionEditController extends Transacti
                                                    , String.valueOf(pNewContract.Total_Interest_Amount__c)));
     }
     
-    private String dateToString(Date pDate){
-        String dateStr = String.valueOf(pDate.day()) + '-' + fsCore.DateUtilGlobal.getMonthShortName(pDate.month()) + '-' + String.valueOf(pDate.year());
+    private String getFormattedDate(Date pDate){
+        String formattedDate = Datetime.newInstance(pDate.year(),pDate.month(),pDate.day()).format('dd-MMM-yyyy');
+        return formattedDate;
     }
     
     public PageReference onSaveAsDraft(){
