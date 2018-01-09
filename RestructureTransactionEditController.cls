@@ -10,8 +10,7 @@ public with sharing class RestructureTransactionEditController extends Transacti
     private PageReference mRedirectPage;
     
     public Boolean mIsPreviewed {get; private set;}
-    
-    public Lending_Contract__c mRestructuredContract {get; private set;}
+    public List<RestructuredField> mRestructureResult {get; private set;}
     public List<Contract_Repayment__c> mRestructuredRepayments {get; private set;}
     
     public RestructureTransactionEditController(ApexPages.StandardController pStdController){
@@ -30,7 +29,7 @@ public with sharing class RestructureTransactionEditController extends Transacti
         mIsRedirect = false;
         mIsPreviewed = false;
         
-        mRestructuredContract = new Lending_Contract__c();
+        mRestructureResult = new List<RestructuredField>();
         mRestructuredRepayments = new List<Contract_Repayment__c>();
         
         //get contract Id
@@ -149,7 +148,9 @@ public with sharing class RestructureTransactionEditController extends Transacti
             }
         }
         else {
-            mRestructuredContract = tpResultObj.get(0).mProcessingResultDataObject.mLendingContractMap.get(tpObject.mLendingContractId);
+            Lending_Contract__c restructuredContract = tpResultObj.get(0).mProcessingResultDataObject.mLendingContractMap.get(tpObject.mLendingContractId);
+            prepareRestructureResult(getLendingContract(), restructuredContract);
+            
             List<Contract_Repayment__c> allRepayments = tpResultObj.get(0).mProcessingResultDataObject.mContractRepaymentMap.get(tpObject.mLendingContractId);
             for(Contract_Repayment__c repay : allRepayments){
                 //add only new repayments to the list for display
@@ -165,6 +166,45 @@ public with sharing class RestructureTransactionEditController extends Transacti
         return null;
     }
 
+    private void prepareRestructureResult(Lending_Contract__c pCurrContract, Lending_Contract__c pNewContract){
+        mRestructureResult = new List<RestructuredField>();
+        
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Next_Payment_Due_Date__c.getDescribe().getLabel()
+                                                   , dateToString(pCurrContract.Next_Payment_Due_Date__c)
+                                                   , dateToString(pNewContract.Next_Payment_Due_Date__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Term__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Current_Term__c)
+                                                   , String.valueOf(pNewContract.Current_Term__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Remaining_Term__c.getDescribe().getLabel()
+                                                   , String.valueOf((pCurrContract.Current_Term__c - pCurrContract.Paid_Term__c))
+                                                   , String.valueOf((pNewContract.Current_Term__c - pCurrContract.Paid_Term__c))));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Payment_Frequency__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Current_Payment_Frequency__c)
+                                                   , String.valueOf(pNewContract.Current_Payment_Frequency__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Maturity_Date__c.getDescribe().getLabel()
+                                                   , dateToString(pCurrContract.Current_Maturity_Date__c)
+                                                   , dateToString(pNewContract.Current_Maturity_Date__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Payment_Due_Day__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Current_Payment_Due_Day__c)
+                                                   , String.valueOf(pNewContract.Current_Payment_Due_Day__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Rate__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Current_Rate__c)
+                                                   , String.valueOf(pNewContract.Current_Rate__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Payment_Amount__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Current_Payment_Amount__c)
+                                                   , String.valueOf(pNewContract.Current_Payment_Amount__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Final_Payment_Amount__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Final_Payment_Amount__c)
+                                                   , String.valueOf(pNewContract.Final_Payment_Amount__c)));
+        mRestructureResult.add(new RestructuredField(Lending_Contract__c.Total_Interest_Amount__c.getDescribe().getLabel()
+                                                   , String.valueOf(pCurrContract.Total_Interest_Amount__c)
+                                                   , String.valueOf(pNewContract.Total_Interest_Amount__c)));
+    }
+    
+    private String dateToString(Date pDate){
+        String dateStr = String.valueOf(pDate.day()) + '-' + fsCore.DateUtilGlobal.getMonthShortName(pDate.month()) + '-' + String.valueOf(pDate.year());
+    }
+    
     public PageReference onSaveAsDraft(){
         Savepoint sp = Database.setSavepoint();
         Boolean isSuccess = saveTransaction(mRestructureTxn, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_DRAFT);
@@ -200,4 +240,15 @@ public with sharing class RestructureTransactionEditController extends Transacti
         return (mRestructureTxn.Id == null ? getContractRecordPage() : getRecordPage(mRestructureTxn.Id));
     }
     
+    public class RestructuredField{
+        public String mFieldName  {get; set;}
+        public String mOldValue   {get; set;}
+        public String mNewValue   {get; set;}
+        
+        public RestructuredField(String pFieldName, String pOldValue, String pNewValue){
+            mFieldName = pFieldName;
+            mOldValue = pOldValue;
+            mNewValue = pNewValue;
+        }
+    }
 }
