@@ -11,7 +11,7 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
     private PageReference mRedirectPage;
     private Boolean mHasError;
 
-    private Map<String, RecordType> mTxnQueueRecordTypeMap;
+    private Map<String, RecordType> mTxnQueueRecordTypeMap; //move to Base Class
     
     public QueuedTransactionEditController(ApexPages.StandardController pStdController){
         super();
@@ -77,6 +77,7 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
                 mRedirectPage = TransactionPostingPageFactory.getTransactionPostingPage(mTxnSetupObject, contractId, mTransaction.Id);
             }
             else {
+                //TO DO : move to Base Class
                 //populate record type map
                 mTxnQueueRecordTypeMap = fsCore.RecordTypeUtil.getInstance()
                                                     .getRecordTypeMapByName(Schema.SObjectType.Transaction_Processing_Queue__c.getName());
@@ -113,105 +114,114 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
         mTxnParamObjectList = QueuedTransactionParamUtil.getParameterObjectList(mTransaction, mTxnSetupObject);
     }
 
-    private void validateTransaction(){
+    //TO DO : move to base class
+    private Boolean isTransactionValid(){
+        Boolean isValid = true;
         if (mTransaction.Transaction_Date__c == null){
-            mHasError = true;
+            isValid = false;
             addErrorToPage(Label.Transaction_Processing_Date_Blank);
         }
         
         if (mTransaction.Processing_User__c == null){
-            mHasError = true;
+            isValid = false;
             addErrorToPage(Label.Transaction_Processing_User_Blank);
         }
 
         for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
             if(QueuedTransactionParamUtil.isRequiredParamBlank(txnParamObj)){
-            mHasError = true;
+                isValid = false;
                 addErrorToPage(String.format(Label.Transaction_Processing_Required_Parameter_Blank, new String[]{txnParamObj.getTxnParam().Name}));
             }
         }
+        
+        return isValid;
     }
 
-    private void saveTransaction(String pTxnQueueStatus){
-        mHasError = false;
-        validateTransaction();
-            
-        if (mHasError){ return; }
-        
-        Savepoint sp = Database.setSavepoint();
-        
-        mTransaction.Processing_Status__c = pTxnQueueStatus;
-        mTransaction.Processing_Result__c = Constants.BLANK_STRING;
-
-        fsCore.DMLResult txnQueueSaveRslt = QueuedTransactionDMLWrapper.getInstance().upsertData(new List<Transaction_Processing_Queue__c>{mTransaction});
-        if (txnQueueSaveRslt.hasErrors()){
-            mHasError = true;
-            addErrorsToPage(txnQueueSaveRslt.getErrorList());
-            Database.rollback(sp);
+    //TO DO : move save and post private methods to base class as public virtual methods
+    private Boolean saveTransaction(Transaction_Processing_Queue__c pTransaction
+                                  , List<QueuedTransactionParamObject> pTxnParamObjectList
+                                  , String pTxnQueueStatus){
+        if (!isTransactionValid()){
+            return false;
         }
         
-        if (mHasError){ return; }
+        pTransaction.Processing_Status__c = pTxnQueueStatus;
+        pTransaction.Processing_Result__c = Constants.BLANK_STRING;
 
+        fsCore.DMLResult txnQueueSaveRslt = QueuedTransactionDMLWrapper.getInstance().upsertData(new List<Transaction_Processing_Queue__c>{pTransaction});
+        if (txnQueueSaveRslt.hasErrors()){
+            addErrorsToPage(txnQueueSaveRslt.getErrorList());
+            return false;
+        }
+        
         List<Transaction_Processing_Parameter__c> queuedTxnParamList = new List<Transaction_Processing_Parameter__c>();
-        for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
+        for(QueuedTransactionParamObject txnParamObj : pTxnParamObjectList){
             Transaction_Processing_Parameter__c txnParam = txnParamObj.getTxnParam();
             if (txnParam.Transaction_Queue_Name__c == null){
-                txnParam.Transaction_Queue_Name__c = mTransaction.Id;
+                txnParam.Transaction_Queue_Name__c = pTransaction.Id;
             }
             queuedTxnParamList.add(txnParam);
         }                 
 
         fsCore.DMLResult txnParamSaveRslt = QueuedTransactionParamDMLWrapper.getInstance().upsertData(queuedTxnParamList);
         if (txnParamSaveRslt.hasErrors()){
-            mHasError = true;
             addErrorsToPage(txnParamSaveRslt.getErrorList());
-            Database.rollback(sp);
+            return false;
         }
+        
+        return true;
     }
 
-    private void postTransaction(){
+    private Boolean postTransaction(Id pTransactionId){
         TransactionProcessingObjectBuilder tpObject = new TransactionProcessingObjectBuilder();
-        tpObject.addQueuedTransaction(mTransaction.Id);
+        tpObject.addQueuedTransaction(pTransactionId);
         tpObject.build();
         
-        List<TransactionProcessingObject> processRslt = TransactionProcessingGateway.processTransactions(tpObject.getTransactionProcessingObjectList(),false);
-        for(TransactionProcessingObject txnProcessObj : processRslt){
-            if (!txnProcessObj.mIsSuccess){
-                mHasError = true;
-                for(String errMsg : txnProcessObj.mErrorStack){
-                    addErrorToPage(errMsg);
-                }
-            }
-        }
+        List<TransactionProcessingObject> tpResultObj = TransactionProcessingGateway.processTransactions(tpObject.getTransactionProcessingObjectList(), false);
 
-        if (mHasError){
-            mTransaction = processRslt.get(0).mTransactionQueueRecord;
-            mTxnParamObjectList = QueuedTransactionParamUtil.getParameterObjectList(processRslt.get(0).mTransactionParameterList);
+        if (!tpResultObj.get(0).mIsSuccess){
+            for(String errMsg : tpResultObj.get(0).mErrorStack){
+                addErrorToPage(errMsg);
+            }
+            return false;
         }
+        return true;
     }
 
     public PageReference onSaveAsDraft(){
-        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_DRAFT);
-        if (mHasError){ return null; }
+        Savepoint sp = Database.setSavepoint();
+        Boolean isSuccess = saveTransaction(mTransaction, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_DRAFT);
+        if (!isSuccess){
+            Database.rollback(sp);
+            return null;
+        }
 
         return getRecordPage(mTransaction.Id);
     }
     
     public PageReference onPostTxn(){
-        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_PROCESSING);
-        if (!mHasError){
-            postTransaction();
+        Savepoint sp = Database.setSavepoint();
+        Boolean isSuccess = saveTransaction(mTransaction, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_READY);
+        if (isSuccess){
+            isSuccess = postTransaction(mTransaction.Id);
         }
 
-        if (mHasError){ return null; }
+        if (!isSuccess){
+            Database.rollback(sp);
+            return null;
+        }
 
         return getContractRecordPage();
     }
     
     public PageReference onQueueTxn(){
-        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_READY);
-        if (mHasError){ return null; }
-
+        Savepoint sp = Database.setSavepoint();
+        Boolean isSuccess = saveTransaction(mTransaction, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_READY);
+        if (!isSuccess){
+            Database.rollback(sp);
+            return null;
+        }
+        
         return getRecordPage(mTransaction.Id);
     }
     
