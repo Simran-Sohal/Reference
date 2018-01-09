@@ -150,7 +150,14 @@ public with sharing class RestructureTransactionEditController extends Transacti
         }
         else {
             mRestructuredContract = tpResultObj.get(0).mProcessingResultDataObject.mLendingContractMap.get(tpObject.mLendingContractId);
-            mRestructuredRepayments = tpResultObj.get(0).mProcessingResultDataObject.mContractRepaymentMap.get(tpObject.mLendingContractId);
+            List<Contract_Repayment__c> allRepayments = tpResultObj.get(0).mProcessingResultDataObject.mContractRepaymentMap.get(tpObject.mLendingContractId);
+            for(Contract_Repayment__c repay : allRepayments){
+                //add only new repayments to the list for display
+                if (repay.Id != null){
+                    mRestructuredRepayments.add(repay);
+                }
+            }
+            
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Please review the processing results.'));
             mIsPreviewed = true;
         }        
