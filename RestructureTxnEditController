@@ -6,6 +6,7 @@ public with sharing class RestructureTxnEditController extends TransactionContro
     private TransactionSetupObject mTxnSetupObject;
     private Boolean mIsRedirect;
     private PageReference mRedirectPage;
+    private Map<String, RecordType> mTxnQueueRecordTypeMap; //move to base class
     
     public Boolean mIsPreviewed {get; private set;}
     
@@ -76,8 +77,19 @@ public with sharing class RestructureTxnEditController extends TransactionContro
             if (mRestructureTxn.Id == null){
                 setPageSubtitle(Label.Restructure_contract_title);
             } else {
+                //TO DO : move to base class
+                //populate record type map
+                mTxnQueueRecordTypeMap = fsCore.RecordTypeUtil.getInstance()
+                                                    .getRecordTypeMapByName(Schema.SObjectType.Transaction_Processing_Queue__c.getName());
+                
+                //cannot edit processed transactions
+                if (mRestructureTxn.RecordTypeId == mTxnQueueRecordTypeMap.get(Constants.RECORD_TYPE_PROCESSED).Id){
+                    throw new ServicingException(Label.Processed_Txn_Edit_Not_Allowed);
+                }
+                
                 setPageSubtitle(Label.Restructure_contract_title + ' (#' + mRestructureTxn.Name + ')');
             }
+            
             setRestructureTxnDetails();
         }
     }        
