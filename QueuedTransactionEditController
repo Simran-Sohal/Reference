@@ -140,7 +140,7 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
     private Boolean saveTransaction(Transaction_Processing_Queue__c pTransaction
                                   , List<QueuedTransactionParamObject> pTxnParamObjectList
                                   , String pTxnQueueStatus){
-        if (!isTransactionValid()){
+        if (!isTransactionValid(pTransaction, pTxnParamObjectList)){
             return false;
         }
         
@@ -201,7 +201,7 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
     public PageReference onPostTxn(){
         Savepoint sp = Database.setSavepoint();
         Boolean isSuccess = saveTransaction(mTransaction, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_READY);
-        if (isSuccess){
+        if (isSuccess && mTransaction.Id != null){
             isSuccess = postTransaction(mTransaction.Id);
         }
 
