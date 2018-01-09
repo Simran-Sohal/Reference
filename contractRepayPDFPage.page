@@ -1,0 +1,71 @@
+<apex:page id="contractRepayPDFPage" standardController="Lending_Contract__c" 
+           extensions="RepaymentPDFController" tabStyle="Lending_Contract__c"
+           showHeader="false" sidebar="false" renderAs="pdf" applyHtmlTag="false" applyBodyTag="false"
+           title="{!mContract.Name} - {!$Label.fscore__pdf_repayment_document_title}">  
+
+    <head>
+        <title>{!mContract.Name} - {!$Label.fscore__pdf_repayment_document_title}</title>
+        
+        <apex:composition template="pdfTemplatePage">
+            <apex:define name="pdfHeader"></apex:define>
+            <apex:define name="pdfFooter"></apex:define>
+            
+            <!-- Title -->
+            <apex:define name="pageTitle">
+                <span class="pdf-doc-title"><strong>{!$Label.fscore__pdf_repayment_document_title}</strong></span><br/>
+            </apex:define>
+            
+            <!-- Sub-Title -->
+            <apex:define name="pageSubTitle">
+                <span class="pdf-doc-sub-title">{!$Label.fscore__pdf_reference_number_title} {!mApplication.Name}</span><br/>
+            </apex:define>
+            
+            <!-- Contract Info -->
+            <apex:define name="recordInfo">
+                <table class="record-info-table">
+                    <tbody>
+                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.PDF_Document_Fields}" var="applicationField">
+                            <tr>
+                                <th width="40%">{!applicationField.Label}</th>
+                                <td width="60%"><apex:outputField value="{!mApplication[applicationField.fieldPath]}"/></td>
+                            </tr>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+            </apex:define>
+
+            <!-- Company Logo -->
+            <apex:define name="logo">
+                <img src="{!companyLogoURL}"/>
+            </apex:define>
+
+            <!-- Branch Info -->
+            <apex:define name="branchInfo">
+                <table class="record-info-table">
+                    <tbody>
+                        <apex:repeat value="{!$ObjectType.Branch_Setup__c.FieldSets.PDF_Document_Fields}" var="branchField">
+                            <tr><td align="right"><apex:outputField value="{!mBranch[branchField.fieldPath]}"/></td></tr>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+            </apex:define>
+            
+            <apex:define name="relatedInfo"></apex:define>
+
+            <!-- Repayment Detail Table -->
+            <apex:define name="pdfContent">
+                <apex:dataTable id="iRepaymentDtlTable" value="{!mRepaymentDtlList}"
+                                var="repayDtl" styleClass="pdf-content-table">  
+
+                    <apex:repeat value="{!$ObjectType.Lending_Application_Repayment__c.FieldSets.Repayment_Detail_List_View_Fields}"
+                                 var="repayField">
+                        <apex:column headerValue="{!repayField.Label}">
+                            <apex:outputField value="{!repayDtl[repayField.fieldPath]}"/>
+                        </apex:column>
+                    </apex:repeat>
+                </apex:dataTable>
+            </apex:define>
+            
+        </apex:composition>
+    </head>
+</apex:page>
