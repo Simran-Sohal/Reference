@@ -9,7 +9,6 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
     private String  mTxnCode;
     private Boolean mIsRedirect;
     private PageReference mRedirectPage;
-    private Boolean mHasError;
 
     private Map<String, RecordType> mTxnQueueRecordTypeMap; //move to Base Class
     
@@ -32,7 +31,6 @@ public with sharing class QueuedTransactionEditController extends TransactionCon
         mTxnParamObjectList = new List<QueuedTransactionParamObject>();
         mTxnCode = Constants.BLANK_STRING;
         mIsRedirect = false;
-        mHasError = false;
         
         Map<String,String> pageURLParamMap = ApexPages.currentPage().getParameters();
         //get contract Id
