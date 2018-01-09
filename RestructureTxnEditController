@@ -116,10 +116,9 @@ public with sharing class RestructureTxnEditController extends TransactionContro
     }
     
     public PageReference onPreview(){
-        mHasError = false;
-        validateTransaction();
-        
-        if (mHasError){ return null; }
+        if (!isTransactionValid(mRestructureTxn, mTxnParamObjectList)){
+            return null;
+        }
         
         TransactionProcessingObject tpObject = new TransactionProcessingObject();
         tpObject.mTransactionQueueRecord = mRestructureTxn;
@@ -127,6 +126,7 @@ public with sharing class RestructureTxnEditController extends TransactionContro
         for (QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
             mTransactionParameterList.add(txnParamObj.getTxnParam());
         }
+        
         tpObject.mProcessingUserId = UserInfo.getUserId();
         tpObject.mProcessingUserProfileId = UserInfo.getProfileId();
         tpObject.mIsTransactionPosting = false;
@@ -140,100 +140,30 @@ public with sharing class RestructureTxnEditController extends TransactionContro
                                                             new List<TransactionProcessingObject>{tpObject}, true);
         
         if (!tpResultObj.get(0).mIsSuccess){
-            mHasError = true;
             for(String errMsg : tpResultObj.get(0).mErrorStack){
                 addErrorToPage(errMsg);
             }
         }
-
-        if (!mHasError){
-            mRestructuredContract = processRslt.get(0).mResultDataObject.mLendingContractMap.get(tpObject.mLendingContractId);
-            mRestructuredRepayments = processRslt.get(0).mResultDataObject.mContractRepaymentMap.get(tpObject.mLendingContractId);
+        else{
+            mRestructuredContract = tpResultObj.get(0).mResultDataObject.mLendingContractMap.get(tpObject.mLendingContractId);
+            mRestructuredRepayments = tpResultObj.get(0).mResultDataObject.mContractRepaymentMap.get(tpObject.mLendingContractId);
             mIsPreviewed = true;
         }        
         
         return null;
     }
 
-    private void validateTransaction(){
-        if (mRestructureTxn.Transaction_Date__c == null){
-            mHasError = true;
-            addErrorToPage(Label.Transaction_Processing_Date_Blank);
-        }
-        
-        if (mRestructureTxn.Processing_User__c == null){
-            mHasError = true;
-            addErrorToPage(Label.Transaction_Processing_User_Blank);
-        }
-
-        for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
-            if(QueuedTransactionParamUtil.isRequiredParamBlank(txnParamObj)){
-            mHasError = true;
-                addErrorToPage(String.format(Label.Transaction_Processing_Required_Parameter_Blank, new String[]{txnParamObj.getTxnParam().Name}));
-            }
-        }
-    }
-    
-    private void saveTransaction(String pTxnQueueStatus){
-        mHasError = false;
-        validateTransaction();
-            
-        if (mHasError){ return; }
-        
-        mRestructureTxn.Processing_Status__c = pTxnQueueStatus;
-        mRestructureTxn.Processing_Result__c = Constants.BLANK_STRING;
-
-        fsCore.DMLResult txnQueueSaveRslt = QueuedTransactionDMLWrapper.getInstance().upsertData(new List<Transaction_Processing_Queue__c>{mRestructureTxn});
-        if (txnQueueSaveRslt.hasErrors()){
-            mHasError = true;
-            addErrorsToPage(txnQueueSaveRslt.getErrorList());
-        }
-        
-        if (mHasError){ return; }
-
-        List<Transaction_Processing_Parameter__c> queuedTxnParamList = new List<Transaction_Processing_Parameter__c>();
-        for(QueuedTransactionParamObject txnParamObj : mTxnParamObjectList){
-            Transaction_Processing_Parameter__c txnParam = txnParamObj.getTxnParam();
-            if (txnParam.Transaction_Queue_Name__c == null){
-                txnParam.Transaction_Queue_Name__c = mRestructureTxn.Id;
-            }
-            queuedTxnParamList.add(txnParam);
-        }                 
-
-        fsCore.DMLResult txnParamSaveRslt = QueuedTransactionParamDMLWrapper.getInstance().upsertData(queuedTxnParamList);
-        if (txnParamSaveRslt.hasErrors()){
-            mHasError = true;
-            addErrorsToPage(txnParamSaveRslt.getErrorList());
-        }
-    }
-
-    private void postTransaction(){
-        TransactionProcessingObjectBuilder tpObject = new TransactionProcessingObjectBuilder();
-        tpObject.addQueuedTransaction(mRestructureTxn.Id);
-        tpObject.build();
-        
-        List<TransactionProcessingObject> tpResultObj = TransactionProcessingGateway.processTransactions(tpObject.getTransactionProcessingObjectList(),false);
-        
-        if (!tpResultObj.get(0).mIsSuccess){
-            mHasError = true;
-            for(String errMsg : tpResultObj.get(0).mErrorStack){
-                addErrorToPage(errMsg);
-            }
-        }
-    }
-    
     public PageReference onSaveAsDraft(){
         Savepoint sp = Database.setSavepoint();
-        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_DRAFT);
-
-        if (mHasError){
+        Boolean isSuccess = saveTransaction(mRestructureTxn, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_DRAFT);
+        if (!isSuccess){
             Database.rollback(sp);
             return null;
         }
 
         return getRecordPage(mRestructureTxn.Id);
     }
-
+    
     public PageReference onPostTxn(){
         if (!mIsPreviewed){
             addErrorToPage(Label.Transaction_Preview_Before_Save_Or_Post);
@@ -241,20 +171,19 @@ public with sharing class RestructureTxnEditController extends TransactionContro
         }
 
         Savepoint sp = Database.setSavepoint();
-        saveTransaction(Constants.TRANSACTION_QUEUE_STATUS_PROCESSING);
-    
-        if (!mHasError){
-            postTransaction();
+        Boolean isSuccess = saveTransaction(mRestructureTxn, mTxnParamObjectList, Constants.TRANSACTION_QUEUE_STATUS_READY);
+        if (isSuccess && mRestructureTxn.Id != null){
+            isSuccess = postTransaction(mRestructureTxn.Id);
         }
 
-        if (mHasError){
+        if (!isSuccess){
             Database.rollback(sp);
             return null;
         }
 
         return getContractRecordPage();
     }
-
+    
     public PageReference onCancel(){
         return (mRestructureTxn.Id == null ? getContractRecordPage() : getRecordPage(mRestructureTxn.Id));
     }
