@@ -77,7 +77,6 @@
                     </apex:facet>
                 </apex:actionStatus>
 
-                <!-- Select Transaction Section -->
                 <div class="slds-m-top_small">
                     <div class="slds-box slds-box_x-small">
                         <apex:outputPanel id="restructureTxnPanel">
@@ -86,15 +85,14 @@
                                 <fsCore:collapsibleHeader label="{!$ObjectType.Lending_Contract__c.Label} : {!$Label.fsserv__contract_current_info_section_title}"
                                                           gridClass="slds-grid_align-spread" for="contractCurrentInfoSection" />
                                               
-
                                 <div id="contractCurrentInfoSection" class="slds-m-top_small">
                                     <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-horizontal_small">
-                                        <apex:repeat value="{!$ObjectType.Lending_Contract__c.FieldSets.Contract_Restructure_Info_Fields}" var="currInfo">
+                                        <apex:repeat value="{!$ObjectType.Lending_Contract__c.FieldSets.Contract_Restructure_Info_Fields}" var="currInfoField">
                                             <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-large-size_1-of-2 slds-truncate">
                                                 <p class="slds-text-body_small slds-text-color_weak">
-                                                    <span class="slds-truncate">{!currInfo.Label}</span>
+                                                    <span class="slds-truncate">{!currInfoField.Label}</span>
                                                 </p>
-                                                <apex:outputField value="{!lendingContract[currInfo.fieldPath]}"/>
+                                                <apex:outputField value="{!lendingContract[currInfoField.fieldPath]}"/>
                                             </div>
                                         </apex:repeat>
                                     </div>
@@ -195,24 +193,71 @@
                                     </div>
                                 </apex:outputPanel>
                                 
-                                <div class="slds-m-top_small">
-                                    <fsCore:sectionHeader label="{!$Label.fsserv__preview_result_section_title}"
-                                                          isEditSectionHeader="true" isModalWindow="true"/>
-                                </div>
-                                
                                 <apex:outputPanel rendered="{!NOT(mIsPreviewed)}">
-                                    <div class="slds-align_absolute-center">
-                                        <div class="slds-m-vertical_small slds-m-horizontal_large slds-text-body_small slds-text-color_weak">
-                                            {!$Label.fsserv__preview_result_section_message}
+                                    <div class="slds-align_absolute-center slds-m-vertical_large">
+                                        <div class="slds-m-horizontal_large">
+                                            <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                                <div class="slds-media__figure">
+                                                    <span class="slds-icon_container slds-icon-utility-info" title="information">
+                                                        <fsCore:svgIcon iconStyleClass="slds-icon slds-icon_small slds-icon-text-default"
+                                                                        iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#info')}"/>
+                                                    </span>
+                                                </div>
+                                                <div class="slds-media__body">
+                                                    <p class="slds-text-body_small slds-text-color_weak">{!$Label.fsserv__preview_result_section_message}</p>
+                                                </div>
+                                            </div>                                            
                                         </div>
                                     </div>
                                 </apex:outputPanel>
-                                
+
+                                <apex:outputPanel rendered="{!(mIsPreviewed)}">
+                                    <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-top_small">
+                                        <!-- Display Restructured Contract field values -->
+                                        <div class="slds-size_1-of-1 slds-large-size_1-of-2 slds-m-right_x-small">
+                                            <fsCore:sectionHeader label="Restructured Contract"
+                                                                  isEditSectionHeader="true" isModalWindow="true"/>
+                                            
+                                            <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-horizontal_small">
+                                                <apex:repeat value="{!$ObjectType.Lending_Contract__c.FieldSets.Contract_Restructure_Result_Fields}" var="resultField">
+                                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-truncate">
+                                                        <p class="slds-text-body_small slds-text-color_weak">
+                                                            <span class="slds-truncate">{!resultField.Label}</span>
+                                                        </p>
+                                                        <apex:outputField value="{!mRestructuredContract[resultField.fieldPath]}"/>
+                                                    </div>
+                                                </apex:repeat>
+                                            </div>
+                                        </div>
+
+                                        <!-- Display Restructured Repayments -->
+                                        <div class="slds-size_1-of-1 slds-large-size_1-of-2 slds-m-left_x-small slds-border_left">
+                                            <fsCore:sectionHeader label="Restructured Repayments"
+                                                                  isEditSectionHeader="true" isModalWindow="true"/>
+                                            
+                                            <div class="slds-scrollable" style="max-height: 335px;">
+                                                <apex:dataTable id="repaymentTable" value="{!mRestructuredRepayments}" var="repay"
+                                                                styleClass="slds-table slds-table_bordered slds-table_striped">  
+                                                    <apex:repeat value="{!$ObjectType.Contract_Repayment__c.FieldSets.Preview_List_Fields}" var="previewField">
+                                                        <apex:column>
+                                                            <apex:facet name="header">
+                                                                <span class="slds-text-heading_x-small slds-cell-wrap">
+                                                                    <strong>{!previewField.Label}</strong>
+                                                                </span>
+                                                            </apex:facet>
+                                                            <apex:outputField value="{!repay[previewField.fieldPath]}" html-class="slds-cell-wrap"/>
+                                                        </apex:column>
+                                                    </apex:repeat>
+                                                </apex:dataTable>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+
                             </apex:pageBlock>
                         </apex:outputPanel>
                     </div>
                 </div>
-                <!-- / Select Transaction Section -->
             </apex:form>
             
             <!-- Footer -->
