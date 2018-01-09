@@ -149,7 +149,7 @@ public with sharing class RestructureTransactionEditController extends Transacti
         }
         else {
             Lending_Contract__c restructuredContract = tpResultObj.get(0).mProcessingResultDataObject.mLendingContractMap.get(tpObject.mLendingContractId);
-            prepareRestructureResult(getLendingContract(), restructuredContract);
+            populateRestructureResult(getLendingContract(), restructuredContract);
             
             List<Contract_Repayment__c> allRepayments = tpResultObj.get(0).mProcessingResultDataObject.mContractRepaymentMap.get(tpObject.mLendingContractId);
             for(Contract_Repayment__c repay : allRepayments){
@@ -166,7 +166,7 @@ public with sharing class RestructureTransactionEditController extends Transacti
         return null;
     }
 
-    private void prepareRestructureResult(Lending_Contract__c pCurrContract, Lending_Contract__c pNewContract){
+    private void populateRestructureResult(Lending_Contract__c pCurrContract, Lending_Contract__c pNewContract){
         mRestructureResult = new List<RestructuredField>();
         
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Next_Payment_Due_Date__c.getDescribe().getLabel()
