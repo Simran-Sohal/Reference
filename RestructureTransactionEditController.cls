@@ -168,6 +168,7 @@ public with sharing class RestructureTransactionEditController extends Transacti
 
     private void populateRestructureResult(Lending_Contract__c pCurrContract, Lending_Contract__c pNewContract){
         mRestructureResult = new List<RestructuredField>();
+        String decimalSeparator = getDecimalSeparator();
         
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Next_Payment_Due_Date__c.getDescribe().getLabel()
                                                    , getFormattedDate(pCurrContract.Next_Payment_Due_Date__c)
@@ -191,19 +192,48 @@ public with sharing class RestructureTransactionEditController extends Transacti
                                                    , String.valueOf(pCurrContract.Current_Rate__c)
                                                    , String.valueOf(pNewContract.Current_Rate__c)));
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Payment_Amount__c.getDescribe().getLabel()
-                                                   , String.valueOf(pCurrContract.Current_Payment_Amount__c)
-                                                   , String.valueOf(pNewContract.Current_Payment_Amount__c)));
+                                                   , getFormattedCurrency(pCurrContract.Current_Payment_Amount__c, decimalSeparator)
+                                                   , getFormattedCurrency(pNewContract.Current_Payment_Amount__c, decimalSeparator)));
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Final_Payment_Amount__c.getDescribe().getLabel()
-                                                   , String.valueOf(pCurrContract.Final_Payment_Amount__c)
-                                                   , String.valueOf(pNewContract.Final_Payment_Amount__c)));
+                                                   , getFormattedCurrency(pCurrContract.Final_Payment_Amount__c,decimalSeparator)
+                                                   , getFormattedCurrency(pNewContract.Final_Payment_Amount__c,decimalSeparator)));
         mRestructureResult.add(new RestructuredField(Lending_Contract__c.Total_Interest_Amount__c.getDescribe().getLabel()
-                                                   , String.valueOf(pCurrContract.Total_Interest_Amount__c)
-                                                   , String.valueOf(pNewContract.Total_Interest_Amount__c)));
+                                                   , getFormattedCurrency(pCurrContract.Total_Interest_Amount__c,decimalSeparator)
+                                                   , getFormattedCurrency(pNewContract.Total_Interest_Amount__c,decimalSeparator)));
     }
     
     private String getFormattedDate(Date pDate){
         String formattedDate = Datetime.newInstance(pDate.year(),pDate.month(),pDate.day()).format('dd-MMM-yyyy');
         return formattedDate;
+    }
+
+    private String getDecimalSeparator(){
+        Decimal testDecimal = 0.19;
+        String testDecimalValStr = (testDecimal).format();
+        String decimalSeparator = (testDecimalValStr.contains(',') ? ',' : (testDecimalValStr.contains('.') ? '.' : '-'));
+        System.debug(loggingLevel.ERROR, 'Decimal separator : ' + decimalSeparator);
+        return decimalSeparator;
+    }
+    
+    private String getFormattedCurrency(Decimal pCurrencyValue, String pDecimalSeparator){
+        Long longVal = pCurrencyValue.longValue();
+        Decimal currencyValWithoutDecimal = Decimal.valueOf(longVal);
+    
+        String formattedValWithoutDecimal = currencyValWithoutDecimal.format();
+    
+        Decimal decimalVal = pCurrencyValue - currencyValWithoutDecimal;
+        String formattedDecimalVal;
+        if (decimalVal == 0){
+            formattedDecimalVal = pDecimalSeparator + '00';
+        } else {
+            formattedDecimalVal = decimalVal.format();
+            formattedDecimalVal = formattedDecimalVal.subString(1);
+            if (formattedDecimalVal.length() < 3){
+                formattedDecimalVal = formattedDecimalVal + '0';
+            }
+        }
+        
+        return formattedValWithoutDecimal + formattedDecimalVal;
     }
     
     public PageReference onSaveAsDraft(){
