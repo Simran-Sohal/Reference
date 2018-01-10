@@ -215,30 +215,51 @@
                                     <div class="slds-grid slds-grid_align-spread slds-m-top_large">
                                         <!-- Display Restructured Contract field values -->
                                         <div class="slds-size_1-of-1 slds-large-size_1-of-2 slds-p-right_x-small">
-                                            <fsCore:sectionHeader label="Restructured Contract"
+                                            <fsCore:sectionHeader label="{!$Label.Restructure_Result_Section_Title}"
                                                                   isEditSectionHeader="true" isModalWindow="true"/>
                                             
-                                            <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-horizontal_small">
-                                                <p>Restructure result fields to be displyed here</p>
-                                                <!-- 
-                                                <apex:repeat value="{!$ObjectType.Lending_Contract__c.FieldSets.Contract_Restructure_Result_Fields}" var="resultField">
-                                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-truncate">
-                                                        <p class="slds-text-body_small slds-text-color_weak">
-                                                            <span class="slds-truncate">{!resultField.Label}</span>
-                                                        </p>
-                                                        <apex:outputField value="{!mRestructuredContract[resultField.fieldPath]}"/>
-                                                    </div>
-                                                </apex:repeat>
-                                                -->
+                                            <div class="slds-scrollable" style="max-height: 800px;">
+                                                <apex:dataTable id="resultTable" value="{!mRestructureResult}" var="result"
+                                                                styleClass="slds-table slds-table_bordered slds-table_striped">  
+                                                    <apex:column>
+                                                        <apex:facet name="header">
+                                                            <span class="slds-text-heading_x-small slds-cell-wrap">
+                                                                <strong>{!$Label.Result_Field_Name}</strong>
+                                                            </span>
+                                                        </apex:facet>
+                                                        <apex:outputText value="{!result.mFieldName}" style="font-weight: bold;" rendered="{!result.mIsDifferent}"/>
+                                                        <apex:outputText value="{!result.mFieldName}" rendered="{!NOT(result.mIsDifferent)}"/>
+                                                    </apex:column>
+
+                                                    <apex:column>
+                                                        <apex:facet name="header">
+                                                            <span class="slds-text-heading_x-small slds-cell-wrap">
+                                                                <strong>{!$Label.Field_Current_Value}</strong>
+                                                            </span>
+                                                        </apex:facet>
+                                                        <apex:outputText value="{!result.mCurrValue}" style="font-weight: bold;" rendered="{!result.mIsDifferent}"/>
+                                                        <apex:outputText value="{!result.mCurrValue}" rendered="{!NOT(result.mIsDifferent)}"/>
+                                                    </apex:column>
+
+                                                    <apex:column>
+                                                        <apex:facet name="header">
+                                                            <span class="slds-text-heading_x-small slds-cell-wrap">
+                                                                <strong>{!$Label.Field_New_Value}</strong>
+                                                            </span>
+                                                        </apex:facet>
+                                                        <apex:outputText value="{!result.mNewValue}" style="font-weight: bold;" rendered="{!result.mIsDifferent}"/>
+                                                        <apex:outputText value="{!result.mNewValue}" rendered="{!NOT(result.mIsDifferent)}"/>
+                                                    </apex:column>
+                                                </apex:dataTable>
                                             </div>
                                         </div>
 
                                         <!-- Display Restructured Repayments -->
                                         <div class="slds-size_1-of-1 slds-large-size_1-of-2 slds-p-left_x-small slds-border_left">
-                                            <fsCore:sectionHeader label="Restructured Repayments"
+                                            <fsCore:sectionHeader label="{!$Label.Restructure_Repayments_Section_Title}"
                                                                   isEditSectionHeader="true" isModalWindow="true"/>
                                             
-                                            <div class="slds-scrollable" style="max-height: 467px;">
+                                            <div class="slds-scrollable" style="max-height: 800px;">
                                                 <apex:dataTable id="repaymentTable" value="{!mRestructuredRepayments}" var="repay"
                                                                 styleClass="slds-table slds-table_bordered slds-table_striped">  
                                                     <apex:repeat value="{!$ObjectType.Contract_Repayment__c.FieldSets.Preview_List_Fields}" var="previewField">
