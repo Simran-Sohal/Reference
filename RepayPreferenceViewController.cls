@@ -23,9 +23,6 @@ public with sharing class RepayPreferenceViewController{
         mPaymentPreferenceList = ContractRelatedRecordQueryUtil.getPaymentPreferences(mContractId);
     }
     
-    public Id getContractId(){
-        return mContractId;
-    }
     public List<Contract_Rate_Preference__c> getRatePreferences(){
         return mRatePreferenceList;
     }
