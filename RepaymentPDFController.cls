@@ -31,7 +31,7 @@ public with sharing class RepaymentPDFController extends fsCore.PDFControllerBas
                 mIsDownload = true;
             }
 
-            String pdfFileName = String.format(Label.fsCore__PDF_Repayment_Document_Name, new List<String>{mContract.Name});
+            String pdfFileName = String.format(Label.fsCore.PDF_Repayment_Document_Name, new List<String>{mContract.Name});
             
             if (mIsDownload) { downloadPDF(pdfFileName); }
         }
