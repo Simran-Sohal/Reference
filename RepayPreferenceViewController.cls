@@ -1,44 +1,35 @@
 public with sharing class RepayPreferenceViewController{
 
-    private Id mApplicationId;
-    private List<LendingApplicationHolidayPrefObject> mHolidayPrefList;
-    private List<LendingApplicationPaymentPrefObject> mPaymentPrefList;
-    private List<LendingApplicationRatePrefObject> mRatePrefList;
+    private Id mContractId;
+    private List<Contract_Rate_Preference__c> mRatePreferenceList;
+    private List<Contract_Payment_Preference__c> mPaymentPreferenceList;
     
     public RepayPreferenceViewController(ApexPages.StandardController pStdController){
-        Lending_Application__c application = (Lending_Application__c)pStdController.getRecord();
-        mHolidayPrefList = new List<LendingApplicationHolidayPrefObject>();
-        mPaymentPrefList = new List<LendingApplicationPaymentPrefObject>();
-        mRatePrefList = new List<LendingApplicationRatePrefObject>();
+        Lending_Contract__c contract = (Lending_Contract__c)pStdController.getRecord();
+        mRatePreferenceList = new List<Contract_Rate_Preference__c>();
+        mPaymentPreferenceList = new List<Contract_Payment_Preference__c>();
         
-        if (application.Id != null){
-            mApplicationId = application.Id;
-            setHolidayPreferences();
-            setPaymentPreferences();
+        if (contract.Id != null){
+            mContractId = contract.Id;
             setRatePreferences();
+            setPaymentPreferences();
         }
     }
 
-    private void setHolidayPreferences(){
-        mHolidayPrefList = LendingApplicationRepaymentUtil.getHolidayPreferenceObjectList(mApplicationId);    
+    private void setRatePreferences(){
+        mRatePreferenceList = ContractRelatedRecordQueryUtil.getRatePreferences(mContractId);
     }
     private void setPaymentPreferences(){
-        mPaymentPrefList = LendingApplicationRepaymentUtil.getPaymentPreferenceObjectList(mApplicationId);
+        mPaymentPreferenceList = ContractRelatedRecordQueryUtil.getPaymentPreferences(mContractId);
     }
-    private void setRatePreferences(){
-        mRatePrefList = LendingApplicationRepaymentUtil.getRatePreferenceObjectList(mApplicationId);
+    
+    public Id getContractId(){
+        return mContractId;
     }
-
-    public Id getApplicationId(){
-        return mApplicationId;
+    public List<Contract_Rate_Preference__c> getRatePreferences(){
+        return mRatePreferenceList;
     }
-    public List<LendingApplicationHolidayPrefObject> getHolidayPreferences(){
-        return mHolidayPrefList;
-    }
-    public List<LendingApplicationPaymentPrefObject> getPaymentPreferences(){
-        return mPaymentPrefList;
-    }
-    public List<LendingApplicationRatePrefObject> getRatePreferences(){
-        return mRatePrefList;
+    public List<Contract_Payment_Preference__c> getPaymentPreferences(){
+        return mPaymentPreferenceList;
     }
 }
