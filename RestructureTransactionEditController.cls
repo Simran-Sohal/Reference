@@ -1,4 +1,3 @@
-
 public with sharing class RestructureTransactionEditController extends TransactionEditControllerBase{
     private static final String CLASS_NAME = 'RestructureTransactionEditController';
     
