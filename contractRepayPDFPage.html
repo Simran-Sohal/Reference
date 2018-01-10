@@ -6,7 +6,7 @@
     <head>
         <title>{!mContract.Name} - {!$Label.fscore__pdf_repayment_document_title}</title>
         
-        <apex:composition template="pdfTemplatePage">
+        <apex:composition template="fsCore__pdfTemplatePage">
             <apex:define name="pdfHeader"></apex:define>
             <apex:define name="pdfFooter"></apex:define>
             
@@ -17,17 +17,17 @@
             
             <!-- Sub-Title -->
             <apex:define name="pageSubTitle">
-                <span class="pdf-doc-sub-title">{!$Label.fscore__pdf_reference_number_title} {!mApplication.Name}</span><br/>
+                <span class="pdf-doc-sub-title">{!$Label.fscore__pdf_reference_number_title} {!mContract.Name}</span><br/>
             </apex:define>
             
             <!-- Contract Info -->
             <apex:define name="recordInfo">
                 <table class="record-info-table">
                     <tbody>
-                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.PDF_Document_Fields}" var="applicationField">
+                        <apex:repeat value="{!$ObjectType.Lending_Contract__c.FieldSets.PDF_Document_Fields}" var="contractField">
                             <tr>
-                                <th width="40%">{!applicationField.Label}</th>
-                                <td width="60%"><apex:outputField value="{!mApplication[applicationField.fieldPath]}"/></td>
+                                <th width="40%">{!contractField.Label}</th>
+                                <td width="60%"><apex:outputField value="{!mContract[contractField.fieldPath]}"/></td>
                             </tr>
                         </apex:repeat>
                     </tbody>
@@ -43,7 +43,7 @@
             <apex:define name="branchInfo">
                 <table class="record-info-table">
                     <tbody>
-                        <apex:repeat value="{!$ObjectType.Branch_Setup__c.FieldSets.PDF_Document_Fields}" var="branchField">
+                        <apex:repeat value="{!$ObjectType.fsCore__Branch_Setup__c.FieldSets.fsCore__PDF_Document_Fields}" var="branchField">
                             <tr><td align="right"><apex:outputField value="{!mBranch[branchField.fieldPath]}"/></td></tr>
                         </apex:repeat>
                     </tbody>
@@ -54,13 +54,13 @@
 
             <!-- Repayment Detail Table -->
             <apex:define name="pdfContent">
-                <apex:dataTable id="iRepaymentDtlTable" value="{!mRepaymentDtlList}"
-                                var="repayDtl" styleClass="pdf-content-table">  
+                <apex:dataTable id="iRepaymentTable" value="{!mRepaymentList}"
+                                var="repay" styleClass="pdf-content-table">  
 
-                    <apex:repeat value="{!$ObjectType.Lending_Application_Repayment__c.FieldSets.Repayment_Detail_List_View_Fields}"
+                    <apex:repeat value="{!$ObjectType.Contract_Repayment__c.FieldSets.PDF_List_Fields}"
                                  var="repayField">
                         <apex:column headerValue="{!repayField.Label}">
-                            <apex:outputField value="{!repayDtl[repayField.fieldPath]}"/>
+                            <apex:outputField value="{!repay[repayField.fieldPath]}"/>
                         </apex:column>
                     </apex:repeat>
                 </apex:dataTable>
