@@ -30,8 +30,8 @@
                             <fsCore:sectionHeader label="{!$Label.Rate_Preference_Section_Title}"
                                                   isEditSectionHeader="true" isModalWindow="true"/>
                             
-                            <apex:outputPanel rendered="{!(mRatePreferenceList.size > 0)}">
-                                <apex:dataTable value="{!mRatePreferenceList}" var="ratePref"
+                            <apex:outputPanel rendered="{!(ratePreferences.size > 0)}">
+                                <apex:dataTable value="{!ratePreferences}" var="ratePref"
                                                 styleClass="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal">  
                                     <apex:repeat value="{!$ObjectType.Contract_Rate_Preference__c.FieldSets.List_View_Fields}" var="listField">
                                         <apex:column >
@@ -44,7 +44,7 @@
                                 </apex:dataTable>
                             </apex:outputPanel>
                             
-                            <apex:outputPanel rendered="{!(mRatePreferenceList.size == 0)}">
+                            <apex:outputPanel rendered="{!(ratePreferences.size == 0)}">
                                 <p>No records to display</p>
                             </apex:outputPanel>
                         </div>
@@ -53,8 +53,8 @@
                             <fsCore:sectionHeader label="{!$Label.Payment_Preference_Section_Title}"
                                                   isEditSectionHeader="true" isModalWindow="true"/>
                             
-                            <apex:outputPanel rendered="{!(mPaymentPreferenceList.size > 0)}">
-                                <apex:dataTable value="{!mPaymentPreferenceList}" var="pmtPref"
+                            <apex:outputPanel rendered="{!(paymentPreferences.size > 0)}">
+                                <apex:dataTable value="{!paymentPreferences}" var="pmtPref"
                                                 styleClass="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal">  
                                     <apex:repeat value="{!$ObjectType.Contract_Payment_Preference__c.FieldSets.List_View_Fields}" var="listField">
                                         <apex:column >
@@ -67,7 +67,7 @@
                                 </apex:dataTable>
                             </apex:outputPanel>
                             
-                            <apex:outputPanel rendered="{!(mPaymentPreferenceList.size == 0)}">
+                            <apex:outputPanel rendered="{!(paymentPreferences.size == 0)}">
                                 <p>No records to display</p>
                             </apex:outputPanel>
                         </div>
