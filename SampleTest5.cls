@@ -71,6 +71,7 @@ private class ContractFeeTest{
                         contractMap.get('AT1701000001')
                       , feeSetupMap.get('Late Fee'));
         ContractFeeDMLWrapper.getInstance().insertData(testFee);
+        System.assertNotEquals(null, testFee.Id, 'Fee record created assert');
               
         Test.startTest();
         Contract_Fee_Tier__c testFeeTier_1 = 
