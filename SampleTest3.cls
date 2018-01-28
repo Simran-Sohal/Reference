@@ -8,9 +8,8 @@ private class ContractCustomerTest{
         TestSetupLoader.loadCompanySetup();
         TestSetupLoader.loadBankSetup();
         TestSetupLoader.loadBranchSetup();
-        TestSetupLoader.loadBalanceSetup();
-        TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadProductSetup();
+        TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
         
         TestDataLoader.loadLendingContracts();
