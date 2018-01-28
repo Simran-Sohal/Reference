@@ -38,10 +38,10 @@ private class ContractItemizationTest{
                 
         Test.startTest();
         Contract_Itemization__c testItemization = 
-                TestContractDataHelper.getTestContractCustomer(
-                        contractMap.get('AT1701000001').Id
-                      , null //Blank Account
-                      , testContactsMap.get('Tony Stark').Id);
+                TestContractDataHelper.getTestContractItemization(
+                        contractMap.get('AT1701000001')
+                      , itemizationMap.get('Insurance')
+                      , 1000);
     
         List<Contract_Itemization__c> testItemizationList = new List<Contract_Itemization__c>();
         testItemizationList.add(testItemization);
