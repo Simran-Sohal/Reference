@@ -13,7 +13,7 @@ private class ContractDirectDebitTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadContractCustomers();
         TestDataLoader.loadContractDirectDebits();
     }
