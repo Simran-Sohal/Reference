@@ -16,7 +16,7 @@ private class ContractFeeTest{
         TestSetupLoader.loadFeeTierSetup();
         TestSetupLoader.loadContractTemplateSetup();
         
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadContractFees();
     }
 
