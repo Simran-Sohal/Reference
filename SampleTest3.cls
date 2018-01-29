@@ -12,7 +12,7 @@ private class ContractCustomerTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
         
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadContractCustomers();
     }
 
