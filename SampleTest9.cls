@@ -13,7 +13,7 @@ private class ContractTxnListControllerTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadQueuedTransactions();
         TestDataLoader.loadContractTransactions();
     }
