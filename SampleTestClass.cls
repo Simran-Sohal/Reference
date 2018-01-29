@@ -27,10 +27,12 @@ private class SampleTestClass{
         TestSetupLoader.loadStageSetup();
 
         TestDataLoader.loadLendingContractsActive();
+        //TestDataLoader.loadLendingContractsPending();
         TestDataLoader.loadContractCustomers();
         TestDataLoader.loadContractCollaterals();
         TestDataLoader.loadContractItemizations();
         TestDataLoader.loadContractBalancesActive();
+        //TestDataLoader.loadContractBalancesPending();
         TestDataLoader.loadContractFees();
         TestDataLoader.loadContractDirectDebits();
         TestDataLoader.loadContractDisbursements();
