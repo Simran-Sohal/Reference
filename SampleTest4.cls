@@ -15,7 +15,7 @@ private class ContractItemizationTest{
         TestSetupLoader.loadProductSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadContractItemizations();
     }
 
