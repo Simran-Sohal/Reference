@@ -12,7 +12,7 @@ private class ContractRepaymentTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadRepayments();
         TestDataLoader.loadRepaymentSchedules();
         TestDataLoader.loadRatePreferences();
