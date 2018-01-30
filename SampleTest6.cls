@@ -48,11 +48,11 @@ private class ContractDirectDebitTest{
         
         Test.startTest();
         ContractDirectDebitDMLWrapper.getInstance().deleteData(currDirectDebits);
-        currDirectDebits = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        currDirectDebits = ContractRelatedRecordQueryUtil.getDirectDebits(testContract.Id);
         System.assertEquals(0, currDirectDebits.size(), 'No direct debit found after delete');
         
         ContractDirectDebitDMLWrapper.getInstance().insertData(newDirectDebits);
-        currDirectDebits = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        currDirectDebits = ContractRelatedRecordQueryUtil.getDirectDebits(testContract.Id);
         System.assertEquals(origRecordCount, currDirectDebits.size(), 'New direct debit records created');
         
         ContractDirectDebitDMLWrapper.getInstance().updateData(currDirectDebits);
