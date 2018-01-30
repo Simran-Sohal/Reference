@@ -30,7 +30,7 @@ public class TestContractDataHelper{
             LendingContractUtil.copyContractTemplateToContract(pTemplate, testContract);
             
             testContract.Title__c = pContractTitle;
-            //TO DO add contract fiels here
+            //TO DO add contract fields here
 
         }catch(DmlException ex){
             exceptionFlag = true;
@@ -45,36 +45,65 @@ public class TestContractDataHelper{
         System.debug(logginglevel.ERROR, ex);
     }
 
-    public static Contract_Balance__c getTestContractBalance(
+    public static Contract_Direct_Debit__c getTestContractDirectDebit(
                                     Lending_Contract__c pContract
-                                  , fsCore__Balance_Setup__c pBalance
-                                  , Decimal pPostedAmount){
-        Contract_Balance__c testBalance = new Contract_Balance__c();
-        testBalance.Lending_Contract_Number__c = pContract.Id;
-        testBalance.Balance_Name__c = pBalance.Id;
-        testBalance.Balance_Family__c = pBalance.fsCore__Balance_Family__c;
-        testBalance.ChargeOff_Action__c = 'Charge-Off';
-        testBalance.Display_Order__c = 9;
-        testBalance.Is_Billing_Required__c = false;
-        testBalance.Is_Interest_Accrued__c = false;
-        testBalance.Is_Investor_Payable__c = false;
-        testBalance.Is_Securitization_Investor_Payable__c = false;
-        testBalance.WriteOff_Action__c = 'Waive';
-        testBalance.Posted_Amount__c = pPostedAmount;
-        testBalance.Adjusted_Minus_Amount__c = 0.00;
-        testBalance.Adjusted_Plus_Amount__c = 0.00;
-        testBalance.Billed_Amount__c = 0.00;
-        testBalance.ChargedOff_Amount__c = 0.00;
-        testBalance.ChargedOff_Opening_Amount__c = 0.00;
-        testBalance.ChargedOff_Recovered_Amount__c = 0.00;
-        testBalance.Opening_Amount__c = 0.00;
-        testBalance.Paid_Amount__c = 0.00;
-        testBalance.Waived_Amount__c = 0.00;
+                                  , Contract_Customer__c pCustomer
+                                  , fsCore__Bank_Account__c pBankAccount
+                                  , String pDebitAmountSource
+                                  , Decimal pDebitAmount){
+        Contract_Direct_Debit__c testDirectDebit = new Contract_Direct_Debit__c();
+        testDirectDebit.Lending_Contract_Number__c = pContract.Id;
+        testDirectDebit.Customer_Reference_Number__c = pCustomer.Id;
+        testDirectDebit.Bank_Account__c = pBankAccount.Id;
+        testDirectDebit.Debit_Amount_Source__c = pDebitAmountSource;
+        testDirectDebit.Debit_Amount__c = pDebitAmount;
+        testDirectDebit.Debit_Start_Date__c = System.today();
+        testDirectDebit.Next_Debit_Date__c = pContract.Next_Payment_Due_Date__c;
+        testDirectDebit.Debit_Frequency__c = pContract.Current_Payment_Frequency__c;
         
-        System.assertNotEquals(null, testBalance);
-        return testBalance;
+        System.assertNotEquals(null, testDirectDebit);
+        return testDirectDebit;
     }
 
+    public static Contract_Disbursement__c getTestContractDisbursement(
+                                    Lending_Contract__c pContract
+                                  , Contract_Customer__c pCustomer
+                                  , Id pBankAccountId
+                                  , Decimal pAmount){
+        Contract_Disbursement__c testDisbursement = getTestContractDisbursement(pContract
+                                                           , 'Customer'
+                                                           , pCustomer.Account_Name__c
+                                                           , pCustomer.Contact_Name__c
+                                                           , pBankAccountId
+                                                           , pAmount);
+        testDisbursement.Customer_Reference_Number__c = pCustomer.Id;
+        
+        System.assertNotEquals(null, testDisbursement);
+        return testDisbursement;
+    }
+
+    public static Contract_Disbursement__c getTestContractDisbursement(
+                                    Lending_Contract__c pContract
+                                  , String pPartyType
+                                  , Id pPartyAccountId
+                                  , Id pPartyContactId
+                                  , Id pBankAccountId
+                                  , Decimal pAmount){
+        Contract_Disbursement__c testDisbursement = new Contract_Direct_Debit__c();
+        testDisbursement.Lending_Contract_Number__c = pContract.Id;
+        testDisbursement.Party_Type__c = pPartyType;
+        testDisbursement.Account_Name__c = pPartyAccountId;
+        testDisbursement.Contact_Name__c = pPartyContactId;
+        testDisbursement.Bank_Account__c = pBankAccountId;
+        testDisbursement.Amount__c = pAmount;
+        testDisbursement.Disbursement_Date__c = System.today();
+        testDisbursement.Payment_Method__c = 'Electronic Clearing';
+        testDisbursement.Debit_Frequency__c = pContract.Current_Payment_Frequency__c;
+        
+        System.assertNotEquals(null, testDisbursement);
+        return testDisbursement;
+    }
+    
     public static Contract_Assignment__c getTestContractAssignment(
                                     Lending_Contract__c pContract
                                   , fsCore__Queue_Assignment_Setup__c pAssignment){
