@@ -32,7 +32,6 @@ private class ContractBalanceTest{
     @isTest
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        Map<String, fsCore__Balance_Setup__c> balancesMap = TestQueryHelper.getTestBalances();
         
         Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
         List<Contract_Balance__c> currBalances = ContractRelatedRecordQueryUtil.getBalances(testContract.Id);
