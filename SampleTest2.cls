@@ -38,23 +38,24 @@ private class ContractCollateralTest{
     @isTest
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        Map<String, fsCore__Collateral__c> collateralMap = TestQueryHelper.getTestCollaterals();
+        Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
+        List<Contract_Collateral__c> currCollaterals = ContractRelatedRecordQueryUtil.getCollaterals(testContract.Id);
+        Integer origRecordCount = currCollaterals.size();
+        System.assertNotEquals(0, origRecordCount, 'Collaterals found');
+        
+        List<Contract_Collateral__c> newCollaterals = currCollaterals.deepClone(false,false,false);
                 
         Test.startTest();
-        Contract_Collateral__c testCollateral = 
-                TestContractDataHelper.getTestContractCollateral(
-                        contractMap.get('AT1701000001')
-                      , collateralMap.get('B3M2W8'));
-    
-        List<Contract_Collateral__c> testCollateralList = new List<Contract_Collateral__c>();
-        testCollateralList.add(testCollateral);
+        ContractCollateralDMLWrapper.getInstance().deleteData(currCollaterals);
+        currCollaterals = ContractRelatedRecordQueryUtil.getCollaterals(testContract.Id);
+        System.assertEquals(0, currCollaterals.size(), 'No collateral found after delete');
         
-        ContractCollateralDMLWrapper.getInstance().insertData(testCollateralList);
-        System.assertNotEquals(null, testCollateral.Id, 'Collateral record created assert');
+        ContractCollateralDMLWrapper.getInstance().insertData(newCollaterals);
+        currCollaterals = ContractRelatedRecordQueryUtil.getCollaterals(testContract.Id);
+        System.assertEquals(origRecordCount, currCollaterals.size(), 'Collateral records created assert');
         
-        ContractCollateralDMLWrapper.getInstance().updateData(testCollateralList);
-        ContractCollateralDMLWrapper.getInstance().upsertData(testCollateralList);
-        ContractCollateralDMLWrapper.getInstance().deleteData(testCollateralList);
+        ContractCollateralDMLWrapper.getInstance().updateData(currCollaterals);
+        ContractCollateralDMLWrapper.getInstance().upsertData(currCollaterals);
         
         Test.stopTest();
     }    
