@@ -15,7 +15,7 @@ private class ContractItemizationTest{
         TestSetupLoader.loadProductSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContractsActive();
+        TestDataLoader.loadLendingContractsPending();
         TestDataLoader.loadContractItemizations();
     }
 
@@ -34,25 +34,24 @@ private class ContractItemizationTest{
     @isTest
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        Map<String, fsCore__Itemization_Setup__c> itemizationMap = TestQueryHelper.getTestItemizations();
-                
+        Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
+        List<Contract_Itemization__c> currItemizations = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        Integer origRecordCount = currItemizations.size();
+        System.assertNotEquals(0, origRecordCount, 'Itemizations found');
+        
+        List<Contract_Itemization__c> newItemizations = currItemizations.deepClone(false,false,false);
+        
         Test.startTest();
-        Contract_Itemization__c testItemization = 
-                TestContractDataHelper.getTestContractItemization(
-                        contractMap.get('AT1701000001')
-                      , itemizationMap.get('Insurance')
-                      , 1000);
-    
-        List<Contract_Itemization__c> testItemizationList = new List<Contract_Itemization__c>();
-        testItemizationList.add(testItemization);
+        ContractItemizationDMLWrapper.getInstance().deleteData(currItemizations);
+        currItemizations = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        System.assertEquals(0, currItemizations.size(), 'No itemizations found after delete');
         
-        ContractItemizationDMLWrapper.getInstance().insertData(testItemizationList);
-        System.assertNotEquals(null, testItemization.Id, 'Itemization record created assert');
+        ContractItemizationDMLWrapper.getInstance().insertData(newItemizations);
+        currItemizations = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        System.assertEquals(origRecordCount, currItemizations.size(), 'New itemization records created');
         
-        ContractItemizationDMLWrapper.getInstance().updateData(testItemizationList);
-        ContractItemizationDMLWrapper.getInstance().upsertData(testItemizationList);
-        ContractItemizationDMLWrapper.getInstance().deleteData(testItemizationList);
-        
+        ContractItemizationDMLWrapper.getInstance().updateData(currItemizations);
+        ContractItemizationDMLWrapper.getInstance().upsertData(currItemizations);
         Test.stopTest();
     }    
     
