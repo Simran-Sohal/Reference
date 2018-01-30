@@ -13,8 +13,8 @@ private class ContractBalanceTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContracts();
-        TestDataLoader.loadContractBalances();
+        TestDataLoader.loadLendingContractsActive();
+        TestDataLoader.loadContractBalancesActive();
     }
 
     @isTest 
@@ -25,7 +25,7 @@ private class ContractBalanceTest{
         ContractBalanceListController listCtrl = new ContractBalanceListController();
         listCtrl.mContractId = contractMap.get('AT1701000001').Id;
         List<Contract_Balance__c> balances = listCtrl.getBalanceList();
-        System.assertEquals(4, balances.size(), '4 balances found assert');
+        System.assertEquals(3, balances.size(), '3 balances found assert');
         Test.stopTest();
     }
     
@@ -33,23 +33,25 @@ private class ContractBalanceTest{
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
         Map<String, fsCore__Balance_Setup__c> balancesMap = TestQueryHelper.getTestBalances();
-                
+        
+        Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
+        List<Contract_Balance__c> currBalances = ContractRelatedRecordQueryUtil.getBalances(testContract.Id);
+        Integer origRecordCount = currBalances.size();
+        System.assertNotEquals(0, origRecordCount, 'Balances found');
+        
+        List<Contract_Balance__c> newBalances = currBalances.deepClone(false,false,false);
+        
         Test.startTest();
-        Contract_Balance__c testBalance = 
-                TestContractDataHelper.getTestContractBalance(
-                        contractMap.get('AT1701000001')
-                      , balancesMap.get('NSF Fee Balance')
-                      , 0.00);
-    
-        List<Contract_Balance__c> testBalanceList = new List<Contract_Balance__c>();
-        testBalanceList.add(testBalance);
+        ContractBalanceDMLWrapper.getInstance().deleteData(currBalances);
+        currBalances = ContractRelatedRecordQueryUtil.getBalances(testContract.Id);
+        System.assertEquals(0, currBalances.size(), 'No balances found after delete');
         
-        ContractBalanceDMLWrapper.getInstance().insertData(testBalanceList);
-        System.assertNotEquals(null, testBalance.Id, 'Balance record created assert');
+        ContractBalanceDMLWrapper.getInstance().insertData(newBalances);
+        currBalances = ContractRelatedRecordQueryUtil.getBalances(testContract.Id);
+        System.assertEquals(origRecordCount, currBalances.size(), 'New balance records created');
         
-        ContractBalanceDMLWrapper.getInstance().updateData(testBalanceList);
-        ContractBalanceDMLWrapper.getInstance().upsertData(testBalanceList);
-        ContractBalanceDMLWrapper.getInstance().deleteData(testBalanceList);
+        ContractBalanceDMLWrapper.getInstance().updateData(currBalances);
+        ContractBalanceDMLWrapper.getInstance().upsertData(currBalances);
         
         Test.stopTest();
     }    
