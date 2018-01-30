@@ -101,6 +101,10 @@ public with sharing class AssignmentCreationProcessor{
     private void setAssignmentSetupMap(){
         Set<String> assignCodeSet = new Set<String>(mContractToAssignmentMap.values());
  
+        Set<String> allowedObjects = new Set<String>();
+        allowedObjects.add(Schema.SObjectType.Lending_Contract__c.getName());
+        allowedObjects.add(Schema.SObjectType.Contract_Assignment__c.getName());
+        
         Set<String> allowedLOB = new Set<String>();
         allowedLOB.add(fsCore.Constants.LOB_SERVICING);
         allowedLOB.add(fsCore.Constants.LOB_COLLECTION);
@@ -110,9 +114,8 @@ public with sharing class AssignmentCreationProcessor{
                                    FROM fsCore__Queue_Assignment_Setup__c
                                   WHERE fsCore__Assignment_Code__c IN :assignCodeSet
                                     AND fsCore__Line_Of_Business__c IN :allowedLOB
-                                    AND fsCore__Is_Active__c = true
-                                    AND (fsCore__Object_Name__c = 'fsServ__Lending_Contract__c' OR
-                                         fsCore__Object_Name__c = 'fsServ__Contract_Assignment__c')];
+                                    AND fsCore__Object_Name__c IN :allowedObjects
+                                    AND fsCore__Is_Active__c = true];
         
         mAssignmentSetupMap = new Map<String, fsCore__Queue_Assignment_Setup__c>();
         for (fsCore__Queue_Assignment_Setup__c queueAssign : queueAssignList){
