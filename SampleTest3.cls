@@ -12,7 +12,7 @@ private class ContractCustomerTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
         
-        TestDataLoader.loadLendingContractsActive();
+        TestDataLoader.loadLendingContractsPending();
         TestDataLoader.loadContractCustomers();
     }
 
@@ -37,26 +37,24 @@ private class ContractCustomerTest{
     @isTest
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        Map<String, Contact> contactMap = TestQueryHelper.getTestContacts();
+        Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
+        List<Contract_Customer__c> currCustomers = ContractRelatedRecordQueryUtil.getCustomers(testContract.Id);
+        Integer origRecordCount = currCustomers.size();
+        System.assertNotEquals(0, origRecordCount, 'Customers found');
+        
+        List<Contract_Customer__c> newCustomers = currCustomers.deepClone(false,false,false);
                 
         Test.startTest();
-        Contract_Customer__c testCustomer = 
-                TestContractDataHelper.getTestContractCustomer(
-                        contractMap.get('AT1701000001')
-                      , null //Blank Account
-                      , contactMap.get('Tony Stark')
-                      , fsCore.Constants.CUSTOMER_TYPE_GUARANTOR);
-    
-        List<Contract_Customer__c> testCustomerList = new List<Contract_Customer__c>();
-        testCustomerList.add(testCustomer);
+        ContractCustomerDMLWrapper.getInstance().deleteData(currCustomers);
+        currCustomers = ContractRelatedRecordQueryUtil.getCustomers(testContract.Id);
+        System.assertEquals(0, currCustomers.size(), 'No customer found after delete');
         
-        ContractCustomerDMLWrapper.getInstance().insertData(testCustomerList);
-        System.assertNotEquals(null, testCustomer.Id, 'Customer record created assert');
+        ContractCustomerDMLWrapper.getInstance().insertData(newCustomers);
+        currCustomers = ContractRelatedRecordQueryUtil.getCustomers(testContract.Id);
+        System.assertEquals(origRecordCount, currCustomers.size(), 'Customer records created assert');
         
-        ContractCustomerDMLWrapper.getInstance().updateData(testCustomerList);
-        ContractCustomerDMLWrapper.getInstance().upsertData(testCustomerList);
-        ContractCustomerDMLWrapper.getInstance().deleteData(testCustomerList);
-        
+        ContractCustomerDMLWrapper.getInstance().updateData(currCustomers);
+        ContractCustomerDMLWrapper.getInstance().upsertData(currCustomers);
         Test.stopTest();
     }    
     
