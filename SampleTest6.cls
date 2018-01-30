@@ -39,30 +39,24 @@ private class ContractDirectDebitTest{
     @isTest
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        Map<Id, List<Contract_Customer__c>> customersMap = TestQueryHelper.getTestContactCustomers();
+        Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
+        List<Contract_Direct_Debit__c> currDirectDebits = ContractRelatedRecordQueryUtil.getDirectDebits(testContract.Id);
+        Integer origRecordCount = currDirectDebits.size();
+        System.assertNotEquals(0, origRecordCount, 'Direct Debits found');
         
-        Lending_Contract__c testContract = contractMap.get('AT1701000001');
-        Contract_Customer__c testCustomer = customersMap.get(testContract.Id).get(0);
-        List<fsCore__Bank_Account__c> testBankAccounts = TestQueryHelper.getTestBankAccountsByContact().get(testCustomer.Contact_Name__c);
+        List<Contract_Direct_Debit__c> newDirectDebits = currDirectDebits.deepClone(false,false,false);
         
         Test.startTest();
-        Contract_Direct_Debit__c testDirectDebit = 
-                TestContractDataHelper.getTestContractDirectDebit(
-                        testContract
-                      , testCustomer
-                      , testBankAccounts.get(0)
-                      , Constants.DEBIT_SOURCE_FIXED_AMOUNT);
-    
-        List<Contract_Direct_Debit__c> testDirectDebitList = new List<Contract_Direct_Debit__c>();
-        testDirectDebitList.add(testDirectDebit);
+        ContractDirectDebitDMLWrapper.getInstance().deleteData(currDirectDebits);
+        currDirectDebits = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        System.assertEquals(0, currDirectDebits.size(), 'No direct debit found after delete');
         
-        ContractDirectDebitDMLWrapper.getInstance().insertData(testDirectDebitList);
-        System.assertNotEquals(null, testDirectDebit.Id, 'Direct Debit record created assert');
+        ContractDirectDebitDMLWrapper.getInstance().insertData(newDirectDebits);
+        currDirectDebits = ContractRelatedRecordQueryUtil.getItemizations(testContract.Id);
+        System.assertEquals(origRecordCount, currDirectDebits.size(), 'New direct debit records created');
         
-        ContractDirectDebitDMLWrapper.getInstance().updateData(testDirectDebitList);
-        ContractDirectDebitDMLWrapper.getInstance().upsertData(testDirectDebitList);
-        ContractDirectDebitDMLWrapper.getInstance().deleteData(testDirectDebitList);
-        
+        ContractDirectDebitDMLWrapper.getInstance().updateData(currDirectDebits);
+        ContractDirectDebitDMLWrapper.getInstance().upsertData(currDirectDebits);
         Test.stopTest();
     }    
     
