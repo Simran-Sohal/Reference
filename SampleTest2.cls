@@ -13,7 +13,7 @@ private class ContractCollateralTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
     
-        TestDataLoader.loadLendingContractsActive();
+        TestDataLoader.loadLendingContractsPending();
         TestDataLoader.loadContractCollaterals();
     }
 
@@ -56,7 +56,6 @@ private class ContractCollateralTest{
         
         ContractCollateralDMLWrapper.getInstance().updateData(currCollaterals);
         ContractCollateralDMLWrapper.getInstance().upsertData(currCollaterals);
-        
         Test.stopTest();
     }    
     
