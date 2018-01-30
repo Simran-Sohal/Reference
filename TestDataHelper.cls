@@ -175,12 +175,23 @@ public class TestContractDataHelper{
         
         for(fsCore__Transaction_Parameter_Setup__c param : pTxnParamSetupList){
             Transaction_Processing_Parameter__c txnParam = new Transaction_Processing_Parameter__c();
-            txnParam.Name = param.fsCore__Parameter_Name__c;
-            
-            testQueuedTxnParamMap.put(param.fsCore__Field_Name__c.toLowerCase(), txnParam);
+            txnParam.Name = param.Name;
+            txnParam.Is_Required__c = param.fsCore__Is_Required__c;
+            txnParam.Display_Order__c = param.fsCore__Display_Order__c;
+            txnParam.Transaction_Parameter_Field_ID__c = param.fsCore__Transaction_Parameter_Field_ID__c;
+            txnParam.Field_Name__c = param.fsCore__Field_Name__c.toLowerCase();
+            txnParam.Object_Name__c = Schema.SObjectType.Contract_Transaction__c.getName();
+            txnParam.Currency_Value__c = null;
+            txnParam.Date_Value__c = null;
+            txnParam.Number_Value__c = null;
+            txnParam.String_Value__c = null;
+            txnParam.Reference_Value_ID__c = null;
+            txnParam.Boolean_Value__c = false;
+                    
+            testQueuedTxnParamMap.put(txnParam.Field_Name__c, txnParam);
         }
         
-        System.assertNotEquals(0, testQueuedTxnParamMap.size());
+        System.assertNotEquals(null, testQueuedTxnParamMap);
         return testQueuedTxnParamMap;
     }
 }
