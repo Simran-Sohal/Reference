@@ -51,8 +51,13 @@ public class TestContractDataHelper{
                                   , fsCore__Bank_Account__c pBankAccount
                                   , String pDebitAmountSource
                                   , Decimal pDebitAmount){
+        Map<String, RecordType> directDebitRecTypeMap
+                = fsCore.RecordTypeUtil.getInstance()
+                        .getRecordTypeMapByName(Schema.SObjectType.Contract_Direct_Debit__c.getName());
+
         Contract_Direct_Debit__c testDirectDebit = new Contract_Direct_Debit__c();
         testDirectDebit.Lending_Contract_Number__c = pContract.Id;
+        testDirectDebit.RecordTypeId = directDebitRecTypeMap.get(Constants.RECORD_TYPE_ACTIVE).Id;
         testDirectDebit.Customer_Reference_Number__c = pCustomer.Id;
         testDirectDebit.Bank_Account__c = pBankAccount.Id;
         testDirectDebit.Debit_Amount_Source__c = pDebitAmountSource;
@@ -89,8 +94,13 @@ public class TestContractDataHelper{
                                   , Id pPartyContactId
                                   , Id pBankAccountId
                                   , Decimal pAmount){
+        Map<String, RecordType> disbursementRecTypeMap
+                = fsCore.RecordTypeUtil.getInstance()
+                        .getRecordTypeMapByName(Schema.SObjectType.Contract_Disbursement__c.getName());
+
         Contract_Disbursement__c testDisbursement = new Contract_Direct_Debit__c();
         testDisbursement.Lending_Contract_Number__c = pContract.Id;
+        testDisbursement.RecordTypeId = disbursementRecTypeMap.get(Constants.RECORD_TYPE_OPEN).Id;
         testDisbursement.Party_Type__c = pPartyType;
         testDisbursement.Account_Name__c = pPartyAccountId;
         testDisbursement.Contact_Name__c = pPartyContactId;
@@ -135,4 +145,42 @@ public class TestContractDataHelper{
         return testStage;
     }
 
+    public static Transaction_Processing_Queue__c getTestQueuedTransaction(
+                                    Lending_Contract__c pContract
+                                  , fsCore__Transaction_Setup__c pTxnSetup){
+        Map<String, RecordType> txnQueueRecordTypeMap
+                = fsCore.RecordTypeUtil.getInstance()
+                        .getRecordTypeMapByName(Schema.SObjectType.Transaction_Processing_Queue__c.getName());
+        
+        Transaction_Processing_Queue__c testQueuedTxn = new Transaction_Processing_Queue__c();
+        testQueuedTxn.Lending_Contract_Number__c = pContract.Id;
+        testQueuedTxn.Transaction_Date__c = System.today();
+        testQueuedTxn.Transaction_Name__c = pTxnSetup.Id;
+        testQueuedTxn.Transaction_Operation_Type__c = pTxnSetup.fsCore__Operation_Type__c;
+        testQueuedTxn.RecordTypeId = txnQueueRecordTypeMap.get(Constants.RECORD_TYPE_OPEN).Id;
+        testQueuedTxn.Processing_Status__c = Constants.TRANSACTION_QUEUE_STATUS_READY;
+        testQueuedTxn.Processing_User__c = UserInfo.getUserId();
+        testQueuedTxn.Processing_Result__c = Constants.BLANK_STRING;
+        testQueuedTxn.Related_Records__c = Constants.BLANK_STRING;
+        
+        System.assertNotEquals(null, testQueuedTxn);
+        return testQueuedTxn;
+    }
+
+    public static Map<String, Transaction_Processing_Parameter__c> getTestQueuedTxnParams(
+                                    Transaction_Processing_Queue__c pQueuedTxn
+                                  , List<fsCore__Transaction_Parameter_Setup__c> pTxnParamSetupList){
+        Map<String, Transaction_Processing_Parameter__c> testQueuedTxnParamMap
+                = new Map<String, Transaction_Processing_Parameter__c>();
+        
+        for(fsCore__Transaction_Parameter_Setup__c param : pTxnParamSetupList){
+            Transaction_Processing_Parameter__c txnParam = new Transaction_Processing_Parameter__c();
+            txnParam.Name = param.fsCore__Parameter_Name__c;
+            
+            testQueuedTxnParamMap.put(param.fsCore__Field_Name__c.toLowerCase(), txnParam);
+        }
+        
+        System.assertNotEquals(0, testQueuedTxnParamMap.size());
+        return testQueuedTxnParamMap;
+    }
 }
