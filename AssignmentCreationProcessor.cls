@@ -12,29 +12,6 @@ public with sharing class AssignmentCreationProcessor{
 
     public AssignmentCreationProcessor(Map<Id, String> pContractToAssignmentMap){
         mContractToAssignmentMap = pContractToAssignmentMap;
-        setAssignmentSetupMap();
-    }
-    
-    private void setAssignmentSetupMap(){
-        Set<String> assignCodeSet = new Set<String>(mContractToAssignmentMap.values());
- 
-        Set<String> allowedLOB = new Set<String>();
-        allowedLOB.add(fsCore.Constants.LOB_SERVICING);
-        allowedLOB.add(fsCore.Constants.LOB_COLLECTION);
-       
-        List<fsCore__Queue_Assignment_Setup__c> queueAssignList = 
-                                [SELECT Id, fsCore__Assignment_Code__c
-                                   FROM fsCore__Queue_Assignment_Setup__c
-                                  WHERE fsCore__Assignment_Code__c IN :assignCodeSet
-                                    AND fsCore__Line_Of_Business__c IN :allowedLOB
-                                    AND fsCore__Is_Active__c = true
-                                    AND (fsCore__Object_Name__c = 'fsServ__Lending_Contract__c' OR
-                                         fsCore__Object_Name__c = 'fsServ__Contract_Assignment__c')];
-        
-        mAssignmentSetupMap = new Map<String, fsCore__Queue_Assignment_Setup__c>();
-        for (fsCore__Queue_Assignment_Setup__c queueAssign : queueAssignList){
-            mAssignmentSetupMap.put(queueAssign.fsCore__Assignment_Code__c, queueAssign);
-        }
     }
     
     public void process(){
@@ -93,6 +70,8 @@ public with sharing class AssignmentCreationProcessor{
     }
     
     private void prepareMaps(){
+        setAssignmentSetupMap();
+        
         mContractMap = new Map<Id, Lending_Contract__c>(
                           [SELECT Id, Name FROM Lending_Contract__c
                             WHERE Id IN :mContractToAssignmentMap.keySet()]);
@@ -119,6 +98,28 @@ public with sharing class AssignmentCreationProcessor{
         }
     }
  
+    private void setAssignmentSetupMap(){
+        Set<String> assignCodeSet = new Set<String>(mContractToAssignmentMap.values());
+ 
+        Set<String> allowedLOB = new Set<String>();
+        allowedLOB.add(fsCore.Constants.LOB_SERVICING);
+        allowedLOB.add(fsCore.Constants.LOB_COLLECTION);
+       
+        List<fsCore__Queue_Assignment_Setup__c> queueAssignList = 
+                                [SELECT Id, fsCore__Assignment_Code__c
+                                   FROM fsCore__Queue_Assignment_Setup__c
+                                  WHERE fsCore__Assignment_Code__c IN :assignCodeSet
+                                    AND fsCore__Line_Of_Business__c IN :allowedLOB
+                                    AND fsCore__Is_Active__c = true
+                                    AND (fsCore__Object_Name__c = 'fsServ__Lending_Contract__c' OR
+                                         fsCore__Object_Name__c = 'fsServ__Contract_Assignment__c')];
+        
+        mAssignmentSetupMap = new Map<String, fsCore__Queue_Assignment_Setup__c>();
+        for (fsCore__Queue_Assignment_Setup__c queueAssign : queueAssignList){
+            mAssignmentSetupMap.put(queueAssign.fsCore__Assignment_Code__c, queueAssign);
+        }
+    }
+
     private Boolean isValid(Id pContractId, String pAssignmentCode){
         if (!mContractMap.containsKey(pContractId)){
             addError(pContractId
