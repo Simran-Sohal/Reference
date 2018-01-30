@@ -13,7 +13,7 @@ private class ContractDisbursementTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContractsActive();
+        TestDataLoader.loadLendingContractsPending();
         TestDataLoader.loadContractCustomers();
         TestDataLoader.loadContractDisbursements();
     }
@@ -39,36 +39,24 @@ private class ContractDisbursementTest{
     @isTest
     static void testDMLWrapper(){
         Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        Map<Id, List<Contract_Customer__c>> customersMap = TestQueryHelper.getTestContactCustomers();
+        Lending_Contract__c testContract = contractMap.get('AT1701000001').Id;
+        List<Contract_Disbursement__c> currDisbursments = ContractRelatedRecordQueryUtil.getDisbursements(testContract.Id);
+        Integer origRecordCount = currDisbursments.size();
+        System.assertNotEquals(0, origRecordCount, 'Disbursments found');
         
-        Lending_Contract__c testContract = contractMap.get('AT1701000001');
-        Contract_Customer__c testCustomer = customersMap.get(testContract.Id).get(0);
-        List<fsCore__Bank_Account__c> testBankAccounts = TestQueryHelper.getTestBankAccountsByContact().get(testCustomer.Contact_Name__c);
+        List<Contract_Disbursement__c> newDisbursments = currDisbursments.deepClone(false,false,false);
         
-        List<Contract_Disbursement__c> currDisbursments = [SELECT Id FROM Contract_Disbursement__c 
-                                                            WHERE Lending_Contract_Number__c = :testContract.Id];
- 
         Test.startTest();
         ContractDisbursementDMLWrapper.getInstance().deleteData(currDisbursments);
-        currDisbursments = [SELECT Id FROM Contract_Disbursement__c 
-                             WHERE Lending_Contract_Number__c = :testContract.Id];
-        System.assertEquals(0, currDisbursments.size(), 'No disbursement record found after delete assert');
+        currDisbursments = ContractRelatedRecordQueryUtil.getDisbursements(testContract.Id);
+        System.assertEquals(0, currDisbursments.size(), 'No disbursement found after delete');
         
-        Contract_Disbursement__c testDisbursement = 
-                TestContractDataHelper.getTestContractDisbursement(
-                        testContract
-                      , testCustomer
-                      , testBankAccounts.get(0)
-                      , testContract.Financed_Amount__c);
-    
-        List<Contract_Disbursement__c> testDisbursementList = new List<Contract_Disbursement__c>();
-        testDisbursementList.add(testDisbursement);
+        ContractDisbursementDMLWrapper.getInstance().insertData(newDisbursments);
+        currDisbursments = ContractRelatedRecordQueryUtil.getDisbursements(testContract.Id);
+        System.assertEquals(origRecordCount, currDisbursments.size(), 'New disbursement records created');
         
-        ContractDisbursementDMLWrapper.getInstance().insertData(testDisbursementList);
-        System.assertNotEquals(null, testDisbursement.Id, 'Disbursement record created assert');
-        
-        ContractDisbursementDMLWrapper.getInstance().updateData(testDisbursementList);
-        ContractDisbursementDMLWrapper.getInstance().upsertData(testDisbursementList);
+        ContractDisbursementDMLWrapper.getInstance().updateData(currDisbursments);
+        ContractDisbursementDMLWrapper.getInstance().upsertData(currDisbursments);
         Test.stopTest();
     }
 }
