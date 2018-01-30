@@ -13,8 +13,8 @@ private class ContractBalanceTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
 
-        TestDataLoader.loadLendingContractsActive();
-        TestDataLoader.loadContractBalancesActive();
+        TestDataLoader.loadLendingContractsPending();
+        TestDataLoader.loadContractBalancesPending();
     }
 
     @isTest 
@@ -51,7 +51,6 @@ private class ContractBalanceTest{
         
         ContractBalanceDMLWrapper.getInstance().updateData(currBalances);
         ContractBalanceDMLWrapper.getInstance().upsertData(currBalances);
-        
         Test.stopTest();
     }    
     
