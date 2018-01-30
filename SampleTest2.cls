@@ -13,7 +13,7 @@ private class ContractCollateralTest{
         TestSetupLoader.loadPaymentAllocMethodSetup();
         TestSetupLoader.loadContractTemplateSetup();
     
-        TestDataLoader.loadLendingContracts();
+        TestDataLoader.loadLendingContractsActive();
         TestDataLoader.loadContractCollaterals();
     }
 
