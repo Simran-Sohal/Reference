@@ -1,5 +1,6 @@
 @isTest
 private class SpectraServicingUtilTest {
+    
     @testSetup
     static void createTestSetup(){
         String errMsg = Constants.BLANK_STRING;
