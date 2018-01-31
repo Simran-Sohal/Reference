@@ -13,35 +13,25 @@ private class SpectraServicingUtilTest {
             //create some holidays
             fsCore__Branch_Setup__c testBranch = branchMap.get('TCHQ');
             Date branchDate = testBranch.fsCore__Business_Date__c;
-            Holiday hd1 = getTestHoliday('Holiday 1', branchDate.addDays(12));
-            Holiday hd2 = getTestHoliday('Holiday 2', branchDate.addDays(20));
-            List<Holiday> holidayList = new List<Holiday>();
-            holidayList.add(hd1);
-            holidayList.add(hd2);
+            Holiday hd1 = new Holiday(Name='Holiday 1',ActivityDate=branchDate.addDays(12),IsAllDay=true,IsRecurrence=false);
+            Holiday hd1 = new Holiday(Name='Holiday 2',ActivityDate=branchDate.addDays(20),IsAllDay=true,IsRecurrence=false);
+            List<Holiday> holidayList = new List<Holiday>{hd1,hd2};
             insert holidayList;
+            
             System.assert(hd1.Id != null, 'Holiday 1 created');
             System.assert(hd2.Id != null, 'Holiday 2 created');
             
             //attach holiday to branch
             List<fsCore__Branch_Holiday_Setup__c> branchHolidays = new List<fsCore__Branch_Holiday_Setup__c>();
-            branchHolidays.add(new fsCore__Branch_Holiday_Setup__c(fsCore__Branch_Name__c));
+            branchHolidays.add(new fsCore__Branch_Holiday_Setup__c(fsCore__Branch_Name__c=testBranch.Id,fsCore__Holiday_Id__c=hd1.Id,fsCore__Is_Active__c=true));
+            branchHolidays.add(new fsCore__Branch_Holiday_Setup__c(fsCore__Branch_Name__c=testBranch.Id,fsCore__Holiday_Id__c=hd2.Id,fsCore__Is_Active__c=true));
+            insert branchHolidays;
             
         } catch (Exception e){
             hasError = true;
             errMsg = String.valueOf(e);
         }
         System.assertEquals(false, hasError, 'Test data creation assert ' + errMsg);
-    }
-    
-    private static Holiday getTestHoliday(String pHolidayName, Date pHolidayDate){
-        Holiday hd = new Holiday();
-        hd.Name = pHolidayName;
-        hd.ActivityDate = pHolidayDate;
-        hd.IsAllDay = true;
-        hd.IsRecurrence = false;
-        
-        System.assertNotEquals(null, hd);
-        return hd;
     }
     
     @isTest
@@ -58,4 +48,17 @@ private class SpectraServicingUtilTest {
         Test.stopTest();
     }
 
+    @isTest
+    private static void testBranchRelatedMethods(){
+        Map<String, fsCore__Branch_Setup__c> branchMap = TestQueryHelper.getTestBranches();
+        
+        Test.startTest();
+        Map<String, Date> branchBizDateMap = SpectraServicingUtil.getBranchBusinessDateMap(branchMap.keySet());
+        System.assertEquals(Date.newInstance(2017,1,5), branchBizDateMap.get('TCHQ'), 'Test branch business date');
+        
+        Map<String, List<Holiday>> branchHolidaysMap = SpectraServicingUtil.getBranchHolidaysMap(branchMap.keySet());
+        System.assertEquals(2, branchHolidaysMap.get('TCHQ').size(), 'Holiday List size for test branch');
+        Test.stopTest();
+    }
+    
 }
