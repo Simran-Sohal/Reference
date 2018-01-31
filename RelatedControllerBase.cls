@@ -52,14 +52,13 @@ public with sharing abstract class ContractRelatedControllerBase extends fsCore.
         return mBusinessDate;
     }
 
-    public void addErrorToPage(String pErrorMessage){
-        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, pErrorMessage));
-    }
-
     public void addErrorsToPage(List<fsCore.ErrorObject> pErrorList){
         for (fsCore.ErrorObject errObj : pErrorList){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, errObj.getErrorMessage()));
+            addErrorToPage(errObj.getErrorMessage());
         }
     }
 
+    public void addErrorToPage(String pErrorMessage){
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, pErrorMessage));
+    }
 }
