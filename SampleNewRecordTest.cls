@@ -40,9 +40,9 @@ private class QueuedTransactionTest{
             
             //create draft queued transactions for the contracts
             TestContractDataHelper.createQueuedTransactions(contractMap.values()
-                                                          , branchMap.get('TCHQ')
                                                           , txnSetupMap.get('PAYMENT_APPLIED')
                                                           , txnParamSetupMap.get('PAYMENT_APPLIED')
+                                                          , branchMap.get('TCHQ').fsCore__Business_Date__c
                                                           , Constants.TRANSACTION_STATUS_DRAFT);
         }
         catch (Exception e){
@@ -52,70 +52,34 @@ private class QueuedTransactionTest{
         System.assertEquals(false, hasError, 'Test data creation assert ' + errMsg);
     }
 
-
-    private static List<TransactionProcessingObject> getTxnProcessingObject(
+    private static List<Transaction_Processing_Queue__c> createQueuedTransactions(
                                         List<Lending_Contract__c> pContractList
-                                      , fsCore__Transaction_Setup__c pPaymentTxn
-                                      , List<fsCore__Transaction_Parameter_Setup__c> pPaymentTxnParams
-                                      , Date pTxnDate){
+                                      , fsCore__Transaction_Setup__c pTxnSetup
+                                      , List<fsCore__Transaction_Parameter_Setup__c> pTxnParamsSetup
+                                      , Date pTxnDate
+                                      , String pTxnStatus){
         
         List<TransactionProcessingObject> queuedTxnList = new List<TransactionProcessingObject>();
         
         for(Lending_Contract__c contract : pContractList){
             TransactionProcessingObject queuedTxnObject = new TransactionProcessingObject();
-            queuedTxnObject.mTransactionQueueRecord = TestContractDataHelper.getTestQueuedTransaction(contract, pPaymentTxn, pTxnDate);
-            
+            queuedTxnObject.mTransactionQueueRecord = TestContractDataHelper.getTestQueuedTransaction(contract, pTxnSetup, pTxnDate);
+            queuedTxnObject.mTransactionQueueRecord.Processing_Status__c = pTxnStatus;
+                
             Map<String, Transaction_Processing_Parameter__c> txnParamMap 
-                    = TestContractDataHelper.getTestQueuedTxnParams(queuedTxnObject.mTransactionQueueRecord, pPaymentTxnParams);
+                    = TestContractDataHelper.getTestQueuedTxnParams(queuedTxnObject.mTransactionQueueRecord, pTxnParamsSetup);
             
-            txnParamMap.get('fsserv__transaction_amount__c').Currency_Value__c = contract.Current_Payment_Amount__c;
-            txnParamMap.get('fsserv__transaction_amount__c').Data_Type__c = 'Currency';
-
-            txnParamMap.get('fsserv__payment_mode__c').String_Value__c = 'ACH';
-            txnParamMap.get('fsserv__payment_mode__c').Data_Type__c = 'String';
-
-            txnParamMap.get('fsserv__payment_source__c').String_Value__c = 'Direct Debit';
-            txnParamMap.get('fsserv__payment_source__c').Data_Type__c = 'String';
-
-            txnParamMap.get('fsserv__payment_reason__c').String_Value__c = 'Regular Payment';
-            txnParamMap.get('fsserv__payment_reason__c').Data_Type__c = 'String';
-
             queuedTxnObject.mTransactionParameterList = txnParamMap.values();
             queuedTxnList.add(queuedTxnObject);
         }
         
-        return queuedTxnList;
-    }
-
-    @isTest
-    private static void testProcessingContractPaymentSuccess() {
-        fsCore__Branch_Setup__c testBranch = TestQueryHelper.getTestBranches().get('TCHQ');
-        //test branch has business date 5-Jan-2017
-        testBranch.fsCore__Business_Date__c = testBranch.fsCore__Business_Date__c.addDays(7);
-        update testBranch;
-        
-        Map<String, Lending_Contract__c> contractMap = TestQueryHelper.getTestLendingContracts();
-        
-        fsCore__Transaction_Setup__c paymentTxn = TestQueryHelper.getTestTxnSetup().get('PAYMENT_APPLIED');
-        System.assertNotEquals(null, paymentTxn);
-        
-        List<fsCore__Transaction_Parameter_Setup__c> paymentTxnParams 
-                = TestQueryHelper.getTestTxnParamSetup().get(paymentTxn.Id);
-        System.assertEquals(4, paymentTxnParams.size());
-        
-        List<TransactionProcessingObject> queuedTxnProcessList 
-                = getTxnProcessingObject(contractMap.values(), paymentTxn, paymentTxnParams, testBranch.fsCore__Business_Date__c);
-        
-        //Test Execution starts here
-        Test.startTest();
         List<Transaction_Processing_Queue__c> queuedTxnList = new List<Transaction_Processing_Queue__c>();
         for (TransactionProcessingObject tpqObj : queuedTxnProcessList){
             queuedTxnList.add(tpqObj.mTransactionQueueRecord);
         }
-        QueuedTransactionDMLWrapper.getInstance().upsertData(queuedTxnList);
+        QueuedTransactionDMLWrapper.getInstance().insertData(queuedTxnList);
         
         List<Transaction_Processing_Parameter__c> queuedTxnParamList = new List<Transaction_Processing_Parameter__c>();
-        Set<Id> savedQueuedTxnSet = new Set<Id>();
         for (TransactionProcessingObject tpqObj : queuedTxnProcessList){
             if (tpqObj.mTransactionQueueRecord.Id != null){
                 for(Transaction_Processing_Parameter__c txnParam : tpqObj.mTransactionParameterList){
@@ -124,10 +88,39 @@ private class QueuedTransactionTest{
                     }
                     queuedTxnParamList.add(txnParam);
                 }
-                savedQueuedTxnSet.add(tpqObj.mTransactionQueueRecord.Id);
             }
         }
-        QueuedTransactionParamDMLWrapper.getInstance().upsertData(queuedTxnParamList);
+        QueuedTransactionParamDMLWrapper.getInstance().insertData(queuedTxnParamList);
+        
+        return queuedTxnList;
+    }
+    
+    @isTest
+    static void testQueuedTxnEditController_NewRecord(){
+        Lending_Contract__c testContract = TestQueryHelper.getTestLendingContracts().get('AT1701000001');
+        fsCore__Transaction_Setup__c paymentTxnSetup = TestQueryHelper.getTestTxnSetup().get('PAYMENT_APPLIED');
+        System.assertNotEquals(null, paymentTxnSetup);
+
+        Test.startTest();
+
+        PageReference txnPage = Page.queuedTxnEditPage;
+        txnPage.getParameters().put('parentId', String.valueOf(testContract.Id));
+        txnPage.getParameters().put('txnCode', 'PAYMENT_APPLIED');
+        Test.setCurrentPage(txnPage);
+        
+        Transaction_Processing_Queue__c newTxn = new Transaction_Processing_Queue__c(); 
+        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(newTxn);
+        QueuedTransactionEditController ctrl = new QueuedTransactionEditController (stdCtrl);
+        
+        System.assertEquals(testContract.Id, ctrl.mTransaction.Lending_Contract_Number__c , 'Parent Contract of the Txn assert');
+        System.assertEquals(paymentTxnSetup.Id, ctrl.mTransaction.Transaction_Name__c , 'Txn Name assert');
+        System.assertEquals(4, ctrl.mTxnParamObjectList.size(), 'Txn Param List size assert');
+        
+        System.assertEquals(null, ctrl.onLoad(), 'No redirect on load');
+        ctrl.onSaveAsDraft();
+        ctrl.onQueueTxn();
+        ctrl.onPostTxn();
+        ctrl.onCancel();
         
         Test.stopTest();
     }
