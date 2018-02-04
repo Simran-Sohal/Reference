@@ -34,20 +34,25 @@ public with sharing class APRProcessor implements fsCore.ActionProcessor{
     }
     
     private void calculateAPR(Lending_Contract__c pContract){
-        CalculatorBuilder calcBuilder = new CalculatorBuilder(pContract);
-        calcBuilder.setCalculator(fsCore.Constants.CALCULATE_APR);
-        calcBuilder.setRepaymentDetails(mContractRepaymentsMap.get(pContract.Id));
-        
-        fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
-        calcObj = fsCore.Calculator.calculate(calcObj);
-        
-        if (!calcObj.getIsSuccess()){
-            String errMsg = (calcObj.getErrorStack().size() > 0) ? calcObj.getErrorStack().get(0) : 'APR Calculation failed';
-            addError(pContract.Id, errMsg, 'CALCULATION_ERROR');
+        try{
+            CalculatorBuilder calcBuilder = new CalculatorBuilder(pContract);
+            calcBuilder.setCalculator(fsCore.Constants.CALCULATE_APR);
+            calcBuilder.setRepaymentDetails(mContractRepaymentsMap.get(pContract.Id));
+
+            fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
+            calcObj = fsCore.Calculator.calculate(calcObj);
+
+            if (!calcObj.getIsSuccess()){
+                String errMsg = (calcObj.getErrorStack().size() > 0) ? calcObj.getErrorStack().get(0) : 'APR Calculation failed';
+                addError(pContract.Id, errMsg, 'CALCULATION_ERROR');
+            }
+            else {
+                pContract.Current_Annual_Percent_Rate__c = calcObj.getCalculatorMain().fsCore__Annual_Percent_Rate__c;
+                mContractForUpdate.add(pContract);
+            }
         }
-        else {
-            pContract.Current_Annual_Percent_Rate__c = calcObj.getCalculatorMain().fsCore__Annual_Percent_Rate__c;
-            mContractForUpdate.add(pContract);
+        catch (Exception e){
+            addErrors(new List<fsCore.ErrorObject>{new fsCore.ErrorObject(pContract.Id, e)});
         }
     }
 
