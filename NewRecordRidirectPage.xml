@@ -1,0 +1,4 @@
+<apex:page standardController="Account" lightningStylesheets="true" 
+           action="{!if($CurrentPage.parameters.RecordType != '012280000015MPR', URLFOR('/001/e',null,[RecordType=$CurrentPage.parameters.RecordType],true),'')}" >
+    <apex:outputLabel value="Cannot create record for this record type"/>
+</apex:page>
