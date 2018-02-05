@@ -1,9 +1,9 @@
-public with sharing class CalculatorBuilder {
+public with sharing class ContractCalculatorBuilder {
 
     private Lending_Contract__c mContract;
     private fsCore.CalculatorObject mCalcObject;
     
-    public CalculatorBuilder(Lending_Contract__c pContract){
+    public ContractCalculatorBuilder(Lending_Contract__c pContract){
         mContract = pContract;
         mCalcObject = new fsCore.CalculatorObject();
     }
@@ -12,11 +12,9 @@ public with sharing class CalculatorBuilder {
         return mCalcObject;
     }
     
-    public CalculatorBuilder setCalculator(String pCalculationTask){
-    
+    public ContractCalculatorBuilder setCalculator(String pCalculationTask){
         fsCore__Calculator__c calc = new fsCore__Calculator__c();
         calc.fsCore__Task__c = pCalculationTask;
-        
         calc.fsCore__Annual_Percent_Rate__c = (mContract.Current_Annual_Percent_Rate__c == null ? 0.00 : mContract.Current_Annual_Percent_Rate__c);
         calc.fsCore__Balloon_Amount__c = (mContract.Current_Balloon_Amount__c == null ? 0.00 : mContract.Current_Balloon_Amount__c);
         calc.fsCore__Balloon_Method__c = mContract.Balloon_Method__c;
@@ -58,13 +56,9 @@ public with sharing class CalculatorBuilder {
         
         mCalcObject.setCalculatorMain(calc);
 
-        BusinessHours bizHrs = fsCore.SpectraCoreUtil.getBusinessHours(mContract.Branch_Code__c);
-        List<Holiday> bizHolidayList = fsCore.SpectraCoreUtil.getBusinessHolidayList(mContract.Branch_Code__c);
         String adjustmentMethod = mContract.Holiday_Adjustment_Daily_Cycle__c;
         adjustmentMethod = String.IsBlank(adjustmentMethod) ? fsCore.Constants.HOLIDAY_ADJUSTMENT_NO_CHANGE : adjustmentMethod;
         
-        mCalcObject.setBusinessHours(bizHrs);
-        mCalcObject.setBizHolidayList(bizHolidayList);
         if(mCalcObject.getCalculatorMain().fsCore__Payment_Frequency__c == fsCore.Constants.CYCLE_DAILY) { 
             mCalcObject.setHolidayAdjustmentMethod(adjustmentMethod);
         }
@@ -72,52 +66,71 @@ public with sharing class CalculatorBuilder {
         return this;
     }
     
-    public void setInterestStartDate(Date pStartDate){
+    public ContractCalculatorBuilder setBusinessHour(BusinessHours pBizHrs){
+        this.mCalcObject.setBusinessHours(pBizHrs);
+        return this;
+    }
+    
+    public ContractCalculatorBuilder setHolidays(List<Holiday> pBizHolidayList){
+        this.mCalcObject.setBizHolidayList(pBizHolidayList);
+        return this;
+    }
+
+    public ContractCalculatorBuilder setInterestStartDate(Date pStartDate){
         this.getCalculatorObject().getCalculatorMain().fsCore__Start_Date__c = pStartDate;
         this.getCalculatorObject().getCalculatorMain().fsCore__Interest_Start_Date__c = pStartDate;
-
+        return this;
     }
     
-    public void setBalloonMethod(String pBalloonMethod){
-        this.getCalculatorObject().getCalculatorMain().fsCore__Balloon_Method__c  = pBalloonMethod;
-    }
-    
-    public void setTerm(Integer pTerm){
+    public ContractCalculatorBuilder setTerm(Integer pTerm){
         this.getCalculatorObject().getCalculatorMain().fsCore__Term__c = pTerm;
+        return this;
     }    
     
-    public void setFrequency(String pPaymentFrequency){
-        this.getCalculatorObject().getCalculatorMain().fsCore__Payment_Frequency__c = pPaymentFrequency;
-    }    
-
-    public void setRate(Decimal pRate){
+    public ContractCalculatorBuilder setRate(Decimal pRate){
         this.getCalculatorObject().getCalculatorMain().fsCore__Rate__c = pRate;
+        return this;
     }    
     
-    public void setSupplementaryInterest(Decimal pInterestAmount){
-        this.getCalculatorObject().getCalculatorMain().fsCore__Supplementary_Interest_Amount__c = pInterestAmount;
-    }
-    
-    public void setPaymentAmount(Decimal pPaymentAmount){
+    public ContractCalculatorBuilder setPaymentAmount(Decimal pPaymentAmount){
         this.getCalculatorObject().getCalculatorMain().fsCore__Payment_Amount__c = pPaymentAmount;
+        return this;
     }    
 
-    public void setFinancedAmount(Decimal pFinancedAmount){
-        this.getCalculatorObject().getCalculatorMain().fsCore__Financed_Amount__c = pFinancedAmount;
-    }   
-    
-    public void setPaymentStartDate(Date pPaymentStartDate){
+    public ContractCalculatorBuilder setPaymentStartDate(Date pPaymentStartDate){
         system.debug(logginglevel.error,'this.getCalculatorObject -->'+this.getCalculatorObject());
         system.debug(logginglevel.error,'this.getCalculatorObject getCalculatorMain() -->'+this.getCalculatorObject().getCalculatorMain());
         this.getCalculatorObject().getCalculatorMain().fsCore__Payment_Start_Date__c = pPaymentStartDate;
         this.getCalculatorObject().getCalculatorMain().fsCore__Payment_Due_Day__c = pPaymentStartDate.day();
+        return this;
     }   
     
-    public void setBalloonAmount(Decimal pBalloonAmount){
+    public ContractCalculatorBuilder setFrequency(String pPaymentFrequency){
+        this.getCalculatorObject().getCalculatorMain().fsCore__Payment_Frequency__c = pPaymentFrequency;
+        return this;
+    }    
+
+    public ContractCalculatorBuilder setFinancedAmount(Decimal pFinancedAmount){
+        this.getCalculatorObject().getCalculatorMain().fsCore__Financed_Amount__c = pFinancedAmount;
+        return this;
+    }   
+    
+    public ContractCalculatorBuilder setSupplementaryInterest(Decimal pInterestAmount){
+        this.getCalculatorObject().getCalculatorMain().fsCore__Supplementary_Interest_Amount__c = pInterestAmount;
+        return this;
+    }
+    
+    public ContractCalculatorBuilder setBalloonMethod(String pBalloonMethod){
+        this.getCalculatorObject().getCalculatorMain().fsCore__Balloon_Method__c  = pBalloonMethod;
+        return this;
+    }
+    
+    public ContractCalculatorBuilder setBalloonAmount(Decimal pBalloonAmount){
         this.getCalculatorObject().getCalculatorMain().fsCore__Balloon_Amount__c = pBalloonAmount;
+        return this;
     }             
     
-    public CalculatorBuilder setPredefinedPayments(List<Contract_Repayment_Schedule__c> pPredefinedPmtList){
+    public ContractCalculatorBuilder setPredefinedPayments(List<Contract_Repayment_Schedule__c> pPredefinedPmtList){
         List<fsCore__Calculator_Repayment_Schedule__c> calcPredefinedPmtList = new List<fsCore__Calculator_Repayment_Schedule__c>();
         
         for (Contract_Repayment_Schedule__c predefinedPmt : pPredefinedPmtList){
@@ -135,7 +148,7 @@ public with sharing class CalculatorBuilder {
         return this;
     }
 
-    public CalculatorBuilder setPaymentPreferences(List<Contract_Payment_Preference__c> pPaymentPrefList){
+    public ContractCalculatorBuilder setPaymentPreferences(List<Contract_Payment_Preference__c> pPaymentPrefList){
         List<fsCore__Calculator_Payment_Preference__c> calcPaymentPrefList = new List<fsCore__Calculator_Payment_Preference__c>();
 
         for (Contract_Payment_Preference__c paymentPref : pPaymentPrefList){
@@ -156,7 +169,7 @@ public with sharing class CalculatorBuilder {
         return this;
     }
 
-    public CalculatorBuilder setHolidayPreferences(List<Contract_Holiday_Preference__c> pHolidayPrefList){
+    public ContractCalculatorBuilder setHolidayPreferences(List<Contract_Holiday_Preference__c> pHolidayPrefList){
         List<fsCore__Calculator_Payment_Holiday_Preference__c> calcHolidayPrefList = new List<fsCore__Calculator_Payment_Holiday_Preference__c>();
         
         for (Contract_Holiday_Preference__c holidayPref : pHolidayPrefList){
@@ -175,7 +188,7 @@ public with sharing class CalculatorBuilder {
         return this;
     }
 
-    public CalculatorBuilder setRatePreferences(List<Contract_Rate_Preference__c> pRatePrefList){
+    public ContractCalculatorBuilder setRatePreferences(List<Contract_Rate_Preference__c> pRatePrefList){
         List<fsCore__Calculator_Rate_Preference__c> calcRatePrefList = new List<fsCore__Calculator_Rate_Preference__c>();
 
         for (Contract_Rate_Preference__c ratePref : pRatePrefList){
@@ -191,7 +204,7 @@ public with sharing class CalculatorBuilder {
         return this;
     }
 
-    public CalculatorBuilder setRepaymentSchedule(List<Contract_Repayment_Schedule__c> pRepayScheduleList){
+    public ContractCalculatorBuilder setRepaymentSchedule(List<Contract_Repayment_Schedule__c> pRepayScheduleList){
         List<fsCore__Calculator_Repayment_Schedule__c> calcRepaySchtList = new List<fsCore__Calculator_Repayment_Schedule__c>();
         
         for (Contract_Repayment_Schedule__c repaySch : pRepayScheduleList){
@@ -209,7 +222,7 @@ public with sharing class CalculatorBuilder {
         return this;
     }
 
-    public CalculatorBuilder setRepaymentDetails(List<Contract_Repayment__c> pRepayDetailList){
+    public ContractCalculatorBuilder setRepaymentDetails(List<Contract_Repayment__c> pRepayDetailList){
         List<fsCore__Calculator_Repayment_Detail__c> calcRepayDtlList = new List<fsCore__Calculator_Repayment_Detail__c>();
         
         for (Contract_Repayment__c repayDtl : pRepayDetailList){
