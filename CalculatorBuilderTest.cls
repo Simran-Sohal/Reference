@@ -1,5 +1,5 @@
 @isTest(seeAllData=false)
-private class CalculatorBuilderTest{
+private class ContractCalculatorBuilderTest{
 
     @testSetup static void createTestData(){
         String errMsg = Constants.BLANK_STRING;
@@ -63,8 +63,15 @@ private class CalculatorBuilderTest{
         List<Contract_Holiday_Preference__c> holidayPref = ContractRelatedRecordQueryUtil.getHolidayPreferences(testContract.Id);
         
         Test.startTest();
-        CalculatorBuilder calcBuilder = new CalculatorBuilder(pContract);
+        ContractCalculatorBuilder calcBuilder = new ContractCalculatorBuilder(pContract);
         calcBuilder.setCalculator(fsCore.Constants.CALCULATE_PAYMENT_AMOUNT);
+        
+        BusinessHours bizHrs = fsCore.SpectraCoreUtil.getBusinessHours(testContract.Branch_Code__c);
+        calcBuilder.setBusinessHour(bizHrs);
+        
+        List<Holiday> bizHolidayList = fsCore.SpectraCoreUtil.getBusinessHolidayList(testContract.Branch_Code__c);
+        calcBuilder.setHolidays(bizHolidayList);
+        
         calcBuilder.setRepaymentDetails(repayments);
         calcBuilder.setRepaymentSchedule(repaySchedule);
         calcBuilder.setRatePreferences(ratePref);
@@ -75,10 +82,26 @@ private class CalculatorBuilderTest{
         calcBuilder.setPredefinedPayments(repaySchedule);
         calcBuilder.setPredefinedPayments(new List<Contract_Repayment_Schedule__c>);
         
-
+        calcBuilder.setInterestStartDate(testContract.Contract_Date__c);
+        calcBuilder.setTerm(testContract.Current_Term__c);
+        calcBuilder.setRate(testContract.Current_Rate__c);
+        calcBuilder.setPaymentAmount(testContract.Current_Payment_Amount__c);
+        calcBuilder.setPaymentStartDate(testContract.Next_Payment_Due_Date__c);
+        calcBuilder.setFrequency(testContract.Current_Payment_Frequency__c);
+        calcBuilder.setFinancedAmount(testContract.Financed_Amount__c);
+        calcBuilder.setSupplementaryInterest(0.00);
+        calcBuilder.setBalloonAmount(testContract.Current_Balloon_Method__c);
+        calcBuilder.setBalloonMethod(testContract.Balloon_Method__c);
+                  
         fsCore.CalculatorObject calcObj = calcBuilder.getCalculatorObject();
-        System.assertEquals();
         
+        System.assertNotEquals(null, calcObj);
+        System.assertEquals(testContract.Current_Term__c, calcObj.getCalculatorMain().fsCore__Term__c);
+        System.assertEquals(testContract.Current_Rate__c, calcObj.getCalculatorMain().fsCore__Rate__c);
+        System.assertEquals(testContract.Current_Payment_Amount__c, calcObj.getCalculatorMain().fsCore__Payment_Amount__c);
+        System.assertEquals(testContract.Next_Payment_Due_Date__c, calcObj.getCalculatorMain().fsCore__Payment_Start_Date__c);
+        System.assertEquals(testContract.Current_Payment_Frequency__c, calcObj.getCalculatorMain().fsCore__Payment_Frequency__c);
+        System.assertEquals(0.00, calcObj.getCalculatorMain().fsCore__Supplementary_Interest_Amount__c);
         Test.stopTest();
     }
 }
