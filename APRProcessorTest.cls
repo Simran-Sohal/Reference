@@ -27,5 +27,17 @@ private class APRProcessorTest{
     @isTest
     static void testAPRCalc(){
         Lending_Contract__c testContract = TestQueryHelper.getTestLendingContracts().get('AT1701000001');
+        
+        Test.startTest();
+        fsCore.ActionInput acInput = new fsCore.ActionInput();
+        acInput.addRecord(testContract.Id);
+        
+        APRProcessor aprCalc = new APRProcessorTest();
+        aprCalc.setInput(acInput);
+        aprCalc.process();
+        
+        fsCore.ActionInput acOutput = aprCalc.getOutput();
+        System.assertEquals(true, acOutput.getIsSuccess(), 'Processing completed successfully');
+        Test.stopTest();
     }
 }
