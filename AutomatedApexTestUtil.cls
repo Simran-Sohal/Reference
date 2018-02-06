@@ -1,15 +1,17 @@
 /*
- * This class has methods to submit the apex test classes for execution
- * and process the result of that last execution of the test classes
+ * This class has methods to submit the apex test classes for execution and processing
+ * the result of that last execution of the test classes
  *
- * Test classes to be executed automatically should be maintained in 
- * a list type Custom Setting Automated_Apex_Test__c
- *     Automated_Apex_Test__c.Name -> Name of the test class
- *     Automated_Apex_Test__c.LastTestJobID__c -> Id of the Async Job that executed the test class most recently
- *     Automated_Apex_Test__c.IsReported__c -> Determines whethere the results of the last test job are reported or not
+ * Test classes to be executed automatically should be maintained in a list type 
+ * Custom Setting AutomatedApexTest__c
+ *     AutomatedApexTest__c.Name             -> Name of the test class
+ *     AutomatedApexTest__c.LastTestJobID__c -> Id of the Async Job that executed the test class most recently
+ *     AutomatedApexTest__c.IsReported__c    -> Determines whethere the results of the last test job are reported or not
  *
  * Here, we are reporting the Apex Test Results via email.
- * Enhance the processing logic to report the test failures
+ * Enhance the processing logic to report the test failures.
+ *
+ * Write Schedulable classes to enqueue test classes and process the test results
  */
 public with sharing class AutomatedApexTestUtil {
 
@@ -17,7 +19,7 @@ public with sharing class AutomatedApexTestUtil {
      * Method to enqueue all the test classes in Automated Apex Test custom setting
      */ 
     public static void enqueueTests() {
-        Map<String, Automated_Apex_Test__c> autoTestsMap = Automated_Apex_Test__c.getAll();
+        Map<String, AutomatedApexTest__c> autoTestsMap = AutomatedApexTest__c.getAll();
         
         List<ApexClass> testClasses = [SELECT Id, Name FROM ApexClass 
                                         WHERE Name IN :autoTestsMap.keySet()];
@@ -54,9 +56,9 @@ public with sharing class AutomatedApexTestUtil {
      */ 
     public static void processTestResults(){
         Set<Id> testJobIds = new Set<Id>();
-        List<Automated_Apex_Test__c> testsToBeReported = new List<Automated_Apex_Test__c>();
+        List<AutomatedApexTest__c> testsToBeReported = new List<AutomatedApexTest__c>();
         
-        for (Automated_Apex_Test__c autoTest : Automated_Apex_Test__c.getAll().values()){
+        for (AutomatedApexTest__c autoTest : AutomatedApexTest__c.getAll().values()){
             if (!autoTest.IsReported__c && String.IsNotBlank(autoTest.LastTestJobID__c)
                     && (autoTest.LastTestJobID__c instanceOf Id)){
                 testJobIds.add(autoTest.LastTestJobID__c);
@@ -100,7 +102,7 @@ public with sharing class AutomatedApexTestUtil {
         sendTestResultEmail(testResults);
         
         //mark tests as reported
-        for (Automated_Apex_Test__c autoTest : testsToBeReported){
+        for (AutomatedApexTest__c autoTest : testsToBeReported){
             autoTest.IsReported__c = true;
         }
         update testsToBeReported;
