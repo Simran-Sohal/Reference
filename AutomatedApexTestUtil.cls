@@ -1,3 +1,16 @@
+/*
+ * This class has methods to submit the apex test classes for execution
+ * and process the result of that last execution of the test classes
+ *
+ * Test classes to be executed automatically should be maintained in 
+ * a list type Custom Setting Automated_Apex_Test__c
+ *     Automated_Apex_Test__c.Name -> Name of the test class
+ *     Automated_Apex_Test__c.LastTestJobID__c -> Id of the Async Job that executed the test class most recently
+ *     Automated_Apex_Test__c.IsReported__c -> Determines whethere the results of the last test job are reported or not
+ *
+ * Here, we are reporting the Apex Test Results via email.
+ * Enhance the processing logic to report the test failures
+ */
 public with sharing class AutomatedApexTestUtil {
 
     /*
@@ -29,8 +42,8 @@ public with sharing class AutomatedApexTestUtil {
             }
             
             for(ApexTestQueueItem item : [SELECT ApexClass.Name, ParentJobId FROM ApexTestQueueItem WHERE Id IN :queuedItemsIds]){
-                autoTestsMap.get(item.ApexClass.Name).Last_Test_Job_ID__c = item.ParentJobId;
-                autoTestsMap.get(item.ApexClass.Name).Is_Reported__c = false;
+                autoTestsMap.get(item.ApexClass.Name).LastTestJobID__c = item.ParentJobId;
+                autoTestsMap.get(item.ApexClass.Name).IsReported__c = false;
             }
             update autoTestsMap.values();
         }
@@ -44,9 +57,9 @@ public with sharing class AutomatedApexTestUtil {
         List<Automated_Apex_Test__c> testsToBeReported = new List<Automated_Apex_Test__c>();
         
         for (Automated_Apex_Test__c autoTest : Automated_Apex_Test__c.getAll().values()){
-            if (!autoTest.Is_Reported__c && String.IsNotBlank(autoTest.Last_Test_Job_ID__c)
-                    && (autoTest.Last_Test_Job_ID__c instanceOf Id)){
-                testJobIds.add(autoTest.Last_Test_Job_ID__c);
+            if (!autoTest.IsReported__c && String.IsNotBlank(autoTest.LastTestJobID__c)
+                    && (autoTest.LastTestJobID__c instanceOf Id)){
+                testJobIds.add(autoTest.LastTestJobID__c);
                 testsToBeReported.add(autoTest);
             }
         }
@@ -88,7 +101,7 @@ public with sharing class AutomatedApexTestUtil {
         
         //mark tests as reported
         for (Automated_Apex_Test__c autoTest : testsToBeReported){
-            autoTest.Is_Reported__c = true;
+            autoTest.IsReported__c = true;
         }
         update testsToBeReported;
     }
