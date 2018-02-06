@@ -219,4 +219,5 @@ public with sharing class AutomatedApexTestUtil {
         }       
         
         return testResultBody;
-    }    
+    }
+}
