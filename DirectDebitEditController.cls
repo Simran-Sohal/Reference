@@ -1,39 +1,43 @@
-public with sharing class DirectDebitEditController extends SingleRecordControllerBase{
+public with sharing class DirectDebitEditController extends ContractRelatedControllerBase{
     private static final String CLASS_NAME = 'DirectDebitEditController';
 
-    public Lending_Application__c mApplication {get; private set;}
-    public LendingApplicationDirectDebitObject mAppDirectDebitObject {get; set;}
-    private Lending_Application_Direct_Debit__c mDirectDebit;
-
-    private Map<Id, Lending_Application_Customer__c> mCustomerMap;
+    public Contract_Direct_Debit__c mDirectDebit {get; set;}
+    
+    private Map<Id, Contract_Customer__c> customerMap;
+    private List<SelectOption> mCustomerSelectList;
+    private Map<Id, fsCore__Bank_Account__c> mBankAccountMap;
+    private List<SelectOption> mBankAccountSelectList;
+    
+    private Map<Id, List<fsCore__Bank_Account__c>> mCustomerBankAccountsMap;
+    private fsCore__Bank_Account__c mSelectedBankAccount;
  
     public DirectDebitEditController(ApexPages.StandardController pStdController){
         super(pStdController);
-        this.mDirectDebit = (Lending_Application_Direct_Debit__c)pStdController.getRecord();
+        this.mDirectDebit = (Contract_Direct_Debit__c)pStdController.getRecord();
         init();
     }
     
     private void init(){
-        if (mContextRecordId != null){
-            mDirectDebit = (Lending_Application_Direct_Debit__c) SObjectQueryUtil.getSObjectRecord(mContextRecordId);
+        if (mDirectDebit.Id != null){
+            mDirectDebit = (Contract_Direct_Debit__c) fsCore.SObjectQueryUtil.getSObjectRecord(mDirectDebit.Id);
         }
 
-        //get parent application
-        Id applicationId;
-        if (mPageURLParamMap.containsKey(Constants.PAGE_PARENT_ID)){
-            applicationId = Id.valueOf(mPageURLParamMap.get(Constants.PAGE_PARENT_ID));
+        //get parent contract
+        Id contractId;
+        if (mPageURLParamMap.containsKey(fsCore.Constants.PAGE_PARENT_ID)){
+            contractId = Id.valueOf(mPageURLParamMap.get(fsCore.Constants.PAGE_PARENT_ID));
         }
-        else if (mDirectDebit.Lending_Application_Number__c != null){
-            applicationId = mDirectDebit.Lending_Application_Number__c;
+        else if (mDirectDebit.Lending_Contract_Number__c != null){
+            contractId = mDirectDebit.Lending_Contract_Number__c;
         } 
         else {
-            throw new CustomException(Label.Parent_Application_Id_Missing);
+            throw new ServicingException(Label.Parent_Contract_Id_Missing);
         }
         
-        mApplication = (Lending_Application__c) SObjectQueryUtil.getSObjectRecord(applicationId);
-        mCustomerMap = new Map<Id, Lending_Application_Customer__c>(LendingApplicationCustomerUtil.getCustomers(mApplication.Id));
+        setLendingContract(contractId);
+        mCustomerMap = new Map<Id, Contract_Customer__c>(ContractRelatedRecordQueryUtil.getCustomers(contractId));
 
-        if(mDirectDebit.Id == null){ //new record
+        if(mDirectDebitObject.mDirectDebit.Id == null){ //new record
             setDefaultValues();
         }
         setDirectDebitObject();
@@ -41,17 +45,17 @@ public with sharing class DirectDebitEditController extends SingleRecordControll
 
     private void setDefaultValues(){
         Map<String, RecordType> recTypeMap = RecordTypeUtil.getInstance()
-                                                   .getRecordTypeMapByName(Schema.SObjectType.Lending_Application_Direct_Debit__c.getName());
+                                                   .getRecordTypeMapByName(Schema.SObjectType.Contract_Direct_Debit__c.getName());
         
-        mDirectDebit = new Lending_Application_Direct_Debit__c();
-        mDirectDebit.RecordTypeId = recTypeMap.get(Constants.RECORD_TYPE_ACTIVE).Id;
-        mDirectDebit.Lending_Application_Number__c = mApplication.Id;
-        mDirectDebit.Debit_Amount_Source__c = null;
+        mDirectDebitObject.mDirectDebit = new Lending_Application_Direct_Debit__c();
+        mDirectDebitObject.mDirectDebit.RecordTypeId = recTypeMap.get(Constants.RECORD_TYPE_ACTIVE).Id;
+        mDirectDebitObject.mDirectDebit.Lending_Application_Number__c = mApplication.Id;
+        mDirectDebitObject.mDirectDebit.Debit_Amount_Source__c = null;
         //if there is only one customer assign it by default
         if (mCustomerMap.size() == 1){
-            mDirectDebit.Customer_Reference_Number__c = mCustomerMap.values().get(0).Id;
+            mDirectDebitObject.mDirectDebit.Customer_Reference_Number__c = mCustomerMap.values().get(0).Id;
         } else {
-            for (Lending_Application_Customer__c customer : mCustomerMap.values()){
+            for (Customer_Customer__c customer : mCustomerMap.values()){
                 if (customer.Is_Primary__c){
                     mDirectDebit.Customer_Reference_Number__c = customer.Id;
                     break;
