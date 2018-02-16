@@ -73,11 +73,12 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
         mBankAccountMap = new Map<Id, fsCore__Bank_Account__c>();
         if (mDirectDebit.Customer_Reference_Number__c != null 
                 && mCustomerMap.containsKey(mDirectDebit.Customer_Reference_Number__c)){
-            if (mCustomerMap.get(mDirectDebit.Customer_Reference_Number__c).Account_Name__c != null){
-                mBankAccountMap.putAll(fsCore.BankAccountUtil.getBankAccountForAccount(mCustomerMap.get(mDirectDebit.Customer_Reference_Number__c).Account_Name__c));
+            Contract_Customer__c customer = mCustomerMap.get(mDirectDebit.Customer_Reference_Number__c);
+            if (customer.Account_Name__c != null){
+                mBankAccountMap.putAll(fsCore.BankAccountUtil.getAccountBankAccountListMap(new Set<Id>{customer.Account_Name__c}));
             }
-            if (mCustomerMap.get(mDirectDebit.Customer_Reference_Number__c).Contact_Name__c != null){
-                mBankAccountMap.putAll(fsCore.BankAccountUtil.getBankAccountForContact(mCustomerMap.get(mDirectDebit.Customer_Reference_Number__c).Contact_Name__c));
+            if (customer.Contact_Name__c != null){
+                mBankAccountMap.putAll(fsCore.BankAccountUtil.getContactBankAccountListMap(new Set<Id>{customer.Contact_Name__c}));
             }
         }
 
