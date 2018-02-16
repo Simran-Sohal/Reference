@@ -1,15 +1,16 @@
-public with sharing class ContractStatementController extends ContractRelatedControllerBase{
-    private static final String CLASS_NAME = 'ContractStatementController';
+public with sharing class GenerateStatementController extends ContractRelatedControllerBase{
+    private static final String CLASS_NAME = 'GenerateStatementController';
     private Lending_Contract__c mThisContract;
     
     public List<SelectOption> mDateRangeOptions {get; private set;}
     public String mSelectedDateRange {get; set;}
     public Boolean mIsGenerated {get; set;}
     public Boolean mIsSaved {get; set;}
+    private Map<String, String> mAllowedDateRanges;
     
-    public ContractStatementObject mStatement {get; private set;}
+    public StatementObject mStatement {get; private set;}
     
-    public ContractStatementController(ApexPages.StandardController pStdController){
+    public GenerateStatementController(ApexPages.StandardController pStdController){
         super(pStdController);
         mThisContract = (Lending_Contract__c)pStdController.getRecord();
         init();
@@ -29,15 +30,14 @@ public with sharing class ContractStatementController extends ContractRelatedCon
     }
     
     private void setDateRangeOptions(){
+        mAllowedDateRanges = StatementUtil.getAllowedDateRanges();
+        
         mDateRangeOptions = new List<SelectOption>();
         mDateRangeOptions.add(new SelectOption(Constants.BLANK_STRING, '-- Select an option --'));
-        mDateRangeOptions.add(new SelectOption('START_TILL_TODAY', 'Contract start till today'));
-        mDateRangeOptions.add(new SelectOption('LAST_30_DAYS', 'Last 30 Days'));
-        mDateRangeOptions.add(new SelectOption('LAST_60_DAYS', 'Last 60 Days'));
-        mDateRangeOptions.add(new SelectOption('LAST_90_DAYS', 'Last 90 Days'));
-        mDateRangeOptions.add(new SelectOption('THIS_FISCAL_YEAR', 'This Fiscal Year'));
-        mDateRangeOptions.add(new SelectOption('LAST_FISCAL_YEAR', 'Last Fiscal Year'));
-        mDateRangeOptions.add(new SelectOption('CUSTOM_DATE_RANGE', 'Custom Date Range'));
+        
+        for (String dateRangeCode : mDateRangeOptions.keySet()){
+            mDateRangeOptions.add(new SelectOption(dateRangeCode, mDateRangeOptions.get(dateRangeCode)));
+        }
     }
 
     public PageReference onGenerate(){
@@ -45,13 +45,27 @@ public with sharing class ContractStatementController extends ContractRelatedCon
             addErrorToPage('Please select a date range option');
             return null;
         }
-        mStatement = ContractStatementUtil.getStatement(getLendingContract(), mSelectedDateRange);
+        
+        mSelectedDateRange = String.escapeSingleQuotes(mSelectedDateRange);
+        if (!mAllowedDateRanges.containsKey(mSelectedDateRange)){
+            addErrorToPage('Please select a valid date range option');
+            return null;
+        }
+        
+        StatementUtil.DateRange statementDateRange = StatementUtil.getDateRange(getBusinessDate()
+                                                                              , mSelectedDateRange);
+        
+        if (mSelectedDateRange.equalsIgnoreCase('START_TILL_TODAY')){
+            statementDateRange.formDate = getLendingContract().Contract_Date__c;
+        }
+        
+        mStatement = StatementUtil.getStatement(getLendingContract().Id, statementDateRange.formDate, statementDateRange.toDate);
         mIsGenerated = true;
     }
     
     public PageReference onDownloadAsPDF(){
         if (mIsGenerated){
-            String pdfPageName = ContractStatementUtil.getPDFStatementPage();
+            String pdfPageName = StatementUtil.getPDFStatementPage();
             PageReference pdfPage = new PageReference('/apex/' + pdfPageName);
             pdfPage.getParameters().put('id', getLendingContract().Id);
             pdfPage.getParameters().put('fromdate', mStatement.statementFromDate);
@@ -63,7 +77,7 @@ public with sharing class ContractStatementController extends ContractRelatedCon
 
     public PageReference onSaveAsFile(){
         if (mIsGenerated){
-            String pdfPageName = ContractStatementUtil.getPDFStatementPage();
+            String pdfPageName = StatementUtil.getPDFStatementPage();
             PageReference pdfPage = new PageReference('/apex/' + pdfPageName);
             pdfPage.getParameters().put('id', getLendingContract().Id);
             pdfPage.getParameters().put('fromdate', mStatement.statementFromDate);
