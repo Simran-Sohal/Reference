@@ -37,11 +37,7 @@ public with sharing class StatementUtil{
         return fiscalYrDtRange;
     }
     
-    public static DateRange getDateRange(Date pContractStartDate
-                                       , Date pFiscalYearStartDate
-                                       , Date pFiscalYearEndDate
-                                       , Date pBusinessDate
-                                       , String pDateRangeCode){
+    public static DateRange getDateRange(Date pBusinessDate, String pDateRangeCode){
         DateRange dtRange = new DateRange();
         
         if (String.IsBlank(pDateRangeCode) || (String.IsNotBlank(pDateRangeCode) && !getAllowedDateRanges().conatinsKey(pDateRangeCode))){
@@ -49,7 +45,7 @@ public with sharing class StatementUtil{
         }
         
         if (pDateRangeCode.equalsIgnoreCase('START_TILL_TODAY')){
-            dtRange.fromDate = pContractStartDate;
+            dtRange.fromDate = pBusinessDate;
             dtRange.toDate = pBusinessDate;
         }
         else if (pDateRangeCode.equalsIgnoreCase('LAST_30_DAYS')){
@@ -69,12 +65,12 @@ public with sharing class StatementUtil{
             dtRange.toDate = pBusinessDate;
         }
         else if (pDateRangeCode.equalsIgnoreCase('THIS_FISCAL_YEAR')){
-            dtRange.fromDate = pFiscalYearStartDate;
-            dtRange.toDate = pFiscalYearEndDate;
+            dtRange = getCurrentFiscalYearDateRange(pBusinessDate);
         }
         else if (pDateRangeCode.equalsIgnoreCase('LAST_FISCAL_YEAR')){
-            dtRange.fromDate = Date.newInstance(pFiscalYearStartDate.year() - 1, pFiscalYearStartDate.month(), pFiscalYearStartDate.day());
-            dtRange.toDate = Date.newInstance(pFiscalYearEndDate.year() - 1, pFiscalYearEndDate.month(), pFiscalYearEndDate.day());
+            DateRange fiscalYrDtRange = getCurrentFiscalYearDateRange(pBusinessDate);
+            dtRange.fromDate = Date.newInstance(fiscalYrDtRange.fromDate.year() - 1, fiscalYrDtRange.fromDate.month(), fiscalYrDtRange.fromDate.day());
+            dtRange.toDate = Date.newInstance(fiscalYrDtRange.toDate.year() - 1, fiscalYrDtRange.toDate.month(), fiscalYrDtRange.toDate.day());
         }
         
         return dtRange;
