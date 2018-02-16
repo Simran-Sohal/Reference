@@ -4,11 +4,12 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
     public Contract_Direct_Debit__c mDirectDebit {get; set;}
     
     private Map<Id, Contract_Customer__c> mCustomerMap;
-    private List<SelectOption> mCustomerSelectList;
+    public List<SelectOption> mCustomerSelectList {get; private set;}
+    
     private Map<Id, fsCore__Bank_Account__c> mBankAccountMap;
-    private List<SelectOption> mBankAccountSelectList;
     private fsCore__Bank_Account__c mSelectedBankAccount;
- 
+    public List<SelectOption> mBankAccountSelectList {get; private set;}
+    
     public DirectDebitEditController(ApexPages.StandardController pStdController){
         super(pStdController);
         this.mDirectDebit = (Contract_Direct_Debit__c)pStdController.getRecord();
@@ -48,9 +49,6 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
         mCustomerSelectList.add(new SelectOption(Constants.BLANK_STRING, '-- Select a customer --'));
         for(Contract_Customer__c customer : mCustomerMap.values()){
             mCustomerSelectList.add(new SelectOption(customer.Id, customer.Customer_Name__c));
-            if (mDirectDebit.Customer_Reference_Number__c == null && customer.Is_Primary__c){
-                mDirectDebit.Customer_Reference_Number__c = customer.Id;
-            }
         }
     }
     
@@ -61,16 +59,12 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
         mDirectDebit = new Contract_Direct_Debit__c();
         mDirectDebit.RecordTypeId = recTypeMap.get(fsCore.Constants.RECORD_TYPE_ACTIVE).Id;
         mDirectDebit.Lending_Contract_Number__c = getLendingContract().Id;
-        mDirectDebit.mDirectDebit.Debit_Amount_Source__c = null;
-        //if there is only one customer assign it by default
-        if (mCustomerMap.size() == 1){
-            mDirectDebit.Customer_Reference_Number__c = mCustomerMap.values().get(0).Id;
-        } else {
-            for (Customer_Customer__c customer : mCustomerMap.values()){
-                if (customer.Is_Primary__c){
-                    mDirectDebit.Customer_Reference_Number__c = customer.Id;
-                    break;
-                }
+        mDirectDebit.Debit_Amount_Source__c = null;
+        //assign the primary customer by default
+        for (Customer_Customer__c customer : mCustomerMap.values()){
+            if (customer.Is_Primary__c){
+                mDirectDebit.Customer_Reference_Number__c = customer.Id;
+                break;
             }
         }
     }
@@ -93,7 +87,6 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
             for (fsCore__Bank_Account__c bankAcct : mBankAccountMap.values()){
                 if (bankAcct.fsCore__Is_Primary__c){
                     mDirectDebit.Bank_Account_Name__c = bankAcct.Id;
-                    mSelectedBankAccount = bankAcct;
                     break;
                 }
             }
@@ -109,14 +102,39 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
         }
     }    
     
-    public override List<ErrorObject> saveRecord(){
-        List<ErrorObject> errorList = new List<ErrorObject>();
-        List<Lending_Application_Direct_Debit__c> directDebitForUpsert = new List<Lending_Application_Direct_Debit__c>();
-        directDebitForUpsert.add(mAppDirectDebitObject.mDirectDebit);
+    public PageReference onCustomerChange(){
+        setBankAccountSelectList();
+        setSelectedBankAccount();
+        return null;
+    }
+
+    public PageReference onBankAccountChange(){
+        setSelectedBankAccount();
+        return null;
+    }
+    
+    public PageReference onAmountSourceChange(){
+        if (String.IsNotBlank(mDirectDebit.Debit_Amount_Source__c) && mDirectDebit.Debit_Amount_Source__c.equalsIgnoreCase(Constants.DEBIT_AMOUNT_SOURCE_REPAYMENT)){
+            mDirectDebit.Debit_Amount__c = getLendingContract().Current_Payment_Amount__c;
+        }
+        else if (String.IsNotBlank(mDirectDebit.Debit_Amount_Source__c) && mDirectDebit.Debit_Amount_Source__c.equalsIgnoreCase(Constants.DEBIT_AMOUNT_SOURCE_TOTAL_DUE)){
+            mDirectDebit.Debit_Amount__c = getLendingContract().Total_Due_Amount__c;
+        }
+        return null;
+    }
+
+    public fsCore__Bank_Account__c getSelectedBankAccount(){
+        return mSelectedBankAccount;
+    }
+    
+    public override List<fsCore.ErrorObject> saveRecord(){
+        List<Contract_Direct_Debit__c> directDebitForUpsert = new List<Contract_Direct_Debit__c>();
+        directDebitForUpsert.add(mDirectDebit);
         
-        DMLResult directDebitSaveRslt = LendingApplicationDirectDebitDMLWrapper.getInstance().upsertData(directDebitForUpsert);
+        List<fsCore.ErrorObject> errorList = new List<fsCore.ErrorObject>();
+        fsCore.DMLResult directDebitSaveRslt = ContractDirectDebitDMLWrapper.getInstance().upsertData(directDebitForUpsert);
         if (directDebitSaveRslt.hasErrors()) { errorList = directDebitSaveRslt.getErrorList(); }
-        super.setContextRecordId(mAppDirectDebitObject.mDirectDebit.Id);
+        super.setContextRecordId(mDirectDebit.Id);
 
         return errorList;
     }
@@ -126,6 +144,6 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
     }
 
     public override PageReference getReturnPageURL(){
-        return new PageReference('/' + Schema.sObjectType.Lending_Application__c.getKeyPrefix() + '/l');
+        return new PageReference('/' + Schema.sObjectType.Lending_Contract__c.getKeyPrefix() + '/l');
     }     
 }
