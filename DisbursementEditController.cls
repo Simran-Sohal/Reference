@@ -1,169 +1,199 @@
-public with sharing class DisbursementEditController extends SingleRecordControllerBase{
+public with sharing class DisbursementEditController extends ContractRelatedControllerBase{
     private static final String CLASS_NAME = 'DisbursementEditController';
 
-    public Lending_Application__c mApplication {get; private set;}
-    public LendingApplicationDisbursementObject mAppDisbObject {get; set;}
-    private Lending_Application_Disbursement__c mDisbursement;
+    public Contract_Disbursement__c mDisbursement {get; set;}
+    public List<SelectOption> mCustomerSelectList {get; private set;}
+    public List<SelectOption> mContactSelectList {get; private set;}
+    public List<SelectOption> mBankAccountSelectList {get; private set;}
+    
+    private Map<Id, Contract_Customer__c> mCustomerMap;
+    private Map<Id, fsCore__Bank_Account__c> mBankAccountMap;
+    private fsCore__Bank_Account__c mSelectedBankAccount;
 
     public DisbursementEditController(ApexPages.StandardController pStdController){
         super(pStdController);
-        this.mDisbursement = (Lending_Application_Disbursement__c)pStdController.getRecord();
+        this.mDisbursement = (Contract_Disbursement__c)pStdController.getRecord();
         init();
     }
     
     private void init(){
-        if (mContextRecordId != null){
-            mDisbursement = (Lending_Application_Disbursement__c) SObjectQueryUtil.getSObjectRecord(mContextRecordId);
+        if (mDisbursement.Id != null){
+            mDisbursement = (Contract_Disbursement__c) fsCore.SObjectQueryUtil.getSObjectRecord(mDisbursement.Id);
         }
 
-        //get parent application
-        Id applicationId;
-        if (mPageURLParamMap.containsKey(Constants.PAGE_PARENT_ID)){
-            applicationId = Id.valueOf(mPageURLParamMap.get(Constants.PAGE_PARENT_ID));
+        //get parent contract
+        Id contractId;
+        if (mPageURLParamMap.containsKey(fsCore.Constants.PAGE_PARENT_ID)){
+            contractId = Id.valueOf(mPageURLParamMap.get(fsCore.Constants.PAGE_PARENT_ID));
         }
-        else if (mDisbursement.Lending_Application_Number__c != null){
-            applicationId = mDisbursement.Lending_Application_Number__c;
+        else if (mDisbursement.Lending_Contract_Number__c != null){
+            contractId = mDisbursement.Lending_Contract_Number__c;
         } 
         else {
-            throw new CustomException(Label.Parent_Application_Id_Missing);
+            throw new ServicingException(Label.Parent_Contract_Id_Missing);
         }
         
-        mApplication = (Lending_Application__c) SObjectQueryUtil.getSObjectRecord(applicationId);
-        if (mDisbursement.Id == null){
-            mDisbursement.Lending_Application_Number__c = mApplication.Id;
+        setLendingContract(contractId);
+        mCustomerMap = new Map<Id, Contract_Customer__c>(ContractRelatedRecordQueryUtil.getCustomers(contractId));
+        setCustomerSelectList();
+
+        if(mDisbursement.Id == null){ //new record
+            setDefaultValues();
         }
-        setDisbursementObject();
+        
+        if (getIsThirdParty()){
+            setContactSelectList();
+        }
+        setBankAccountSelectList();
+        setSelectedBankAccount();
     }
 
-    private void setDisbursementObject(){
-        mAppDisbObject = new LendingApplicationDisbursementObject(mDisbursement);
-        mAppDisbObject.setUniqueKey(SpectraCoreUtil.getRandomInteger());
-        if (String.IsNotBlank(mDisbursement.Disbursement_Party_Type__c) && mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(Constants.DISBURSEMENT_PARTY_CUSTOMER)){
-            Map<Id, Lending_Application_Customer__c> customerMap = new Map<Id, Lending_Application_Customer__c>(LendingApplicationCustomerUtil.getCustomers(mApplication.Id));
-            mAppDisbObject.setCustomerList(customerMap);
-            mAppDisbObject.setCustomerDetails();
-        } 
-        
-        if (mDisbursement.Account_Name__c != null && String.IsNotBlank(mDisbursement.Disbursement_Party_Type__c)
-                && !mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(Constants.DISBURSEMENT_PARTY_CUSTOMER)){
-            mAppDisbObject.setAccountContactList();
-        }
-
-        if (String.isNotBlank(mDisbursement.Payment_Method__c)
-                && mDisbursement.Payment_Method__c.equalsIgnoreCase(Constants.PAYMENT_METHOD_ELECTRONIC)){
-            mAppDisbObject.setIsElectronicPayment();
-            setPartyBankAccounts();
+    private void setCustomerSelectList(){
+        mCustomerSelectList = new List<SelectOption>();
+        mCustomerSelectList.add(new SelectOption(Constants.BLANK_STRING, '-- Select a customer --'));
+        for(Contract_Customer__c customer : mCustomerMap.values()){
+            mCustomerSelectList.add(new SelectOption(customer.Id, customer.Customer_Name__c));
         }
     }
     
-    private void setPartyBankAccounts(){
-        Set<Id> searchByAccountIdSet = new Set<Id>();
-        Set<Id> searchByContactIdSet = new Set<Id>();
+    private void setDefaultValues(){
+        Map<String, RecordType> recTypeMap = RecordTypeUtil.getInstance()
+                                                   .getRecordTypeMapByName(Schema.SObjectType.Contract_Disbursement__c.getName());
         
-        if (mDisbursement.Account_Name__c != null){ searchByAccountIdSet.add(mDisbursement.Account_Name__c); }
-        if (mDisbursement.Contact_Name__c != null){ searchByContactIdSet.add(mDisbursement.Contact_Name__c); }
-        
-        Map<Id, List<Bank_Account__c>> partyBankAccountsMap = new Map<Id, List<Bank_Account__c>>();
-        partyBankAccountsMap.putAll(BankAccountUtil.getAccountBankAccountListMap(searchByAccountIdSet));
-        partyBankAccountsMap.putAll(BankAccountUtil.getContactBankAccountListMap(searchByContactIdSet));
-
-        mAppDisbObject.setPartyBankAccounts(partyBankAccountsMap);
-        mAppDisbObject.setBankAccountList();
-        mAppDisbObject.setSelectedBankAccount();
+        mDisbursement = new Contract_Direct_Debit__c();
+        mDisbursement.RecordTypeId = recTypeMap.get(Constants.RECORD_TYPE_OPEN).Id;
+        mDisbursement.Lending_Contract_Number__c = getLendingContract().Id;
+        mDisbursement.Disbursement_Date__c = getBusinessDate();
+        mDisbursement.Payment_Method__c = fsCore.Constants.PAYMENT_METHOD_ELECTRONIC;
+    }
+    
+    private void setContactSelectList(){
+        List<Contact> contactList = new List<Contact>();
+        if (mDisbursement.Account_Name__c != null){
+            contactList = fsCore.AccountContactUtil.getContactList(mDisbursement.Account_Name__c);
+            if (contactList.size() == 1 && mDisbursement.Contact_Name__c == null){
+                mDisbursement.Contact_Name__c = contactList.get(0).Id;
+            }
+        }
+        mContactSelectList = fsCore.AccountContactUtil.getContactSelectList(contactList);
     }
 
+    private void setBankAccountSelectList(){
+        mBankAccountMap = new Map<Id, fsCore__Bank_Account__c>();
+        if (getIsElectronicPayment()){
+            if (mDisbursement.Account_Name__c != null){
+                mBankAccountMap.putAll(fsCore.BankAccountUtil.getAccountBankAccountListMap(new Set<Id>{mDisbursement.Account_Name__c}));
+            }
+            if (mDisbursement.Contact_Name__c != null){
+                mBankAccountMap.putAll(fsCore.BankAccountUtil.getContactBankAccountListMap(new Set<Id>{mDisbursement.Contact_Name__c}));
+            }
+        }
+
+        mBankAccountSelectList = fsCore.BankAccountUtil.getBankAccountSelectList(mBankAccountMap.values());
+        
+        if (getIsElectronicPayment() && mDisbursement.Bank_Account_Name__c == null){
+            for (fsCore__Bank_Account__c bankAcct : mBankAccountMap.values()){
+                if (bankAcct.fsCore__Is_Primary__c){
+                    mDisbursement.Bank_Account_Name__c = bankAcct.Id;
+                    break;
+                }
+            }
+        }
+    }
+    
+    private void setSelectedBankAccount(){
+        if (mDisbursement.Bank_Account_Name__c != null && mBankAccountMap.containsKey(mDisbursement.Bank_Account_Name__c)){
+            mSelectedBankAccount = mBankAccountMap.get(mDisbursement.Bank_Account_Name__c);
+        } else {
+            mDisbursement.Bank_Account_Name__c = null;
+            mSelectedBankAccount = getBlankBankAccount();
+        }
+    }
+    
+    public Boolean getIsCustomer(){
+        return (String.IsNotBlank(mDisbursement.Disbursement_Party_Type__c) 
+                    && mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(fsCore.Constants.DISBURSEMENT_PARTY_CUSTOMER));
+    }
+    
+    public Boolean getIsThirdParty(){
+        return (String.IsNotBlank(mDisbursement.Disbursement_Party_Type__c) 
+                    && mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(fsCore.Constants.DISBURSEMENT_PARTY_THIRD_PARTY));
+    }
+    
+    public Boolean getIsElectronicPayment(){
+        return (String.IsNotBlank(mDisbursement.Payment_Method__c) && mDisbursement.Payment_Method__c.equalsIgnoreCase(fsCore.Constants.PAYMENT_METHOD_ELECTRONIC));
+    }
+    
     public PageReference onPartyTypeChange(){
-        mAppDisbObject.setPartyType();
+        mDisbursement.Customer_Reference_Number__c = null;
+        mDisbursement.Account_Name__c = null;
+        mDisbursement.Contact_Name__c = null;
         
-        mAppDisbObject.mDisbursement.Account_Name__c = null;
-        mAppDisbObject.mDisbursement.Contact_Name__c = null;
-        mAppDisbObject.mDisbursement.Bank_Account_Name__c = null;
-        
-        if (String.IsNotBlank(mAppDisbObject.mDisbursement.Disbursement_Party_Type__c)
+        if (String.IsNotBlank(mDisbursement.Disbursement_Party_Type__c)
                 && mAppDisbObject.mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(Constants.DISBURSEMENT_PARTY_CUSTOMER)){
-            Map<Id, Lending_Application_Customer__c> customerMap = new Map<Id, Lending_Application_Customer__c>(LendingApplicationCustomerUtil.getCustomers(mApplication.Id));
-            mAppDisbObject.setCustomerList(customerMap);
-            
-            for(Lending_Application_Customer__c customer : customerMap.values()){
+            for(Contract_Customer__c customer : mCustomerMap.values()){
                 if (customer.Is_Primary__c){
-                    mAppDisbObject.mDisbursement.Customer_Reference_Number__c = customer.Id;
+                    mDisbursement.Customer_Reference_Number__c = customer.Id;
                     break;
                 }
             }
 
-            mAppDisbObject.setCustomerDetails();
-
+            if (mDisbursement.Customer_Reference_Number__c != null){
+                mDisbursement.Account_Name__c = mCustomerMap.get(mDisbursement.Customer_Reference_Number__c).Account_Name__c;
+                mDisbursement.Contact_Name__c = mCustomerMap.get(mDisbursement.Customer_Reference_Number__c).Contact_Name__c;
+            }
         } 
-        mAppDisbObject.resetBankAccountDetails();
-        setPartyBankAccounts();
+        
+        setBankAccountSelectList();
+        setSelectedBankAccount();
         return null;
     }
     
     public PageReference onAccountChange(){
-        mAppDisbObject.mDisbursement.Contact_Name__c = null;
-        mAppDisbObject.mDisbursement.Bank_Account_Name__c = null;
-        mAppDisbObject.setAccountContactList();
-        mAppDisbObject.resetBankAccountDetails();
-        setPartyBankAccounts();
+        mDisbursement.Contact_Name__c = null;
+        setContactSelectList();
+        setBankAccountSelectList();
+        setSelectedBankAccount();
         return null;
     }
 
     public PageReference onContactChange(){
-        mAppDisbObject.mDisbursement.Bank_Account_Name__c = null;
-        mAppDisbObject.resetBankAccountDetails();
-        setPartyBankAccounts();
-        return null;
-    }
-
-    public PageReference onFutureFlagChange(){
-        mAppDisbObject.setFutureFlag();
+        setBankAccountSelectList();
+        setSelectedBankAccount();
         return null;
     }
 
     public PageReference onCustomerChange(){
-        mAppDisbObject.setCustomerDetails();
-        mAppDisbObject.resetBankAccountDetails();
-        setPartyBankAccounts();
+        mDisbursement.Account_Name__c = null;
+        mDisbursement.Contact_Name__c = null;
+        if (mDisbursement.Customer_Reference_Number__c != null){
+            mDisbursement.Account_Name__c = mCustomerMap.get(mDisbursement.Customer_Reference_Number__c).Account_Name__c;
+            mDisbursement.Contact_Name__c = mCustomerMap.get(mDisbursement.Customer_Reference_Number__c).Contact_Name__c;
+        }
+        setBankAccountSelectList();
+        setSelectedBankAccount();
         return null;
     }
 
     public PageReference onPaymentMethodChange(){
-        mAppDisbObject.setIsElectronicPayment();
-        mAppDisbObject.resetBankAccountDetails();
-        mAppDisbObject.resetAddressDetails();
+        setBankAccountSelectList();
+        setSelectedBankAccount();
         return null;
     }
 
     public PageReference onBankAccountChange(){
-        mAppDisbObject.setSelectedBankAccount();
+        setSelectedBankAccount();
         return null;
     }
 
-    public override Boolean validateRecord(){
-        Boolean isValid = true;
-        if (String.IsNotBlank(mAppDisbObject.mDisbursement.Disbursement_Party_Type__c)
-                && mAppDisbObject.mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(Constants.DISBURSEMENT_PARTY_CUSTOMER)
-                    && mAppDisbObject.mDisbursement.Customer_Reference_Number__c == null){
-            isValid = false;
-            addError(Label.Customer_Not_Selected_For_Disbursement);
-        }
-        if (String.IsNotBlank(mAppDisbObject.mDisbursement.Disbursement_Party_Type__c)
-                && mAppDisbObject.mDisbursement.Disbursement_Party_Type__c.equalsIgnoreCase(Constants.DISBURSEMENT_PARTY_THIRD_PARTY)
-                    && (mAppDisbObject.mDisbursement.Account_Name__c == null && mAppDisbObject.mDisbursement.Contact_Name__c == null)){
-            isValid = false;
-            addError(Label.Account_Contact_Blank_For_Disbursement);
-        }
-        return isValid;
-    }
-    
-    public override List<ErrorObject> saveRecord(){
-        List<ErrorObject> errorList = new List<ErrorObject>();
-        List<Lending_Application_Disbursement__c> disbForUpsert = new List<Lending_Application_Disbursement__c>();
-        disbForUpsert.add(mAppDisbObject.mDisbursement);
+    public override List<fsCore.ErrorObject> saveRecord(){
+        List<Contract_Disbursement__c> disbursementForUpsert = new List<Contract_Disbursement__c>();
+        disbursementForUpsert.add(mDisbursement);
         
-        DMLResult disbSaveRslt = LendingApplicationDisbursementDMLWrapper.getInstance().upsertData(disbForUpsert);
-        if (disbSaveRslt.hasErrors()) { errorList = disbSaveRslt.getErrorList(); }
-        super.setContextRecordId(mAppDisbObject.mDisbursement.Id);
+        List<fsCore.ErrorObject> errorList = new List<fsCore.ErrorObject>();
+        fsCore.DMLResult disbursementSaveRslt = ContractDisbursementDMLWrapper.getInstance().upsertData(disbursementForUpsert);
+        if (disbursementSaveRslt.hasErrors()) { errorList = disbursementSaveRslt.getErrorList(); }
+        super.setContextRecordId(mDisbursement.Id);
 
         return errorList;
     }
@@ -173,6 +203,24 @@ public with sharing class DisbursementEditController extends SingleRecordControl
     }
 
     public override PageReference getReturnPageURL(){
-        return new PageReference('/' + Schema.sObjectType.Lending_Application__c.getKeyPrefix() + '/l');
-    }     
+        return new PageReference('/' + Schema.sObjectType.Lending_Contract__c.getKeyPrefix() + '/l');
+    }
+    
+    private fsCore__Bank_Account__c getBlankBankAccount(){
+        fsCore__Bank_Account__c blankBankAcct = new fsCore__Bank_Account__c();
+        blankBankAcct.name = null;
+        blankBankAcct.fsCore__Account_Name__c = null;
+        blankBankAcct.fsCore__Contact_Name__c = null;
+        blankBankAcct.fsCore__Bank_Account_Holder_Name__c = null;
+        blankBankAcct.fsCore__Bank_Account_Number__c = null;
+        blankBankAcct.fsCore__Bank_Account_Type__c = null;
+        blankBankAcct.fsCore__Bank_Identification_Code__c = null;
+        blankBankAcct.fsCore__Bank_Name__c = null;
+        blankBankAcct.fsCore__Bank_Branch_Name__c = null;
+        blankBankAcct.fsCore__Is_Active__c = false;
+        blankBankAcct.fsCore__Is_Primary__c = false;
+        blankBankAcct.fsCore__Is_Verified__c = false;
+        
+        return blankBankAcct;
+    }
 }
