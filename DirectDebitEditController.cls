@@ -146,5 +146,23 @@ public with sharing class DirectDebitEditController extends ContractRelatedContr
 
     public override PageReference getReturnPageURL(){
         return new PageReference('/' + Schema.sObjectType.Lending_Contract__c.getKeyPrefix() + '/l');
-    }     
+    }
+    
+    private fsCore__Bank_Account__c getBlankBankAccount(){
+        fsCore__Bank_Account__c blankBankAcct = new fsCore__Bank_Account__c();
+        blankBankAcct.name = null;
+        blankBankAcct.fsCore__Account_Name__c = null;
+        blankBankAcct.fsCore__Contact_Name__c = null;
+        blankBankAcct.fsCore__Bank_Account_Holder_Name__c = null;
+        blankBankAcct.fsCore__Bank_Account_Number__c = null;
+        blankBankAcct.fsCore__Bank_Account_Type__c = null;
+        blankBankAcct.fsCore__Bank_Identification_Code__c = null;
+        blankBankAcct.fsCore__Bank_Name__c = null;
+        blankBankAcct.fsCore__Bank_Branch_Name__c = null;
+        blankBankAcct.fsCore__Is_Active__c = false;
+        blankBankAcct.fsCore__Is_Primary__c = false;
+        blankBankAcct.fsCore__Is_Verified__c = false;
+        
+        return blankBankAcct;
+    }
 }
