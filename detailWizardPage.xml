@@ -1,0 +1,272 @@
+<apex:page id="lendingAppDetailWizardPage" standardController="Lending_Application__c" 
+           extensions="LendingAppDetailWizardController" tabStyle="Lending_Application__c"
+           standardStylesheets="true" showHeader="{!NOT(mWizardLayout.mIsFullScreenMode)}"
+           sidebar="{!NOT(mWizardLayout.mIsFullScreenMode)}" 
+           title="{!mPageTitle} : {!mPageSubTitle}">  
+
+    <head>
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <apex:slds />
+        <apex:stylesheet value="{!URLFOR($Resource.fs_style, 'fs-style.css')}"/>
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" />
+        <script src="{!URLFOR($Resource.fs_svg, 'svg4everybody.js')}"/>
+        <script>var $j = jQuery.noConflict();</script>
+    </head>
+    
+    <body>
+        <div class="slds-scope">
+            <apex:form styleClass="fs-data-form slds-form--stacked slds-m-horizontal_x-small" rendered="{!$ObjectType.Lending_Application__c.accessible}">
+
+                <c:wizardPageHeader parentRecordId="{!mApplication.Id}"
+                                    iconStyleClass="slds-icon slds-icon--large slds-icon-standard-apps"
+                                    iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/custom-sprite/svg/symbols.svg#custom18')}"
+                                    pageTitle="{!mPageTitle}"
+                                    pageSubTitle="{!mPageSubTitle}"
+                                    previousAction="{!onPrevious}"
+                                    renderPrevious="{!hasPrevious}"
+                                    nextAction="{!onNext}"
+                                    renderNext="{!hasNext}"
+                                    saveAction="{!onSave}"
+                                    renderSave="true"
+                                    saveAndReturnAction="{!onSaveAndReturn}"
+                                    cancelAction="{!onCancel}"
+                                    wizardSectionList="{!mWizardSectionList}"
+                                    directNavigationWarning="{!mWizardLayout.mShowDirectNavigationWarning}"/>
+
+                <apex:outputPanel id="messagePanel" styleClass="fs-message-panel">
+                    <apex:pageMessages ></apex:pageMessages>
+                </apex:outputPanel>
+    
+                <apex:actionStatus id="waitActionStatus">
+                    <apex:facet name="start">
+                        <c:fsSpinner spinnerSize="medium"/>
+                    </apex:facet>
+                </apex:actionStatus>
+
+                <div class="slds-container_fluid slds-m-vertical_small">
+                    <c:pageMessage messageTitle="{!$Label.fscore__invalid_access}" 
+                                   messageDetail="{!$Label.fscore__edit_page_for_new_record_exception}" 
+                                   rendered="{!ISBLANK(mApplication.Id)}"
+                                   backgroundTheme="default"
+                                   iconTheme="slds-icon-text-error"
+                                   iconType="assets/icons/utility-sprite/svg/symbols.svg#error"/>
+
+                    <c:pageMessage messageTitle="{!$Label.fscore__insufficient_privileges}" 
+                                   messageDetail="{!$Label.fscore__insufficient_privileges_message} {!$Label.fscore__contact_sys_admin}" 
+                                   rendered="{!AND(NOT(ISBLANK(mApplication.Id))
+                                                 , NOT($ObjectType.Lending_Application__c.updateable))}"
+                                   backgroundTheme="default"
+                                   iconTheme="slds-icon-text-error"
+                                   iconType="assets/icons/utility-sprite/svg/symbols.svg#error"/>
+                
+                    <apex:outputPanel id="iApplicationDetailPanel"
+                                      rendered="{!AND(NOT(ISBLANK(mApplication.Id))
+                                                    , $ObjectType.Lending_Application__c.updateable)}">
+
+                        <apex:pageBlock id="iApplicationDetailBlock" mode="maindetail" html-class="fs-data-block">
+                            <div id="lendingAppInfoTabPanel" class="slds-tabs_scoped">
+                                <ul class="slds-tabs_scoped__nav" role="tablist">
+                                    <!-- Tab 1 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label slds-active" role="presentation">
+                                        <a id="tab_1_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="0" aria-selected="true" aria-controls="tab_1_Content" >
+                                            {!$Label.Application_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 1 Title -->
+    
+                                    <!-- Tab 2 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_2_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_2_Content" >
+                                            {!$Label.Itemization_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 2 Title -->
+                                </ul>
+    
+                                <!-- Tab 1 Contents -->
+                                <div id="tab_1_Content" class="slds-tabs_scoped__content slds-show"
+                                     role="tabpanel" aria-labelledby="tab_1_Title">
+
+                                    <!-- Application Mandatory Info -->
+                                    <apex:outputPanel id="iApplicationInfoPanel">
+                                        <c:sectionHeader label="{!$Label.fscore__application_info_block_title}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+    
+                                        <!-- Main Details -->
+                                        <div class="slds-grid slds-wrap slds-m-horizontal_small">
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Branch_Name__c.Label}</span>
+                                                </p>
+                                                <apex:outputField value="{!mApplication.Branch_Name__c}" />
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Company_Name__c.Label}</span>
+                                                </p>
+                                                <apex:outputField value="{!mApplication.Company_Name__c}" />
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Product_Family__c.Label}</span>
+                                                </p>
+                                                <apex:outputField value="{!mApplication.Product_Family__c}" />
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Application_Date__c.Label}</span>
+                                                    <apex:outputPanel styleClass="fs-required slds-m-left_xx-small" 
+                                                                      rendered="{!(mIsMainDetailChangedAllowed)}">*</apex:outputPanel>
+                                                </p>
+                                                <apex:inputField value="{!mApplication.Application_Date__c}" rendered="{!(mIsMainDetailChangedAllowed)}">
+                                                    <apex:actionSupport event="onchange" action="{!onApplicationDateChange}"
+                                                                        reRender="messagePanel,iProductListPanel,iApplicationInfoPanel,iRequestedAmountPanel"
+                                                                        status="waitStatus"/>
+                                                </apex:inputField>
+                                                <apex:outputField value="{!mApplication.Application_Date__c}" rendered="{!NOT(mIsMainDetailChangedAllowed)}"/>
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Product_Name__c.Label}</span>
+                                                    <apex:outputPanel styleClass="fs-required slds-m-left_xx-small"
+                                                                      rendered="{!(mIsMainDetailChangedAllowed)}">*</apex:outputPanel>
+                                                </p>
+                                                <apex:outputPanel id="iProductListPanel" rendered="{!(mIsMainDetailChangedAllowed)}">
+                                                    <c:actionSelectList value="{!mApplication.Product_Name__c}"
+                                                                        selectOptions="{!mProductSelectList}"
+                                                                        enableRefreshAction="true"
+                                                                        refreshAction="{!onProductListRefresh}"
+                                                                        enableChangeAction="true"
+                                                                        changeAction="{!onProductChange}"
+                                                                        reRender="messagePanel,iApplicationInfoPanel,iProductListPanel,iRequestedAmountPanel"/>
+                                                </apex:outputPanel>
+                                                
+                                                <apex:outputField value="{!mApplication.Product_Name__c}" rendered="{!NOT(mIsMainDetailChangedAllowed)}"/>
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Collateral_Type__c.Label}</span>
+                                                </p>
+                                                <apex:outputPanel id="iCollateralTypePanel">
+                                                    <apex:outputField value="{!mApplication.Collateral_Family__c}"/>
+                                                    <apex:outputText value=" - " rendered="{!NOT(ISBLANK(mApplication.Collateral_Sub_Family__c))}"/>
+                                                    <apex:outputField value="{!mApplication.Collateral_Sub_Family__c}"/>
+                                                </apex:outputPanel>
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Is_Secured__c.Label}</span>
+                                               </p>
+                                                <apex:outputField value="{!mApplication.Is_Secured__c}"/>
+                                            </div>
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Is_Syndication_Allowed__c.Label}</span>
+                                                </p>
+                                                <apex:outputField value="{!mApplication.Is_Syndication_Allowed__c}"/>
+                                            </div>
+                                        </div>
+                                        <!-- / Main Details -->
+                                    </apex:outputPanel>
+                                    <!-- / Application Mandatory Info -->
+                                    
+                                    <!-- Application Additonal Info -->
+                                    <apex:outputPanel id="iAdditionalInfoPanel" rendered="true">
+                                        <div class="slds-m-top--small">
+                                            <c:sectionHeader label="{!$Label.fscore__additional_information_block_title}"
+                                                             isEditSectionHeader="true" isModalWindow="true"/>
+                
+                                            <div class="slds-grid slds-wrap slds-m-horizontal_small">
+                                                <apex:repeat value="{!IF(mApplication.Product_Family__c == 'Lease'
+                                                                        ,$ObjectType.Lending_Application__c.FieldSets.Lease_Additional_Info_Fields
+                                                                        ,IF(mApplication.Product_Family__c == 'Line'
+                                                                           ,$ObjectType.Lending_Application__c.FieldSets.Line_Additional_Info_Fields
+                                                                           ,$ObjectType.Lending_Application__c.FieldSets.Loan_Additional_Info_Fields))}"
+                                                               var="additionalInfo">
+                                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                            <span class="slds-truncate">{!additionalInfo.Label}</span>
+                                                            <apex:outputPanel rendered="{!OR(additionalInfo.required, additionalInfo.dbrequired)}"
+                                                                              styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                                        </p>
+                                                        <apex:inputField value="{!mApplication[additionalInfo.fieldPath]}"/>
+                                                    </div>
+                                                </apex:repeat>
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel>
+                                    <!-- / Application Additional Info -->
+                                </div>
+                                <!-- / Tab 1 Contents -->
+                                
+                                <!-- Tab 2 Contents -->
+                                <div id="tab_2_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_2_Title">
+    
+                                    <!-- Requested Amount Information -->
+                                    <apex:outputPanel id="iRequestedAmountPanel">
+                                        <c:sectionHeader label="{!$Label.fscore__requested_amt_itemized_section_title}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+    
+                                        <div class="slds-p-horizontal--x-small">
+                                            <c:lendingAppItemizationEditList itemizationObjectList="{!mItemizationObjectList}" 
+                                                                             requestMode="true"/>
+                                        </div>
+                                    </apex:outputPanel>
+                                    <!-- / Requested Amount Information -->
+        
+                                    <!-- Requested Information -->
+                                    <apex:outputPanel id="iRequestedInfoPanel">
+                                        <div class="slds-m-top--small">
+                                            <c:sectionHeader label="{!$Label.fscore__requested_information_block_title}"
+                                                             isEditSectionHeader="true" isModalWindow="true"/>
+            
+                                           <div class="slds-grid slds-wrap slds-m-horizontal_small">
+                                                <apex:repeat value="{!IF(mApplication.Product_Family__c == 'Lease'
+                                                                        ,$ObjectType.Lending_Application__c.FieldSets.Lease_Requested_Info_Fields
+                                                                        ,IF(mApplication.Product_Family__c == 'Line'
+                                                                           ,$ObjectType.Lending_Application__c.FieldSets.Line_Requested_Info_Fields
+                                                                           ,$ObjectType.Lending_Application__c.FieldSets.Loan_Requested_Info_Fields))}"
+                                                               var="requestedInfo">
+                                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                            <span class="slds-truncate">{!requestedInfo.Label}</span>
+                                                            <apex:outputPanel rendered="{!OR(requestedInfo.required, requestedInfo.dbrequired)}"
+                                                                              styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                                        </p>
+                                                        <apex:inputField value="{!mApplication[requestedInfo.fieldPath]}"/>
+                                                    </div>
+                                                </apex:repeat>
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel>
+                                    <!-- / Requested Information -->
+        
+                                </div>
+                                <!-- / Tab 2 Contents -->
+                            </div>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                </div>
+                
+            </apex:form>
+            <!-- / Wizard Step Body -->
+
+            <!-- Footer -->
+            <c:fsCopyright pageTitle="{!mPageTitle} - {!mPageSubTitle}"/>
+            <!-- / Footer -->
+        </div>
+        
+        <c:fsModalWindow />
+        
+        <script src="{!URLFOR($Resource.fs_slds_tabs_js, 'fs_slds_tabs_js.js')}"/>
+        <script>
+            //This method overrides the standard salesforce setFocusOnLoad so that
+            //when the page opens the focus should not go to the date field
+            function setFocusOnLoad() {}
+        </script>
+    </body>
+</apex:page>
