@@ -1,0 +1,226 @@
+<apex:page id="investmentEditPage" standardController="Lending_Application_Investment__c"
+           extensions="InvestmentEditController" tabStyle="Lending_Application_Investment__c"
+           showHeader="true" sidebar="true" applyHtmlTag="true" docType="html-5.0"
+           title="{!$Label.fscore__edit_lending_app_investment_title}">
+
+    <head>
+        <apex:slds />
+        <apex:stylesheet value="{!URLFOR($Resource.fs_style, 'fs-style.css')}"/>
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"/>
+        <script src="{!URLFOR($Resource.fs_svg, 'svg4everybody.js')}"></script>
+        <script>
+            svg4everybody();
+            var $j = jQuery.noConflict();
+        </script>
+    </head>   
+        
+    <body>   
+        <div class="slds-scope">
+            <apex:form id="investmentEditForm" styleClass="slds-form_horizontal fs-data-form slds-m-horizontal_x-small slds-m-bottom_large">
+
+                <div id="page-sticky-anchor"></div>
+                <div id="page-sticky-header">
+                    <div class="slds-page-header slds-m-bottom--small" role="banner">
+                        <div class="slds-grid slds-grid--align-spread">
+                            <div class="slds-col" align="left">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                       <c:svgIcon iconStyleClass="slds-icon slds-icon--large slds-icon-standard-apps"
+                                                  iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/custom-sprite/svg/symbols.svg#custom18')}"/>
+                                    </div>
+                                    <div class="slds-media__body slds-align-middle">
+                                        <p class="slds-text-heading--label">{!mApplication.Name}</p>
+                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle">
+                                            {!IF(ISBLANK(mAppInvestmentObj.mInvestment.Id)
+                                                       , $Label.fscore__new_lending_app_investment_title
+                                                       , ($ObjectType.Lending_Application_Investment__c.Fields.Name.Label + mAppInvestmentObj.mInvestment.Name))}
+                                      
+                                        </h1>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col slds-no-flex slds-align-middle">
+                                <apex:commandButton value="{!$Label.fscore__save_button}" 
+                                                    title="{!$Label.fscore__save_button_tooltip}"
+                                                    styleClass="slds-button slds-button--brand"
+                                                    action="{!onSave}" 
+                                                    status="waitStatus"
+                                                    reRender="messagePanel,investmentBlockPanel"/>
+                                                    
+                                <apex:commandButton immediate="true" action="{!cancel}"
+                                                    value="{!$Label.fscore__cancel_button}" 
+                                                    title="{!$Label.fscore__cancel_button_tooltip}"
+                                                    styleClass="slds-button slds-button--neutral"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <apex:actionStatus id="waitStatus">
+                    <apex:facet name="start">
+                        <c:fsSpinner spinnerSize="medium"/>
+                    </apex:facet>
+                </apex:actionStatus>
+
+                <apex:outputPanel id="messagePanel" styleClass="fs-message-panel">
+                    <apex:pagemessages />
+                </apex:outputPanel>          
+    
+                <div class="slds-m-top--small">
+                    <div class="slds-box slds-box--x-small slds-container--fluid">
+                        <apex:outputPanel id="investmentBlockPanel">
+                            <apex:pageBlock id="investmentPageBlock" mode="mainDetail" html-class="fs-data-block">
+                                
+                                <!-- Hidden Calculation basis amount for investor contribution calculation -->
+                                <apex:inputText id="iCalcBasisAmt" value="{!mApplication.Financed_Amount__c}" style="display: none;"/>
+
+                                <apex:outputPanel id="applicationInfoPanel" rendered="{!ISBLANK(mAppInvestmentObj.mInvestment.Id)}">
+                                    <c:sectionHeader label="{!$Label.fscore__syndication_so_far_info_section_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+    
+                                    <apex:pageBlockSection columns="2" collapsible="false" html-class="slds-theme--default">
+                                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Application_Info_For_Investment}"
+                                                     var="appInfo"> 
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="{!appInfo.Label}"></apex:outputLabel>
+                                                <apex:outputField value="{!mApplication[appInfo.fieldPath]}"/>
+                                            </apex:pageBlockSectionItem>
+                                            
+                                        </apex:repeat>
+                                    </apex:pageBlockSection>
+                                    <div class="slds-p-bottom--small"></div>
+ 
+                                </apex:outputPanel>                            
+
+                                <apex:outputPanel id="investmentInfoPanel">
+                                    <c:sectionHeader label="{!$Label.fscore__syndication_info_section_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                                    
+                                    <apex:pageBlockSection columns="2" collapsible="false" html-class="slds-theme--default">
+                                        
+                                        <apex:pageBlockSectionItem id="iInvestorAccount">
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Investment__c.Fields.Account_Name__c.Label}"></apex:outputLabel>
+                                            <apex:inputField id="iInvestorAccount" value="{!mAppInvestmentObj.mInvestment.Account_Name__c}" required="false">
+                                                <apex:actionSupport event="onchange" action="{!onAccountChange}" 
+                                                                    reRender="messagePanel,investmentBlockPanel"
+                                                                    status="waitStatus"/>
+                                            </apex:inputField>
+                                        </apex:pageBlockSectionItem>
+
+                                        <apex:pageBlockSectionItem id="iInvestorContact">
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Investment__c.Fields.Contact_Name__c.Label}"></apex:outputLabel>
+                                            
+                                            <apex:outputPanel id="iInvestorContactPanel">
+                                                <!-- Lookup Field -->
+                                                <apex:inputField id="iInvestorContactLookup" value="{!mAppInvestmentObj.mInvestment.Contact_Name__c}" required="false"
+                                                                 rendered="{!ISBLANK(mAppInvestmentObj.mInvestment.Account_Name__c)}">
+                                                </apex:inputField>
+                                                <!-- / Lookup Field -->
+                                                                            
+                                                <!-- List Field -->
+                                                <apex:selectList id="iInvestorContactField" value="{!mAppInvestmentObj.mInvestment.Contact_Name__c}" 
+                                                                 multiselect="false" size="1"
+                                                                 rendered="{!NOT(ISBLANK(mAppInvestmentObj.mInvestment.Account_Name__c))}">
+                                                    <apex:selectOptions value="{!mAppInvestmentObj.investorContactList}"/>
+                                                </apex:selectList>
+                                                <!-- / List Field -->
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+
+                                        <apex:pageBlockSectionItem id="iInvestmentPercent">
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Investment__c.Fields.Contribution_Percent__c.Label}">
+                                                <apex:outputPanel styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                            </apex:outputLabel>
+                                            
+                                            <apex:outputPanel id="iInvestmentPercentPanel">
+                                                <apex:inputField id="iInvestmentPercentValue" value="{!mAppInvestmentObj.mInvestment.Contribution_Percent__c}" required="false"/>
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+
+                                        <apex:pageBlockSectionItem id="iInvestmentAmount">
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Investment__c.Fields.Contribution_Amount__c.Label}">
+                                                <apex:outputPanel styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                            </apex:outputLabel>
+                                            
+                                            <apex:outputPanel id="iInvestmentAmountPanel">
+                                                <apex:inputField id="iInvestmentAmountValue" value="{!mAppInvestmentObj.mInvestment.Contribution_Amount__c}" required="false"/>
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+
+                                        <apex:pageBlockSectionItem id="iInvestmentRate">
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Investment__c.Fields.Rate__c.Label}">
+                                                <apex:outputPanel styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                            </apex:outputLabel>
+                                            
+                                            <apex:outputPanel id="iInvestmentRatePanel">
+                                                <apex:inputField id="iInvestmentRateValue" value="{!mAppInvestmentObj.mInvestment.Rate__c}" required="false"/>
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+
+                                        <apex:pageBlockSectionItem id="iInvestmentServiceRate">
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Investment__c.Fields.Service_Rate__c.Label}">
+                                                <apex:outputPanel styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                            </apex:outputLabel>
+                                            
+                                            <apex:outputPanel id="iInvestmentServiceRatePanel">
+                                                <apex:inputField id="iInvestmentServiceRateValue" value="{!mAppInvestmentObj.mInvestment.Service_Rate__c}" required="false"/>
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+
+                                    </apex:pageBlockSection>
+
+                                </apex:outputPanel>                            
+                            </apex:pageBlock>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+                
+            </apex:form>
+            <c:fsCopyright pageTitle="{!IF(ISBLANK(mAppInvestmentObj.mInvestment.Id)
+                                         , $Label.fscore__new_lending_app_investment_title
+                                         , ($ObjectType.Lending_Application_Investment__c.Fields.Name.Label + mAppInvestmentObj.mInvestment.Name))}"/>
+        </div>
+        
+        <script src="{!URLFOR($Resource.fs_sticky_header, 'fs_sticky_header.js')}"/>
+        <script>
+            $j(document).ready( function () {
+                attachValueChangeEventMethods();
+            });
+        
+            function attachValueChangeEventMethods(){
+                var calcBasisAmount = $j("input[id$=iCalcBasisAmt]").val();
+                console.log(calcBasisAmount);
+                
+                $j("input[id$=iInvestmentPercentValue]").on('change',function(){
+                    console.log('handling investment percentage change...');
+
+                    var investmentPercent = $j("input[id$=iInvestmentPercentValue]").val();
+                    console.log('Percentage value : ' + investmentPercent);
+
+                    if (calcBasisAmount != undefined && !isNaN(calcBasisAmount) && calcBasisAmount > 0){
+                        var investmentAmount = ((calcBasisAmount * investmentPercent) / 100).toFixed(2);
+                        console.log('Amount value : ' + investmentAmount);
+
+                        $j("input[id$=iInvestmentAmountValue]").val(investmentAmount);
+                    }
+                });
+
+                $j("input[id$=iInvestmentAmountValue]").on('change',function(){
+                    console.log('handling investment amount change...');
+                    
+                    var investmentAmount = $j("input[id$=iInvestmentAmountValue]").val();
+                    console.log('Amount value : ' + investmentAmount);
+
+                    if (calcBasisAmount != undefined && !isNaN(calcBasisAmount) && calcBasisAmount > 0){
+                        var investmentPercent = ((investmentAmount / calcBasisAmount) * 100).toFixed(4);
+                        console.log('Percent value : ' + investmentPercent);
+
+                        $j("input[id$=iInvestmentPercentValue]").val(investmentPercent);
+                    }
+                });              
+            }  
+        </script>            
+    </body>
+</apex:page>
