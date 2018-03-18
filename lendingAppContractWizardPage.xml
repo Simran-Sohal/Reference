@@ -45,38 +45,63 @@
                     </apex:facet>
                 </apex:actionStatus>
         
-                <div class="slds-m-vertical--small">
-                    <fieldset class="slds-box slds-theme--default slds-container--fluid">
-                        <c:pageMessage messageTitle="{!$Label.fscore__invalid_access}" 
-                                       messageDetail="{!$Label.fscore__contract_info_invalid_access_message}" 
-                                       rendered="{!ISBLANK(mApplication.Id)}"
-                                       backgroundTheme="default"
-                                       iconTheme="slds-icon-text-error"
-                                       iconType="assets/icons/utility-sprite/svg/symbols.svg#error"/>
+                <div class="slds-container_fluid slds-m-vertical_small">
+                    <c:pageMessage messageTitle="{!$Label.fscore__invalid_access}" 
+                                   messageDetail="{!$Label.fscore__contract_info_invalid_access_message}" 
+                                   rendered="{!ISBLANK(mApplication.Id)}"
+                                   backgroundTheme="default"
+                                   iconTheme="slds-icon-text-error"
+                                   iconType="assets/icons/utility-sprite/svg/symbols.svg#error"/>
         
-                        <apex:outputPanel id="iEditContractInfoPanel" rendered="{!NOT(ISBLANK(mApplication.Id))}">
+                    <apex:outputPanel id="iEditContractInfoPanel" rendered="{!NOT(ISBLANK(mApplication.Id))}">
+                        <apex:pageBlock id="iContractInfoBlock" mode="maindetail" html-class="fs-data-block">
 
-                            <div class="slds-grid slds-grid--align-spread slds-m-bottom--small">
-                                <div class="slds-col">
-                                    <h3><span class="slds-text-heading--small" style="color: #16325c;">
-                                        <strong>{!$Label.fscore__contract_info_edit_section_title}</strong>
-                                    </span></h3>
-                                </div>
-                            </div>
+                            <div id="iContractInfoTabPanel" class="slds-tabs_scoped">
+                                <ul class="slds-tabs_scoped__nav" role="tablist">
+                                    <!-- Tab 1 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label slds-active" role="presentation">
+                                        <a id="tab_1_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="0" aria-selected="true" aria-controls="tab_1_Content" >
+                                            {!$Label.Contract_Template_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 1 Title -->
+    
+                                    <!-- Tab 2 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_2_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_2_Content" >
+                                            {!$Label.Contract_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 2 Title -->
 
-                            <apex:pageBlock id="iContractInfoBlock" mode="maindetail" html-class="fs-data-block">
+                                    <!-- Tab 3 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_3_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_3_Content" >
+                                            {!$Label.Repayment_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 3 Title -->
+                                </ul>
+    
+                                <!-- Tab 1 Contents -->
+                                <div id="tab_1_Content" class="slds-tabs_scoped__content slds-show"
+                                     role="tabpanel" aria-labelledby="tab_1_Title">
 
-                                <apex:outputPanel id="iContractInfoPanel">
                                     <c:sectionHeader label="{!$Label.fscore__contract_template_info_section}" 
                                                      isEditSectionHeader="true" isModalWindow="true"/>
 
-                                    <apex:pageBlockSection id="iContractTemplateInfoSection" collapsible="false" columns="1">
+                                    <div class="slds-grid slds-wrap slds-m-horizontal_small">
                                         <!-- Contract Template -->
-                                        <apex:pageBlockSectionItem id="iContractTemplateName">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Contract_Template_Name__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                    
+                                        <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-truncate">
+                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Contract_Template_Name__c.Label}</span>
+                                                <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                            </p>
                                             <apex:outputPanel id="iContractTemplateListPanel">
                                                 <c:actionSelectList value="{!mApplication.Contract_Template_Name__c}"
                                                                     selectOptions="{!mContractTemplateSelectList}"
@@ -106,356 +131,321 @@
                                                                     reRender="messagePanel,iContractTemplateListPanel,iContractParamDetailPanel,iItemizationContentPanel,iContractualFeePanel,iPredefinedPmtPanel,iRatePreferencePanel,iPmtPreferencePanel"
                                                                     rendered="{!NOT(ISBLANK(mApplication.Contract_Template_Name__c))}"/>
                                             </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
+                                        </div>
                                         <!-- / Contract Template -->
-                                    </apex:pageBlockSection>
-                                </apex:outputPanel>
-        
-                                <!-- Contract Params -->
-                                <apex:outputPanel id="iContractParamDetailPanel">
-                                    <!-- Section title -->
-                                    <div class="slds-m-top--small">
-                                        <div class="slds-grid slds-grid--align-spread slds-m-bottom--small fs-edit-section-header"
-                                             style="background-color: #f3f2f2 !important;">
-                                            <div class="slds-col slds-align-middle">
-                                                <h3><span style="color: #16325c;">
-                                                        <strong>{!$Label.fscore__contract_financial_param_section_title}</strong>
-                                                    </span>
-                                                </h3>
-                                            </div>
-                                            
-                                            <div class="slds-col slds-no-flex slds-align-middle">
-                                                <apex:selectList id="iSelectedCalcParam" multiselect="false" size="1"
-                                                                 title="{!$Label.fscore__calculate_option_tooltip}"
-                                                                 value="{!mCalculateOption}"
-                                                                 style="height: 1.5rem !important; width: 100% !important;"
-                                                                 styleClass="slds-m-horizontal--xx-small"
-                                                                 onchange="setFieldDisplayProperties();">
-                                                     <apex:selectOptions value="{!mCalculateOptionList}"/>
-                                                </apex:selectList>
-                                            </div>
-                                        </div>
                                     </div>
-                                    <!-- / Section title -->
-        
-                                    <div class="slds-grid slds-grid--align-spread slds-m-bottom--small">
-                                        <div class="slds-col"></div>
-                                        <div class="slds-col slds-no-flex slds-align-top">
-                                            <apex:commandButton id="calculateButtonTop" action="{!onCalculate}" 
-                                                                value="{!$Label.fscore__calculate_button}"
-                                                                title="{!$Label.fscore__calculate_button}"
-                                                                reRender="messagePanel,iContractParamDetailPanel,iCalcResultPanel" 
-                                                                status="waitActionStatus"
-                                                                styleClass="slds-button slds-button--brand"
-                                                                oncomplete="onCalculationComplete();"/>
-                                        </div>
-                                    </div>
-        
-                                    <apex:pageBlockSection id="iFinancialParamSection" columns="2" collapsible="false">
-                                        <!-- Financed Amount -->
-                                        <apex:pageBlockSectionItem id="iFinancedAmount">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Financed_Amount__c.Label}">
-                                                <apex:outputPanel id="iFinancedAmountRequired" 
-                                                                  rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"
-                                                                  styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:outputPanel >
-                                                <apex:outputField id="iFinancedAmountReadOnly"
-                                                                  value="{!mApplication.Financed_Amount__c}"
-                                                                  rendered="{!NOT($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
-                                                <apex:inputField id="iFinancedAmountValue"
-                                                                 value="{!mApplication.Financed_Amount__c}"
-                                                                 rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
-                                            </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Rate -->
-                                        <apex:pageBlockSectionItem id="iRate">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Rate__c.Label}">
-                                                <apex:outputPanel id="iRateRequired" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:inputField id="iRateValue" value="{!mApplication.Rate__c}"/>
-                                        </apex:pageBlockSectionItem>
-        
-                                       <!-- Prepaid Fee -->
-                                        <apex:pageBlockSectionItem id="iPrepaidFee">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Prepaid_Fee__c.Label}">
-                                                <apex:outputPanel rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"
-                                                                  styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:outputPanel >
-                                                <apex:outputField id="iPrepaidFeeReadOnly" value="{!mApplication.Prepaid_Fee__c}"
-                                                                  rendered="{!NOT($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
-                                                <apex:inputField id="iPrepaidFeeValue" value="{!mApplication.Prepaid_Fee__c}"
-                                                                 rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
-                                            </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Term -->
-                                        <apex:pageBlockSectionItem id="iTerm">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Term__c.Label}">
-                                                <apex:outputPanel id="iTermRequired" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:inputField id="iTermValue" value="{!mApplication.Term__c}"/>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Financed Fee -->
-                                        <apex:pageBlockSectionItem id="iFinancedFee">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Finance_Fee__c.Label}">
-                                                <apex:outputPanel rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"
-                                                                  styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:outputPanel >
-                                                <apex:outputField id="iFinanceFeeReadOnly" value="{!mApplication.Finance_Fee__c}" 
-                                                                  rendered="{!NOT($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
-                                                <apex:inputField id="iFinanceFeeValue" value="{!mApplication.Finance_Fee__c}"
-                                                                 rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
-                                            </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-
-                                        <!-- Payment Frequency-->
-                                        <apex:pageBlockSectionItem id="iPaymentFrequency">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Payment_Frequency__c.Label}">
-                                                <apex:outputPanel id="iPaymentFrequencyRequired" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:inputField id="iPaymentFrequencyValue" value="{!mApplication.Payment_Frequency__c}"/>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Contract Date -->
-                                        <apex:pageBlockSectionItem id="iContractDate">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Contract_Date__c.Label}">
-                                                <apex:outputPanel id="iContractDateRequired" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:inputField id="iContractDateValue" value="{!mApplication.Contract_Date__c}"/>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Payment Start Date -->
-                                        <apex:pageBlockSectionItem id="iPaymentStartDate">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Payment_Start_Date__c.Label}">
-                                                <apex:outputPanel id="iPaymentStartDateRequired" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:inputField id="iPaymentStartDateValue" value="{!mApplication.Payment_Start_Date__c}"/>
-                                        </apex:pageBlockSectionItem>
-
-                                        <!-- Payment Amount-->
-                                        <apex:pageBlockSectionItem id="iPaymentAmount">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Payment_Amount__c.Label}">
-                                                <apex:outputPanel id="iPaymentAmountRequired" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                        
-                                            <apex:inputField id="iPaymentAmountValue" value="{!mApplication.Payment_Amount__c}"/>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Balloon Amount-->
-                                        <apex:pageBlockSectionItem id="iBalloonAmount">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Balloon_Amount__c.Label}"></apex:outputLabel>
-                                        
-                                            <apex:inputField id="iBalloonAmountValue"
-                                                             value="{!mApplication.Balloon_Amount__c}"/>
-                                        </apex:pageBlockSectionItem>
-
-                                        <!-- Interest Only Term -->
-                                        <apex:pageBlockSectionItem id="iInterestOnlyTerm">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Interest_Only_Term__c.Label}"></apex:outputLabel>
-                                        
-                                            <apex:inputField id="iInterestOnlyValue" value="{!mApplication.Interest_Only_Term__c}"/>
-                                        </apex:pageBlockSectionItem>
-        
-                                        <!-- Interest Start Date -->
-                                        <apex:pageBlockSectionItem id="iInterestStartDate">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application__c.Fields.Interest_Accrual_Start_Date__c.Label}"></apex:outputLabel>
-                                        
-                                            <apex:inputField id="iInterestStartDateValue" value="{!mApplication.Interest_Accrual_Start_Date__c}"/>
-                                        </apex:pageBlockSectionItem>
-                
-                                        <!-- show additional fields from field set -->
-                                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Contract_Additional_Edit_Fields}" var="additionalInfo">
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!additionalInfo.Label}">
-                                                    <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small" 
-                                                                      rendered="{!OR(additionalInfo.required, additionalInfo.dbRequired)}">*</apex:outputPanel>
-                                                </apex:outputLabel>
-                                                <apex:inputField value="{!mApplication[additionalInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
-                                       </apex:repeat>
-                                    </apex:pageBlockSection>
-                                        
-                                    <div class="slds-grid slds-grid--align-spread slds-m-top--small">
-                                        <div class="slds-col"></div>
-                                        <div class="slds-col slds-no-flex slds-align-top">
-                                            <apex:commandButton id="calculateButtonBottom" action="{!onCalculate}" 
-                                                                value="{!$Label.fscore__calculate_button}"
-                                                                title="{!$Label.fscore__calculate_button}"
-                                                                reRender="messagePanel,iContractParamDetailPanel,iCalcResultPanel" 
-                                                                status="waitActionStatus"
-                                                                styleClass="slds-button slds-button--brand"
-                                                                oncomplete="onCalculationComplete();"/>
-                                        </div>
-                                    </div>
-
-                                </apex:outputPanel>
-                                <!-- 
-                                  -- Additional Details Panel with Itemization, Contractual Fees
-                                  -- Predefined Payments, Payment Preferences and Schedule
-                                  -->
-                                <div class="slds-tabs--scoped slds-m-top--large">
-                                    <!--Tabs -->
-                                    <ul class="slds-tabs--scoped__nav" role="tablist">
-                                        <li id="itemizationTab" class="slds-tabs--scoped__item slds-text-heading--label slds-active"
-                                            title="{!$Label.Itemization_Section_Title}" role="presentation">
-                                            <a id="itemizationTabLabel" class="slds-tabs--scoped__link" href="#void" role="tab" tabindex="0"
-                                               aria-selected="false" aria-controls="itemizationTabContent">
-                                               {!$Label.Itemization_Section_Title}
-                                            </a>
-                                        </li>
-
-                                        <li id="contractualFeeTab" class="slds-tabs--scoped__item slds-text-heading--label"
-                                            title="{!$Label.Contract_Fee_Section_Title}" role="presentation">
-                                            <a id="contractualFeeTabLabel" class="slds-tabs--scoped__link" href="#void" role="tab" tabindex="-1" 
-                                               aria-selected="true" aria-controls="contractualFeeTabContent">{!$Label.Contract_Fee_Section_Title}</a>
-                                        </li>
-
-                                        <li id="advancePreferenceTab" class="slds-tabs--scoped__item slds-text-heading--label"
-                                            title="{!$Label.Advance_Preferences_Title}" role="presentation">
-                                            <a id="advancePrefTabLabel" class="slds-tabs--scoped__link" href="#void" role="tab" tabindex="-1" 
-                                               aria-selected="true" aria-controls="advancePrefTabContent">{!$Label.Advance_Preferences_Title}</a>
-                                        </li>
-
-                                        <li id="calculationResultTab" class="slds-tabs--scoped__item slds-text-heading--label"
-                                            title="{!$Label.fscore__calculator_result_heading}" role="presentation">
-                                            <a id="calculationResultTabLabel" class="slds-tabs--scoped__link" href="#void" role="tab" tabindex="-1" 
-                                               aria-selected="true" aria-controls="calculationResultTabContent">{!$Label.fscore__calculator_result_heading}</a>
-                                        </li>
-                                    </ul>
-                                    <!-- / Tabs -->
                                     
-                                    <!-- Contents -->
-                                    <!-- Itemizations -->
-                                    <div id="itemizationTabContent" class="slds-tabs--scoped__content slds-show"
-                                         role="tabpanel" aria-labelledby="itemizationTabLabel">
-        
-                                        <apex:outputPanel id="iItemizationContentPanel">
-
-                                            <div class="slds-grid slds-grid--align-spread">
-                                                <div class="slds-col"> </div>
-                                                <div class="slds-col slds-no-flex slds-align-middle">
-                                                    <apex:commandLink action="{!onAddItemization}" 
-                                                                      value="{!$Label.fscore__add_button}"
-                                                                      title="{!$Label.fscore__add_button}"
-                                                                      reRender="messagePanel,iItemizationContentPanel" 
-                                                                      status="waitActionStatus"
-                                                                      style="padding: 4px 8px !important;"
-                                                                      styleClass="fs-small-button--brand"/>&nbsp;&nbsp;
-
-                                                    <apex:commandLink action="{!onCalculateItemizations}" 
-                                                                      value="{!$Label.fscore__calculate_button}"
-                                                                      title="{!$Label.fscore__calculate_all_itemization_button_toolip}"
-                                                                      reRender="messagePanel,iContractParamDetailPanel,iItemizationContentPanel" 
-                                                                      status="waitActionStatus"
-                                                                      style="padding: 4px 8px !important;"
-                                                                      styleClass="fs-small-button--brand"/>&nbsp;&nbsp;
-
-                                                    <apex:commandLink action="{!onSyncItemizationsToContract}" 
-                                                                      value="{!$Label.fscore__calculate_and_sync_button}"
-                                                                      title="{!$Label.fscore__calculate_and_sync_itemization_tooltip}"
-                                                                      reRender="messagePanel,iContractParamDetailPanel,iItemizationContentPanel" 
-                                                                      status="waitActionStatus"
-                                                                      style="padding: 4px 8px !important;"
-                                                                      styleClass="fs-small-button--brand"/>
-                                                </div>
-                                            </div>
+                                    <apex:outputPanel id="iItemizationContentPanel">
+	                                    <div class="slds-m-top_small">
+	                                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small fs-edit-section-header"
+	                                             style="background-color: #f3f2f2 !important;">
+	                                            <div class="slds-col slds-align-middle">
+	                                                <h3><span style="color: #16325c;">
+	                                                        <strong>{!$Label.Itemization_Section_Title}</strong>
+	                                                    </span>
+	                                                </h3>
+	                                            </div>
+	                                            
+	                                            <div class="slds-col slds-no-flex slds-align-middle">
+	                                                <apex:commandLink action="{!onAddItemization}" 
+	                                                                  value="{!$Label.fscore__add_button}"
+	                                                                  title="{!$Label.fscore__add_button}"
+	                                                                  reRender="messagePanel,iItemizationContentPanel" 
+	                                                                  status="waitActionStatus"
+	                                                                  style="padding: 4px 8px !important;"
+	                                                                  styleClass="fs-small-button--brand"/>&nbsp;
+	
+	                                                <apex:commandLink action="{!onCalculateItemizations}" 
+	                                                                  value="{!$Label.fscore__calculate_button}"
+	                                                                  title="{!$Label.fscore__calculate_all_itemization_button_toolip}"
+	                                                                  reRender="messagePanel,iContractParamDetailPanel,iItemizationContentPanel" 
+	                                                                  status="waitActionStatus"
+	                                                                  style="padding: 4px 8px !important;"
+	                                                                  styleClass="fs-small-button--brand"/>&nbsp;
+	
+	                                                <apex:commandLink action="{!onSyncItemizationsToContract}" 
+	                                                                  value="{!$Label.fscore__calculate_and_sync_button}"
+	                                                                  title="{!$Label.fscore__calculate_and_sync_itemization_tooltip}"
+	                                                                  reRender="messagePanel,iContractParamDetailPanel,iItemizationContentPanel" 
+	                                                                  status="waitActionStatus"
+	                                                                  style="padding: 4px 8px !important;"
+	                                                                  styleClass="fs-small-button--brand"/>
+	                                            </div>
+	                                        </div>
 
                                             <c:lendingAppItemizationEditList itemizationObjectList="{!mItemizationObjectList}" 
                                                                              requestMode="false"/>
-                                        </apex:outputPanel>
-                                    </div>
-                                    <!-- / Itemizations -->
+                                        </div>
+                                    </apex:outputPanel>
                                     
-                                    <!-- Contractual Fees -->
-                                    <div id="contractualFeeTabContent" class="slds-tabs--scoped__content slds-hide"
-                                         role="tabpanel" aria-labelledby="contractualFeeTabLabel">
-                                        <apex:outputPanel id="iContractualFeePanel">                                    
+                                    <apex:outputPanel id="iContractualFeePanel">
+                                        <div class="slds-m-top_small">
+ 		                                    <c:sectionHeader label="{!$Label.Contract_Fee_Section_Title}" 
+		                                                     isEditSectionHeader="true" isModalWindow="true"/>
+		 
                                             <c:lendingAppFeeEditList contractualFeeObjectList="{!mContractualFeeObjectList}"
                                                                      titleStyleClass="slds-hide"/>
+                                        </div>                              
+                                    </apex:outputPanel>
+                                </div>
+                                <!-- / Tab 1 Contents -->
+                                
+                                <!-- Tab 2 Contents -->
+                                <div id="tab_2_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_2_Title">
 
-                                        </apex:outputPanel>
-                                    </div>
-                                    <!-- / Contractual Fees -->
-                                    
-                                    <!-- Advance Payment Preferences -->
-                                    <div id="advancePrefTabContent" class="slds-tabs--scoped__content slds-hide"
-                                         role="tabpanel" aria-labelledby="advancePrefTabLabel">
-                                        
-                                        <div class="slds-grid slds-grid--align-spread slds-container--fluid">
-                                            <div class="slds-col slds-size--1-of-1 slds-large-size--1-of-2 slds-p-right--small slds-col--rule-right">
-                                                <apex:outputPanel id="iPredefinedPmtPanel">                                    
-                                                    <c:lendingAppPredefinedPayment applicationId="{!mApplication.Id}"
-                                                                                   predefinedPaymentList="{!mPredefinedPmtObjectList}"
-                                                                                   removedPredefinedPaymentList="{!mRemovedPredefinedPmtList}"
-                                                                                   isApplicable="{!mApplication.Is_Predefined_User_Payments_Allowed__c}"
-                                                                                   titleStyleClass="slds-text-body--regular"/>
-                                                </apex:outputPanel>
-                                            </div>
-                                            <div class="slds-col slds-size--1-of-1 slds-large-size--1-of-2 slds-p-left--small">
-                                                <apex:outputPanel id="iRatePreferencePanel">
-                                                    <c:lendingAppRatePreference applicationId="{!mApplication.Id}"
-                                                                                ratePreferenceList="{!mRatePrefObjectList}"
-                                                                                removedRatePreferenceList="{!mRemovedRatePrefList}"
-                                                                                isApplicable="{!mApplication.Is_Advance_Rate_Preferences_Allowed__c}"
-                                                                                titleStyleClass="slds-text-body--regular"/>
-                                                </apex:outputPanel>
-                                            </div>
+	                                <!-- Contract Params -->
+	                                <apex:outputPanel id="iContractParamDetailPanel">
+	                                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+	                                        <div class="slds-col"></div>
+	                                        <div class="slds-col slds-no-flex slds-align-top">
+	                                            <apex:selectList id="iSelectedCalcParam" multiselect="false" size="1"
+	                                                             title="{!$Label.fscore__calculate_option_tooltip}"
+	                                                             value="{!mCalculateOption}"
+	                                                             style="height: 1.5rem !important; width: 100% !important;"
+	                                                             styleClass="slds-m-horizontal--xx-small"
+	                                                             onchange="setFieldDisplayProperties();">
+	                                                 <apex:selectOptions value="{!mCalculateOptionList}"/>
+	                                            </apex:selectList>&nbsp;
+	                                            
+	                                            <apex:commandButton id="calculateButtonTop" action="{!onCalculate}" 
+	                                                                value="{!$Label.fscore__calculate_button}"
+	                                                                title="{!$Label.fscore__calculate_button}"
+	                                                                reRender="messagePanel,iContractParamDetailPanel,iCalcResultPanel" 
+	                                                                status="waitActionStatus"
+	                                                                styleClass="slds-button slds-button--brand"
+	                                                                oncomplete="onCalculationComplete();"/>
+	                                        </div>
+	                                    </div>
+	        
+	                                    <div class="slds-grid slds-wrap slds-m-horizontal_small">
+	                                        <!-- Financed Amount -->
+	                                        <div id="iFinancedAmount" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Financed_Amount__c.Label}</span>
+	                                                <apex:outputPanel id="iFinancedAmountRequired" 
+	                                                                  rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"
+	                                                                  styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:outputField id="iFinancedAmountReadOnly" value="{!mApplication.Financed_Amount__c}"
+	                                                              rendered="{!NOT($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
+	                                            <apex:inputField id="iFinancedAmountValue" value="{!mApplication.Financed_Amount__c}"
+	                                                             rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
+	                                        </div>
+	
+	                                        <!-- Rate -->
+	                                        <div id="iRate" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Rate__c.Label}</span>
+	                                                <apex:outputPanel id="iRateRequired" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:inputField id="iRateValue" value="{!mApplication.Rate__c}"/>
+	                                        </div>
+	
+	                                        <!-- Term -->
+	                                        <div id="iTerm" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Term__c.Label}</span>
+	                                                <apex:outputPanel id="iTermRequired" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:inputField id="iTermValue" value="{!mApplication.Term__c}"/>
+	                                        </div>
+	                                        
+	                                        <!-- Frequency -->
+	                                        <div id="iPaymentFrequency" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Payment_Frequency__c.Label}</span>
+	                                                <apex:outputPanel id="iPaymentFrequencyRequired" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:inputField id="iPaymentFrequencyValue" value="{!mApplication.Payment_Frequency__c}"/>
+	                                        </div>
+	
+	                                        <!-- Contract Date -->
+	                                        <div id="iContractDate" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Contract_Date__c.Label}</span>
+	                                                <apex:outputPanel id="iContractDateRequired" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:inputField id="iContractDateValue" value="{!mApplication.Contract_Date__c}"/>
+	                                        </div>
+	        
+	                                        <!-- Payment Start Date -->
+	                                        <div id="iPaymentStartDate" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Payment_Start_Date__c.Label}</span>
+	                                                <apex:outputPanel id="iPaymentStartDateRequired" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:inputField id="iPaymentStartDateValue" value="{!mApplication.Payment_Start_Date__c}"/>
+	                                        </div>
+	
+	                                        <!-- Payment Amount-->
+	                                        <div id="iPaymentAmount" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Payment_Amount__c.Label}</span>
+	                                                <apex:outputPanel id="iPaymentAmountRequired" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                             <apex:inputField id="iPaymentAmountValue" value="{!mApplication.Payment_Amount__c}"/>
+	                                        </div>
+	
+	                                        <!-- Prepaid_Fee__c -->
+	                                        <div id="iPrepaidFee" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Prepaid_Fee__c.Label}</span>
+	                                                <apex:outputPanel rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"
+	                                                                  styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:outputField id="iPrepaidFeeReadOnly" value="{!mApplication.Prepaid_Fee__c}"
+	                                                              rendered="{!NOT($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
+	                                            <apex:inputField id="iPrepaidFeeValue" value="{!mApplication.Prepaid_Fee__c}"
+	                                                             rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
+	                                        </div>
+	
+	
+	                                        <!-- Financed Fee -->
+	                                        <div id="iFinanceFee" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Finance_Fee__c.Label}</span>
+	                                                <apex:outputPanel rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"
+	                                                                  styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                            </p>
+	                                            <apex:outputField id="iFinanceFeeReadOnly" value="{!mApplication.Finance_Fee__c}" 
+	                                                              rendered="{!NOT($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
+	                                            <apex:inputField id="iFinanceFeeValue" value="{!mApplication.Finance_Fee__c}"
+	                                                             rendered="{!($Permission.Allow_Access_To_Edit_Itemized_Fields)}"/>
+	                                        </div>
+	
+	                                        <!-- Balloon Amount-->
+	                                        <div id="iBalloonAmount" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Balloon_Amount__c.Label}</span>
+	                                            </p>
+	                                            <apex:inputField id="iBalloonAmountValue" value="{!mApplication.Balloon_Amount__c}"/>
+	                                        </div>
+	
+	                                        <!-- Interest Only Term -->
+	                                        <div id="iInterestOnlyTerm" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Interest_Only_Term__c.Label}</span>
+	                                            </p>
+	                                            <apex:inputField id="iInterestOnlyValue" value="{!mApplication.Interest_Only_Term__c}"/>
+	                                        </div>
+	
+	                                        <!-- Interest Start Date -->
+	                                        <div id="iInterestStartDate" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                                <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Interest_Accrual_Start_Date__c.Label}</span>
+	                                            </p>
+	                                            <apex:inputField id="iInterestStartDateValue" value="{!mApplication.Interest_Accrual_Start_Date__c}"/>
+	                                        </div>
+	
+	                                        <!-- show additional fields from field set -->
+	                                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Contract_Additional_Edit_Fields}" var="additionalInfo">
+		                                        <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+		                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                                <span class="slds-truncate">{!additionalInfo.Label}</span>
+	                                                    <apex:outputPanel rendered="{!OR(additionalInfo.required, additionalInfo.dbRequired)}"
+	                                                                      styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                            </p>
+		                                            <apex:inputField value="{!mApplication[additionalInfo.fieldPath]}" required="false"/>
+		                                        </div>
+	                                       </apex:repeat>
+	                                    </div>
+	                                        
+                                        <!-- Advance Parameters  -->
+                                        <div class="slds-m-top_small">
+ 		                                    <!-- Change this to collapsible header  -->
+ 		                                    <c:sectionHeader label="{!$Label.Advance_Preferences_Title}" 
+		                                                     isEditSectionHeader="true" isModalWindow="true"/>
+
+		                                    <div id="iAdvancePrefSection">   
+		                                        <div class="slds-grid slds-grid_align-spread slds-container_fluid">
+		                                            <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 slds-p-right_small slds-col_rule-right">
+		                                                <apex:outputPanel id="iPredefinedPmtPanel">                                    
+		                                                    <c:lendingAppPredefinedPayment applicationId="{!mApplication.Id}"
+		                                                                                   predefinedPaymentList="{!mPredefinedPmtObjectList}"
+		                                                                                   removedPredefinedPaymentList="{!mRemovedPredefinedPmtList}"
+		                                                                                   isApplicable="{!mApplication.Is_Predefined_User_Payments_Allowed__c}"
+		                                                                                   titleStyleClass="slds-text-body--regular"/>
+		                                                </apex:outputPanel>
+		                                            </div>
+		                                            <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 slds-p-left_small">
+		                                                <apex:outputPanel id="iRatePreferencePanel">
+		                                                    <c:lendingAppRatePreference applicationId="{!mApplication.Id}"
+		                                                                                ratePreferenceList="{!mRatePrefObjectList}"
+		                                                                                removedRatePreferenceList="{!mRemovedRatePrefList}"
+		                                                                                isApplicable="{!mApplication.Is_Advance_Rate_Preferences_Allowed__c}"
+		                                                                                titleStyleClass="slds-text-body--regular"/>
+		                                                </apex:outputPanel>
+		                                            </div>
+		                                        </div>
+		
+		                                        <div class="slds-m-top_medium">
+		                                            <apex:outputPanel id="iPmtPreferencePanel">
+		                                                <c:lendingAppPaymentPreference applicationId="{!mApplication.Id}"
+		                                                                               paymentPreferenceList="{!mPaymentPrefObjectList}"
+		                                                                               removedPaymentPreferenceList="{!mRemovedPaymentPrefList }"
+		                                                                               isApplicable="{!mApplication.Is_Advance_Payment_Preferences_Allowed__c}"
+		                                                                               titleStyleClass="slds-text-body--regular"/>
+		                                            </apex:outputPanel>
+		                                        </div>
+		
+		                                        <!-- Commented by SSingh : To be implemented with Promotion feature -->
+		                                        <!--
+		                                            <div class="slds-m-top--medium">
+		                                                <c:lendingAppHolidayPreference applicationId="{!mApplication.Id}"
+		                                                                               holidayPreferenceList="{!mHolidayPrefObjectList}"
+		                                                                               removedHolidayPreferenceList="{!mRemovedHolidayPrefList}"
+		                                                                               titleStyleClass="slds-text-body--regular"/>
+		                                            </div>
+		                                        -->
+		                                    </div>
                                         </div>
+                                        
+	                                    <div class="slds-grid slds-grid--align-spread slds-m-top--small">
+	                                        <div class="slds-col"></div>
+	                                        <div class="slds-col slds-no-flex slds-align-top">
+	                                            <apex:commandButton id="calculateButtonBottom" action="{!onCalculate}" 
+	                                                                value="{!$Label.fscore__calculate_button}"
+	                                                                title="{!$Label.fscore__calculate_button}"
+	                                                                reRender="messagePanel,iContractParamDetailPanel,iCalcResultPanel" 
+	                                                                status="waitActionStatus"
+	                                                                styleClass="slds-button slds-button--brand"
+	                                                                oncomplete="onCalculationComplete();"/>
+	                                        </div>
+	                                    </div>
+	
+                                        <div class="slds-m-top_small">
+ 		                                    <c:sectionHeader label="{!$Label.Advance_Preferences_Title}" 
+		                                                     isEditSectionHeader="true" isModalWindow="true"/>
 
-                                        <div class="slds-m-top--large">
-                                            <apex:outputPanel id="iPmtPreferencePanel">
-                                                <c:lendingAppPaymentPreference applicationId="{!mApplication.Id}"
-                                                                               paymentPreferenceList="{!mPaymentPrefObjectList}"
-                                                                               removedPaymentPreferenceList="{!mRemovedPaymentPrefList }"
-                                                                               isApplicable="{!mApplication.Is_Advance_Payment_Preferences_Allowed__c}"
-                                                                               titleStyleClass="slds-text-body--regular"/>
+                                            <apex:outputPanel id="iCalcResultPanel">                                    
+                                                <div id="iCalcResultSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                                	<!-- show calculated fields from field set -->
+			                                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Contract_Calculated_Fields}" var="calculatedField">
+                                                        <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+				                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+				                                                <span class="slds-truncate">{!calculatedField.Label}</span>
+			                                                </p>
+				                                            <apex:outputField value="{!mApplication[calculatedField.fieldPath]}"/>
+				                                        </div>
+			                                       </apex:repeat>
+                                                </div>
                                             </apex:outputPanel>
                                         </div>
 
-                                        <!-- Commented by SSingh : To be implemented with Promotion feature -->
-                                        <!--
-                                            <div class="slds-m-top--medium">
-                                                <c:lendingAppHolidayPreference applicationId="{!mApplication.Id}"
-                                                                               holidayPreferenceList="{!mHolidayPrefObjectList}"
-                                                                               removedHolidayPreferenceList="{!mRemovedHolidayPrefList}"
-                                                                               titleStyleClass="slds-text-body--regular"/>
-                                            </div>
-                                        -->
-                                    </div>
-                                    <!-- / Advance Payment Preferences -->
+	                                </apex:outputPanel>
+                                </div>
+                                <!-- / Tab 2 Contents -->
+                                
+                                <!-- Tab 3 Contents -->
+                                <div id="tab_3_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_3_Title">
 
-                                    <!-- Calculation Result -->
-                                    <div id="calculationResultTabContent" class="slds-tabs--scoped__content slds-hide"
-                                         role="tabpanel" aria-labelledby="calculationResultTabLabel">
-                                        <apex:outputPanel id="iCalcResultPanel">                                    
-                                            <apex:pageBlockSection id="iCalcResultSection" columns="2" collapsible="false">
-                                                <!-- show calculated fields from field set -->
-                                                <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Contract_Calculated_Fields}" var="calculatedField">
-                                                    <apex:pageBlockSectionItem >
-                                                        <apex:outputLabel value="{!calculatedField.Label}"></apex:outputLabel>
-                                                        <apex:outputField value="{!mApplication[calculatedField.fieldPath]}"/>
-                                                    </apex:pageBlockSectionItem>
-                                                </apex:repeat>
-                                            </apex:pageBlockSection>
-        
-                                            <div class="slds-m-top--small">
-                                                <c:sectionHeader label="{!$Label.fscore__repayment_schedule_section_title}"
-                                                                 isEditSectionHeader="true" isModalWindow="true"/>
-                                            </div>
-                                            <div class="slds-m-horizontal--small">
+                                        <apex:outputPanel id="repaymentsPanel">
+                                            <c:sectionHeader label="{!$Label.fscore__repayment_schedule_section_title}"
+                                                             isEditSectionHeader="true" isModalWindow="true"/>
+                                            
+                                            <div class="slds-m-horizontal_x-small">
                                                 <apex:dataTable id="iRepaySchTable" value="{!mRepayScheduleList}" var="repaySch"
                                                                 rendered="{!(mRepayScheduleList.size > 0)}"
                                                                 styleClass="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal">  
@@ -479,16 +469,53 @@
                                                     </div>
                                                 </apex:outputPanel>
                                             </div>
+                                        
+                                            <div class="slds-m-top_small">
+			                                    <c:sectionHeader label="{!$Label.fscore__repayment_detail_section_title}"
+			                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                                            </div>
+                                            
+		                                    <div class="slds-m-horizontal_x-small">
+		                                        <div class="slds-scrollable_y">
+		                                            <div style="max-height:640px">
+		                                                <apex:dataTable id="iRepaymentDtlTable" value="{!mRepaymentList}" var="repayDtl"
+		                                                                rendered="{!(mRepaymentList.size > 0)}"
+		                                                                styleClass="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal">  
+		                                
+		                                                    <apex:repeat value="{!$ObjectType.Lending_Application_Repayment_Detail__c.FieldSets.Repayment_List_View_Fields}"
+		                                                                 var="listViewField">
+		                                                        <apex:column >
+		                                                            <apex:facet name="header">
+		                                                                <span class="slds-text-heading--x-small slds-truncate slds-cell-wrap">
+		                                                                    <strong>{!listViewField.Label}</strong>
+		                                                                </span>
+		                                                            </apex:facet>
+		                                                            <apex:outputField value="{!repayDtl[listViewField.fieldPath]}" html-class="slds-cell-wrap"/>
+		                                                        </apex:column>
+		                                                    </apex:repeat>
+		                                
+		                                                </apex:dataTable>
+		                                            </div>                       
+		                                        </div>
+		                                        
+		                                        <apex:outputPanel rendered="{!(mRepaymentList.size == 0)}">
+		                                            <div class="slds-box slds-box--x-small slds-container--fluid"
+		                                                 style="border-radius: 0; border-left: 0; border-right: 0;">
+		                                                <div align="center">
+		                                                    <span class="slds-text-body--regular">{!$Label.No_Record_To_Display}</span>
+		                                                </div>
+		                                            </div>
+		                                        </apex:outputPanel>
+		                                    </div>
+                                        
                                         </apex:outputPanel>
-                                    </div>
-                                    <!-- / Calculation Result -->
-                                    <!-- / Contents -->
+
                                 </div>
-                                <!-- / Additional Details -->
+                                <!-- / Tab 3 Contents -->
+                            </div>
         
-                            </apex:pageBlock>
-                        </apex:outputPanel>
-                    </fieldset>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
                 </div>
             </apex:form>
             <!-- / Wizard Step Body -->
