@@ -415,25 +415,25 @@
 	                                    </div>
 	
                                         <div class="slds-m-top_small">
- 		                                    <c:sectionHeader label="{!$Label.Advance_Preferences_Title}" 
-		                                                     isEditSectionHeader="true" isModalWindow="true"/>
+					    <c:sectionHeader label="{!$Label.fscore__calculator_result_heading}" 
+							     isEditSectionHeader="true" isModalWindow="true"/>
 
                                             <apex:outputPanel id="iCalcResultPanel">                                    
                                                 <div id="iCalcResultSection" class="slds-grid slds-wrap slds-m-horizontal_small">
                                                 	<!-- show calculated fields from field set -->
-			                                        <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Contract_Calculated_Fields}" var="calculatedField">
+						    <apex:repeat value="{!$ObjectType.Lending_Application__c.FieldSets.Contract_Calculated_Fields}" var="calculatedField">
                                                         <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
-				                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
-				                                                <span class="slds-truncate">{!calculatedField.Label}</span>
-			                                                </p>
-				                                            <apex:outputField value="{!mApplication[calculatedField.fieldPath]}"/>
-				                                        </div>
-			                                       </apex:repeat>
+							    <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+								<span class="slds-truncate">{!calculatedField.Label}</span>
+							    </p>
+							    <apex:outputField value="{!mApplication[calculatedField.fieldPath]}"/>
+							</div>
+						    </apex:repeat>
                                                 </div>
                                             </apex:outputPanel>
                                         </div>
 
-	                                </apex:outputPanel>
+	                            </apex:outputPanel>
                                 </div>
                                 <!-- / Tab 2 Contents -->
                                 
