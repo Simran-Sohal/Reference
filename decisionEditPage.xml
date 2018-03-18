@@ -1,0 +1,487 @@
+<apex:page id="decisionEditPage" standardController="Lending_Application_Decision__c"
+           extensions="DecisionEditController" tabStyle="Lending_Application_Decision__c"
+           showHeader="true" sidebar="true" applyHtmlTag="true" docType="html-5.0"
+           title="{!$Label.fscore__edit_lending_app_decision_title}">
+
+    <head>
+        <apex:slds />
+        <apex:stylesheet value="{!URLFOR($Resource.fs_style, 'fs-style.css')}"/>
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"/>
+        <script src="{!URLFOR($Resource.fs_svg, 'svg4everybody.js')}"></script>
+        <script>
+            var $j = jQuery.noConflict();
+            svg4everybody();
+        </script>
+    </head>   
+
+    <body>   
+        <div class="slds-scope">
+            <apex:form id="decisionEditForm" styleClass="slds-form_horizontal fs-data-form slds-m-horizontal_x-small slds-m-bottom_large">
+
+                <div id="page-sticky-anchor"></div>
+                <div id="page-sticky-header">
+                    <div class="slds-page-header slds-m-bottom_small" role="banner">
+                        <div class="slds-grid slds-grid--align-spread">
+                            <div class="slds-col" align="left">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                       <c:svgIcon iconStyleClass="slds-icon slds-icon--large slds-icon-standard-apps"
+                                                  iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/custom-sprite/svg/symbols.svg#custom18')}"/>
+                                    </div>
+                                    <div class="slds-media__body slds-align-middle">
+                                        <p class="slds-text-heading--label">{!mApplication.Name}</p>
+                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle">
+                                            {!IF(ISBLANK(mDecision.Id), $Label.fscore__new_lending_app_decision_title, ($ObjectType.Lending_Application_Decision__c.Fields.Name.Label + mDecision.Name))}
+                                        </h1>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col slds-no-flex slds-align-middle">
+                                <apex:commandButton value="{!$Label.fscore__save_button}" 
+                                                    title="{!$Label.fscore__save_button_tooltip}"
+                                                    styleClass="slds-button slds-button--brand"
+                                                    action="{!onSave}" 
+                                                    status="waitStatus"
+                                                    reRender="messagePanel,decisionBlockPanel"/>
+                                                    
+                                <apex:commandButton immediate="true" action="{!cancel}"
+                                                    value="{!$Label.fscore__cancel_button}" 
+                                                    title="{!$Label.fscore__cancel_button_tooltip}"
+                                                    styleClass="slds-button slds-button--neutral"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                <apex:actionStatus id="waitStatus">
+                    <apex:facet name="start">
+                        <c:fsSpinner spinnerSize="medium"/>
+                    </apex:facet>
+                </apex:actionStatus>
+
+                <apex:outputPanel id="messagePanel" styleClass="fs-message-panel">
+                    <apex:pagemessages />
+                </apex:outputPanel>          
+    
+                <div class="slds-container_fluid slds-m-top_small">
+                    <apex:outputPanel id="decisionBlockPanel">
+                        <apex:pageBlock id="decisionPageBlock" mode="mainDetail" html-class="fs-data-block">
+                            
+                            <div id="decisionTabPanel" class="slds-tabs_scoped">
+                                <ul class="slds-tabs_scoped__nav" role="tablist">
+                                    <!-- Tab 1 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label slds-active" role="presentation">
+                                        <a id="tab_1_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="0" aria-selected="true" aria-controls="tab_1_Content" >
+                                            {!$Label.Decision_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 1 Title -->
+    
+                                    <!-- Tab 2 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_2_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_2_Content" >
+                                            {!$Label.Itemization_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 2 Title -->
+
+                                    <!-- Tab 3 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_3_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_3_Content" >
+                                            {!$Label.Stipulation_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 3 Title -->
+                                </ul>
+    
+
+                                <!-- Tab 1 Contents -->
+                                <div id="tab_1_Content" class="slds-tabs_scoped__content slds-show"
+                                     role="tabpanel" aria-labelledby="tab_1_Title">
+                                    <apex:outputPanel id="decisionInfoPanel">
+                                       <c:sectionHeader label="{!$Label.fscore__information_block_title}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+    
+                                        <apex:pageBlockSection id="decisionInfoSection" columns="2" collapsible="false" html-class="slds-theme--default">
+                 
+                                            <apex:pageblockSectionItem >
+                                                <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision__c.Fields.Decision__c.Label}">
+                                                    <apex:outputPanel styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
+                                                </apex:outputLabel>
+                                                <apex:outputPanel id="decisionValue">
+                                                    <apex:inputField value="{!mDecision.Decision__c}" required="false">
+                                                        <apex:actionSupport action="{!onDecisionChange}" event="onchange"
+                                                                            status="waitStatus" reRender="messagePanel,decisionBlockPanel"/>
+                                                    </apex:inputField>
+                                                </apex:outputPanel>
+                                            </apex:pageblockSectionItem>
+    
+                                            <apex:pageblockSectionItem >
+                                                <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision__c.Fields.Lending_Application_Number__c.Label}">
+                                                </apex:outputLabel>
+                                                <apex:outputField value="{!mDecision.Lending_Application_Number__c}"/>
+                                            </apex:pageblockSectionItem>
+    
+                                            
+                                            <apex:pageblockSectionItem >
+                                                <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision__c.Fields.Decision_By__c.Label}">
+                                                    <apex:outputPanel styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
+                                                </apex:outputLabel>
+                                                <apex:inputField value="{!mDecision.Decision_By__c}" required="false"/>
+                                            </apex:pageblockSectionItem>
+                                            
+                                            <apex:pageblockSectionItem /> <!-- Blank Space -->
+                                            
+                                            <apex:pageblockSectionItem rendered="{!AND(mIsRejected, $ObjectType.Lending_Application_Decision__c.Fields.Reject_Reason__c.accessible)}">
+                                                <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision__c.Fields.Reject_Reason__c.Label}"></apex:outputLabel>
+                                                <apex:selectList value="{!mRejectReasonList}" multiselect="true"
+                                                                 size="10" style="width:95% !important; height:auto !important;">
+                                                    <apex:selectOptions value="{!mRejectReasonOptions}"/>
+                                                </apex:selectList>
+                                            </apex:pageblockSectionItem>
+                                        </apex:pageBlockSection>
+        
+                                    </apex:outputPanel>                            
+        
+                                    <apex:outputPanel id="decisionReferencePanel">
+                                        <div class="slds-m-top--small">
+                                            <c:sectionHeader label="{!$Label.fscore__decision_reference_section_title}"
+                                                             isEditSectionHeader="true" isModalWindow="true"/>
+                                        </div>
+        
+                                        <apex:pageBlockSection id="decisionReferenceSection" columns="2" collapsible="false"
+                                                               html-class="slds-theme--default">
+                 
+                                            <apex:repeat value="{!$ObjectType.Lending_Application_Decision__c.FieldSets.Decision_Reference_Fields}" var="decisionRef">
+                                                <apex:pageblockSectionItem >
+                                                    <apex:outputLabel value="{!decisionRef.Label}">
+                                                        <apex:outputPanel rendered="{!OR(decisionRef.required, decisionRef.dbrequired)}"
+                                                                          styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
+                                                    </apex:outputLabel>
+                                                    <apex:inputField value="{!mDecision[decisionRef.fieldPath]}" required="false"/>
+                                                </apex:pageblockSectionItem>
+                                            </apex:repeat>
+                                            
+                                        </apex:pageBlockSection>
+                                    </apex:outputPanel>                            
+        
+                                    <apex:outputPanel id="decisionAdditionalInfoPanel">
+                                        <div class="slds-m-top--small">
+                                            <c:sectionHeader label="{!$Label.fscore__additional_information_block_title}"
+                                                             isEditSectionHeader="true" isModalWindow="true"/>
+                                        </div>
+        
+                                        <apex:pageBlockSection id="decisionNotesSection" columns="1" collapsible="false"
+                                                               html-class="slds-theme--default">
+                                            <apex:inputTextarea rows="3" value="{!mDecision.Decision_Notes__c}" style="width:87% !important;"/>
+                                        </apex:pageBlockSection>
+        
+                                        <apex:pageBlockSection id="decisionAdditionalInfoSection" columns="2" collapsible="false"
+                                                               html-class="slds-theme--default">
+                                            <apex:repeat value="{!$ObjectType.Lending_Application_Decision__c.FieldSets.Additional_Info_Fields}" var="addlInfo">
+                                                <apex:pageblockSectionItem >
+                                                    <apex:outputLabel value="{!addlInfo.Label}">
+                                                        <apex:outputPanel rendered="{!OR(addlInfo.required, addlInfo.dbrequired)}"
+                                                                          styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
+                                                    </apex:outputLabel>
+                                                    <apex:inputField value="{!mDecision[addlInfo.fieldPath]}" required="false"/>
+                                                </apex:pageblockSectionItem>
+                                            </apex:repeat>
+    
+                                            <apex:pageblockSectionItem rendered="{!NOT(ISBLANK(mDecision.Id))}">
+                                                <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision__c.Fields.Last_Decision_Updated_On__c.Label}">
+                                                </apex:outputLabel>
+                                                <apex:outputField value="{!mDecision.Last_Decision_Updated_On__c}"/>
+                                            </apex:pageblockSectionItem>
+                                        </apex:pageBlockSection>
+                                    </apex:outputPanel>                            
+                                </div>
+                                <!-- / Tab 1 Contents -->
+    
+                                <!-- Tab 2 Contents -->
+                                <div id="tab_2_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_2_Title">
+                                    <!-- Itemizations -->
+                                    <apex:outputPanel id="itemizationApprovalPanel">
+                                        <div class="slds-m-bottom_small">
+                                            <div class="slds-grid slds-grid--align-spread slds-m-bottom--small fs-edit-section-header"
+                                                 style="background-color: #f3f2f2 !important;">
+                                                <div class="slds-col slds-align-middle">
+                                                    <h3><span style="color: #16325c;">
+                                                            <strong>{!$Label.fscore__itemization_section_title}</strong>
+                                                        </span>
+                                                    </h3>
+                                                </div>
+                                                
+                                                <div class="slds-col slds-no-flex slds-align-middle">
+                                                    <div class="slds-p-vertical--xxx-small">
+                                                        <apex:commandLink action="{!onCalculateAllItemization}" 
+                                                                          value="{!$Label.fscore__calculate_button}"
+                                                                          title="{!$Label.fscore__calculate_all_itemization_button_toolip}"
+                                                                          reRender="messagePanel,itemizationApprovalTablePanel" 
+                                                                          status="waitStatus"
+                                                                          style="padding: 4px 8px !important;"
+                                                                          styleClass="fs-small-button--brand"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+    
+                                            <div class="slds-p-horizontal--x-small">
+                                                <apex:outputPanel id="itemizationApprovalTablePanel" rendered="{!(mDecisionItmzObjList.size > 0)}">
+                                                    <div class="">
+                                                        <apex:dataTable id="itemizationApprovalTable" value="{!mDecisionItmzObjList}" var="decisionItmzObj" 
+                                                                        styleClass="slds-table slds-table--bordered slds-table--striped slds-max-medium-table--stacked-horizontal">
+                                                                            
+                                                            <apex:column width="5%">
+                                                                <apex:facet name="header">
+                                                                    <span class="slds-text-heading--x-small slds-truncate">
+                                                                        <strong>{!$Label.fscore__serial_number}</strong>
+                                                                    </span>
+                                                                </apex:facet>
+                                                                <apex:outputField value="{!decisionItmzObj.itemization.Display_Order__c}"/>
+                                                            </apex:column>
+                                    
+                                                            <apex:column width="20%">
+                                                                <apex:facet name="header">
+                                                                    <span class="slds-text-heading--x-small slds-truncate">
+                                                                        <strong>{!$ObjectType.Lending_Application_Decision_Itemization__c.Fields.Itemization_Name__c.Label}</strong>
+                                                                    </span>
+                                                                </apex:facet>
+                                                                <apex:outputText value="{!decisionItmzObj.itemizationName}"/>
+                                                                <p style="font-size: 10px !important; color: #97a3ad !important;">{!decisionItmzObj.itemization.Itemization_Family__c}</p>
+                                                            </apex:column>
+                                    
+                                                            <apex:column width="20%">
+                                                                <apex:facet name="header">
+                                                                    <span class="slds-text-heading--x-small slds-truncate">
+                                                                        <strong>{!$ObjectType.Lending_Application_Decision_Itemization__c.Fields.Description__c.Label}</strong>
+                                                                    </span>
+                                                                </apex:facet>
+                                                                <apex:inputField value="{!decisionItmzObj.itemization.Description__c}"
+                                                                                 style="width: 100% !important;"/>
+                                                            </apex:column>
+    
+                                                            <apex:column width="5%">
+                                                                <apex:facet name="header">
+                                                                    <span class="slds-text-heading--x-small slds-truncate">
+                                                                        <strong>{!$ObjectType.Lending_Application_Decision_Itemization__c.Fields.Plus_Or_Minus__c.Label}</strong>
+                                                                    </span>
+                                                                </apex:facet>
+                                                                <span class="slds-text-heading--small"><strong>{!decisionItmzObj.itemization.Plus_Or_Minus__c}</strong></span>
+                                                            </apex:column>
+                                    
+                                                            <apex:column width="25%">
+                                                                <apex:facet name="header">
+                                                                    <span class="slds-text-heading--x-small slds-truncate">
+                                                                        <strong>{!$ObjectType.Lending_Application_Decision_Itemization__c.Fields.Requested_Amount__c.Label}</strong>
+                                                                    </span>
+                                                                </apex:facet>
+                                                                <apex:inputField value="{!decisionItmzObj.itemization.Requested_Amount__c}" 
+                                                                                 style="width: 100% !important;"/>
+                                                            </apex:column>
+                                    
+                                                            <apex:column width="25%">
+                                                                <apex:facet name="header">
+                                                                    <span class="slds-text-heading--x-small slds-truncate">
+                                                                        <strong>{!$ObjectType.Lending_Application_Decision_Itemization__c.Fields.Approved_Amount_Unsigned__c.Label}</strong>
+                                                                    </span>
+                                                                </apex:facet>
+                                                                
+                                                                <apex:inputField value="{!decisionItmzObj.itemization.Approved_Amount_Unsigned__c}"
+                                                                                 style="width: 100% !important;" rendered="{!NOT(decisionItmzObj.isCalculable)}"/>
+                                                                
+                                                                <apex:actionStatus id="calcActionStatus"
+                                                                                   rendered="{!AND(decisionItmzObj.isCalculable, NOT(decisionItmzObj.itemization.Is_Calculated__c))}">
+                                                                    <apex:facet name="start">
+                                                                        <apex:outputText value="{!$Label.fscore__calculate_button_assistive_text}"
+                                                                                         style="color: #97a3ad !important;" styleClass="slds-text-body--small"/>    
+                                                                    </apex:facet>
+                                                                    <apex:facet name="stop">
+                                                                        <apex:commandLink action="{!onCalculateItemization}" 
+                                                                                          value="{!$Label.fscore__calculate_button}"
+                                                                                          title="{!$Label.fscore__calculate_itemization_button_toolip}"
+                                                                                          rendered="{!AND(decisionItmzObj.isCalculable, NOT(decisionItmzObj.itemization.Is_Calculated__c))}"
+                                                                                          reRender="messagePanel,itemizationApprovalTablePanel" 
+                                                                                          status="calcActionStatus"
+                                                                                          style="color: #ffffff !important;" 
+                                                                                          styleClass="fs-small-button--brand">
+                                                                            <apex:param name="recNumber" assignTo="{!mSelectedItmzRecord}" value="{!decisionItmzObj.recordNumber}"/>
+                                                                        </apex:commandLink>
+                                                                    </apex:facet>
+                                                                </apex:actionStatus>
+                                                                
+                                                                <apex:inputField value="{!decisionItmzObj.itemization.Approved_Amount_Unsigned__c}"
+                                                                                 style="width: 70% !important;"
+                                                                                 rendered="{!AND(decisionItmzObj.isCalculable, decisionItmzObj.itemization.Is_Calculated__c, decisionItmzObj.itemization.Is_Override_Allowed__c)}" />
+                                    
+                                                                <apex:outputField value="{!decisionItmzObj.itemization.Approved_Amount_Unsigned__c}"
+                                                                                  rendered="{!AND(decisionItmzObj.isCalculable, decisionItmzObj.itemization.Is_Calculated__c, NOT(decisionItmzObj.itemization.Is_Override_Allowed__c))}" />
+                                    
+                                                                &nbsp;
+                                                                <apex:commandLink action="{!onCalculateItemization}"
+                                                                                  rendered="{!AND(decisionItmzObj.isCalculable, decisionItmzObj.itemization.Is_Calculated__c)}"
+                                                                                  reRender="messagePanel,itemizationApprovalTablePanel" 
+                                                                                  title="{!$Label.fscore__recalculate_itemization_button_tooltip}"
+                                                                                  status="reCalcActionStatus" 
+                                                                                  style="align-self: center;"
+                                                                                  type="image/png">
+                                                                                  
+                                                                    <apex:actionStatus id="reCalcActionStatus">
+                                                                        <apex:facet name="start">
+                                                                            <apex:image value="{!URLFOR($Resource.fs_slds,'/assets/images/spinners/slds_spinner_brand.gif')}"
+                                                                                        height="24px" width="24px" style="padding: 2px !important;" />
+                                                                        </apex:facet>
+                                                                        <apex:facet name="stop">
+                                                                            <apex:image value="{!URLFOR($Resource.fs_slds,'/assets/icons/utility/refresh_60.png')}" 
+                                                                                        height="24px" width="24px" style="padding: 2px !important;" />
+                                                                        </apex:facet>
+                                                                    </apex:actionStatus>
+                                                                    <apex:param name="recNumber" assignTo="{!mSelectedItmzRecord}" value="{!decisionItmzObj.recordNumber}"/>
+                                                                </apex:commandLink>
+                                                           </apex:column>
+                                    
+                                                        </apex:dataTable>
+                                                    </div>
+                                                </apex:outputPanel>
+                                    
+                                                <apex:outputPanel rendered="{!(mDecisionItmzObjList.size == 0)}">
+                                                    <div class="slds-align--absolute-center">
+                                                        <span class="slds-text-body--regular">{!$Label.fscore__no_record_to_display}</span>
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel>
+                                    <!-- / Itemizations -->
+                                    </div>
+                                <!-- / Tab 2 Contents -->
+    
+                                <!-- Tab 3 Contents -->
+                                <div id="tab_3_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_3_Title">
+                                    <!-- Stipulations -->
+                                    <apex:outputPanel id="stipulationPanel" rendered="{!$ObjectType.Lending_Application_Decision_Stipulation__c.accessible}">
+                                        <div class="slds-m-bottom_small">
+                                            <div class="slds-grid slds-grid--align-spread slds-m-bottom--small fs-edit-section-header"
+                                                 style="background-color: #f3f2f2 !important;">
+                                                <div class="slds-col slds-align-middle">
+                                                    <h3><span style="color: #16325c;">
+                                                            <strong>{!$Label.Stipulation_Section_Title}</strong>
+                                                        </span>
+                                                    </h3>
+                                                </div>
+                                                
+                                                <div class="slds-col slds-no-flex slds-align-middle">
+                                                    <apex:commandLink action="{!onAddStipulation}"
+                                                                      rendered="{!$ObjectType.Lending_Application_Decision_Stipulation__c.createable}"
+                                                                      reRender="messagePanel,stipulationPanel" 
+                                                                      title="{!$Label.fscore__add_button_tooltip}"
+                                                                      status="waitStatus"
+                                                                      style="color: #ffffff !important;align-self: center;" 
+                                                                      type="image/png">
+                                                       <apex:image value="{!URLFOR($Resource.fs_slds, 'assets/icons/action/new_60.png')}"
+                                                                   styleClass="fs-small-button--brand" height="24px" width="24px" 
+                                                                   style="padding: 2px !important;" />
+                                                   </apex:commandLink>
+                                                </div>
+                                            </div>
+                                        </div>    
+        
+                                        <div class="slds-p-horizontal--x-small">
+                                            <!-- Stipulations Table -->
+                                            <apex:dataTable id="iStipulationTable" value="{!mStipulationObjList}" var="stipulationObj"
+                                                            rendered="{! mStipulationObjList.size > 0}"
+                                                            styleClass="slds-table slds-table--bordered slds-table--striped slds-max-medium-table--stacked-horizontal">  
+                        
+                                                <apex:column width="35%">
+                                                    <apex:facet name="header">
+                                                        <span class="slds-text-heading--x-small slds-truncate slds-cell-wrap">
+                                                            <strong>{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Stipulation_Name__c.Label}</strong>
+                                                        </span>
+                                                    </apex:facet>
+                                                    <apex:selectList value="{!stipulationObj.stipulation.Stipulation_Name__c}"
+                                                                     multiselect="false" size="1" style="width: 100% !important;"
+                                                                     rendered="{!NOT(stipulationObj.stipulation.Is_Fulfilled__c)}" >
+                                                        <apex:selectOptions value="{!stipulationObj.stipulationSelectList}"/>
+                                                    </apex:selectList>
+                                                    <apex:outputField value="{!stipulationObj.stipulation.Stipulation_Name_Formula__c}"
+                                                                      rendered="{!(stipulationObj.stipulation.Is_Fulfilled__c)}"/>
+                                                </apex:column>
+                                                
+                                                <apex:column width="55%">
+                                                    <apex:facet name="header">
+                                                        <span class="slds-text-heading--x-small slds-truncate slds-cell-wrap">
+                                                            <strong>{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Comments__c.Label}</strong>
+                                                        </span>
+                                                    </apex:facet>
+                                                    <apex:inputField value="{!stipulationObj.stipulation.Comments__c}"
+                                                                     style="width: 100% !important;"
+                                                                     rendered="{!NOT(stipulationObj.stipulation.Is_Fulfilled__c)}"/>
+                                                    <apex:outputField value="{!stipulationObj.stipulation.Comments__c}"
+                                                                      rendered="{!(stipulationObj.stipulation.Is_Fulfilled__c)}"/>
+                                                </apex:column>
+                        
+                                                <apex:column width="10%">
+                                                    <apex:facet name="header"></apex:facet>
+                                                    <div class="slds-float--right">
+                                                        <apex:image value="{!URLFOR($Resource.fs_slds, 'assets/icons/utility/check_60.png')}"
+                                                                    height="28px" width="28px" style="padding: 4px !important;"
+                                                                    rendered="{!stipulationObj.stipulation.Is_Fulfilled__c}"
+                                                                    title="{!$Label.fscore__fulfilled_stipulation}" />
+        
+                                                        <apex:commandLink action="{!onDeleteStipulation}"
+                                                                          rendered="{!AND(NOT(stipulationObj.stipulation.Is_Fulfilled__c)
+                                                                                         , OR(stipulationObj.stipulation.Id == null
+                                                                                            , $ObjectType.Lending_Application_Decision_Stipulation__c.deletable))}"
+                                                                          reRender="messagePanel,stipulationPanel"
+                                                                          title="{!$Label.fscore__delete_button_tooltip}"
+                                                                          status="deleteRowStatus"
+                                                                          style="align-self: center;"
+                                                                          type="image/png">
+                                                                          
+                                                             <apex:actionStatus id="deleteRowStatus">
+                                                                <apex:facet name="start">
+                                                                    <apex:image value="{!URLFOR($Resource.fs_slds,'/assets/images/spinners/slds_spinner_brand.gif')}"
+                                                                                styleClass="fs-action-icon--delete" height="28px" width="28px" style="padding: 4px !important;" />
+                                                                </apex:facet>
+                                                                <apex:facet name="stop">
+                                                                    <apex:image value="{!URLFOR($Resource.fs_slds, 'assets/icons/utility/close_60.png')}"
+                                                                                styleClass="fs-action-icon--delete" height="28px" width="28px" style="padding: 4px !important;" />
+                                                                </apex:facet>
+                                                            </apex:actionStatus>
+                                                            <apex:param name="deleteRecord" value="{!stipulationObj.uniqueKey}" assignTo="{!mDeletedStipulationKey}"/>
+                                                        </apex:commandLink>
+                                                    </div>
+                                                </apex:column>
+                            
+                                            </apex:dataTable>
+                                                                
+                                            <apex:outputPanel rendered="{!(mStipulationObjList.size == 0)}">
+                                                <div class="slds-align--absolute-center">
+                                                        <span class="slds-text-body--regular">{!$Label.fscore__no_record_to_display}</span>
+                                                </div>
+                                            </apex:outputPanel>
+                                            <!-- / Stipulations Table --> 
+                                        </div>
+                                    </apex:outputPanel>                            
+                                    <!-- / Stipulations -->
+                                </div>
+                                <!-- / Tab 3 Contents -->
+                            </div>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                </div>
+            </apex:form>
+            <c:fsCopyright pageTitle="{!IF(ISBLANK(mDecision.Id), $Label.fscore__new_lending_app_decision_title, ($ObjectType.Lending_Application_Decision__c.Fields.Name.Label + mDecision.Name))}"/>
+        </div>
+        <script src="{!URLFOR($Resource.fs_slds_tabs_js, 'fs_slds_tabs_js.js')}"/>
+        <script src="{!URLFOR($Resource.fs_sticky_header, 'fs_sticky_header.js')}"/>            
+    </body>
+</apex:page>
