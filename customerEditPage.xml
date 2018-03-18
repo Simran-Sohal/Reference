@@ -1,0 +1,266 @@
+<apex:page id="customerEditPage" standardController="Lending_Application_Customer__c"
+           extensions="CustomerEditController" tabStyle="Lending_Application_Customer__c"
+           showHeader="true" applyHtmlTag="true" docType="html-5.0"
+           title="{!$Label.fscore__edit_lending_app_customer_title}">
+
+    <head>
+        <apex:slds />
+        <apex:stylesheet value="{!URLFOR($Resource.fs_style, 'fs-style.css')}"/>
+        <script src="{!URLFOR($Resource.fs_svg, 'svg4everybody.js')}"></script>
+        <script>svg4everybody();</script>
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" />
+        <script>var $j = jQuery.noConflict();</script>
+    </head>   
+
+    <body>   
+        <div class="slds-scope">
+            <apex:form id="customerEditForm" styleClass="slds-form_horizontal fs-data-form slds-m-bottom_large slds-m-horizontal_x-small">
+
+                <div id="page-sticky-anchor"></div>
+                <div id="page-sticky-header">
+                    <div class="slds-page-header slds-m-bottom--small" role="banner">
+                        <div class="slds-grid slds-grid--align-spread">
+                            <div class="slds-col" align="left">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                       <c:svgIcon iconStyleClass="slds-icon slds-icon--large slds-icon-standard-apps"
+                                                  iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/custom-sprite/svg/symbols.svg#custom18')}"/>
+                                    </div>
+                                    <div class="slds-media__body slds-align-middle">
+                                        <p class="slds-text-heading--label">{!mApplication.Name}</p>
+                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle">
+                                            {!IF(ISBLANK(mCustomerObj.mCustomer.Id)
+                                                       , $Label.fscore__new_lending_app_customer_title
+                                                       , ($ObjectType.Lending_Application_Customer__c.Fields.Name.Label + mCustomerObj.mCustomer.Name))}
+                                      
+                                        </h1>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col slds-no-flex slds-align-middle">
+                                <apex:commandButton value="{!$Label.fscore__save_button}" 
+                                                    title="{!$Label.fscore__save_button_tooltip}"
+                                                    styleClass="slds-button slds-button--brand"
+                                                    action="{!onSave}" 
+                                                    status="waitStatus"
+                                                    reRender="messagePanel,customerBlockPanel"/>
+                                                    
+                                <apex:commandButton immediate="true" action="{!cancel}"
+                                                    value="{!$Label.fscore__cancel_button}" 
+                                                    title="{!$Label.fscore__cancel_button_tooltip}"
+                                                    styleClass="slds-button slds-button--neutral"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <apex:actionStatus id="waitStatus">
+                    <apex:facet name="start">
+                        <c:fsSpinner spinnerSize="medium"/>
+                    </apex:facet>
+                </apex:actionStatus>
+
+                <apex:outputPanel id="messagePanel" styleClass="fs-message-panel">
+                    <apex:pagemessages />
+                </apex:outputPanel>          
+
+                <div class="slds-m-top--small slds-container--fluid">
+                    <apex:outputPanel id="customerBlockPanel">
+                        <div class="slds-box slds-box--x-small">
+                            <apex:pageBlock id="customerPageBlock" mode="mainDetail" html-class="fs-data-block">
+                                
+                                <apex:outputPanel id="customerAccountContactPanel">
+                                    <c:sectionHeader label="{!$Label.fscore__customer_info_section_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+
+                                    <apex:pageBlockSection collapsible="false" columns="2" html-class="slds-theme--default">
+                                        <!-- Account Field -->
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Customer__c.Fields.Account_Name__c.Label}"></apex:outputLabel>
+                                                                    
+                                            <apex:outputPanel id="iAccountFieldPanel">
+                                                <apex:inputField value="{!mCustomerObj.mCustomer.Account_Name__c}">
+                                                    <apex:actionSupport event="onchange" action="{!onAccountChange}" 
+                                                                        reRender="iAccountFieldPanel,iContactFieldPanel,customerBankAccountPanel,customerFinancialPanel,customerEmploymentPanel"
+                                                                        status="waitStatus"/>
+                                                </apex:inputField>
+                            
+                                                <!--
+                                                <apex:commandLink value="{!$Label.fscore__new_record_title}"
+                                                                  onclick="OpenModal('/apex/fscore__customerAccountEditPage?key={!mCustomerObj.uniqueKey}', 'Large');"
+                                                                  rendered="{!AND($ObjectType.Account.createable, ISBLANK(mCustomerObj.mCustomer.Account_Name__c))}"
+                                                                  title="{!$ObjectType.Account.label} - {!$Label.fscore__new_record_tooltip}"
+                                                                  reRender="customerAccountContactPanel"
+                                                                  style="color: #ffffff !important;"
+                                                                  styleClass="fs-small-button--brand"/>
+                                                -->
+                                                
+                                                <apex:commandLink onclick="OpenModal('/apex/fscore__customerAccountEditPage?id={!mCustomerObj.mCustomer.Account_Name__c}', 'Large');"
+                                                                  rendered="{!AND($ObjectType.Account.updateable
+                                                                                , NOT(ISBLANK(mCustomerObj.mCustomer.Account_Name__c)))}"
+                                                                  title="{!$ObjectType.Account.label} - {!$Label.fscore__edit_record_tooltip}"
+                                                                  type="image/png"
+                                                                  reRender="customerAccountContactPanel"
+                                                                  style="align-self: center;">
+                                                    <apex:image value="{!URLFOR($Resource.fs_slds, 'assets/icons/utility/edit_60.png')}"
+                                                                styleClass="fs-action-icon"/>
+                                                </apex:commandLink>
+                                                
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <!-- / Account Field -->   
+                                        
+                                        <!-- Contact Field -->
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Customer__c.Fields.Contact_Name__c.Label}"></apex:outputLabel>
+                                                                    
+                                            <apex:outputPanel id="iContactFieldPanel">
+                                                <!-- Lookup Field, if Account is blank -->
+                                                <apex:inputField value="{!mCustomerObj.mCustomer.Contact_Name__c}"
+                                                                 rendered="{!ISBLANK(mCustomerObj.mCustomer.Account_Name__c)}">
+                                                    <apex:actionSupport event="onchange" action="{!onContactChange}"
+                                                                        reRender="iContactFieldPanel,iAccountFieldPanel,customerBankAccountPanel,customerFinancialPanel,customerEmploymentPanel"
+                                                                        status="waitStatus"/>
+                                                </apex:inputField>
+                                                <!-- / Lookup Field -->
+                                                                            
+                                                <!-- List Field with refresh button, if Account is not blank -->
+                                                <apex:selectList value="{!mCustomerObj.mCustomer.Contact_Name__c}" 
+                                                                 multiselect="false" size="1"
+                                                                 rendered="{!NOT(ISBLANK(mCustomerObj.mCustomer.Account_Name__c))}">
+                                                    <apex:selectOptions value="{!mCustomerObj.customerContactList}"/>
+                                                    <apex:actionSupport event="onchange" action="{!onContactChange}"
+                                                                        reRender="iContactFieldPanel,iAccountFieldPanel,customerBankAccountPanel,customerFinancialPanel,customerEmploymentPanel"
+                                                                        status="waitStatus"/>
+                                                </apex:selectList>
+                                                
+                                                <apex:outputText rendered="{!NOT(ISBLANK(mCustomerObj.mCustomer.Account_Name__c))}">&nbsp;</apex:outputText>
+                                                
+                                                <!--
+                                                <apex:commandLink value="{!$Label.fscore__new_record_title}"
+                                                                  onclick="OpenModal('/apex/fscore__customerContactEditPage?key={!mCustomerObj.uniqueKey}&accountId={!mCustomerObj.mCustomer.Account_Name__c}', 'Large');"
+                                                                  rendered="{!AND($ObjectType.Contact.createable
+                                                                                , ISBLANK(mCustomerObj.mCustomer.Contact_Name__c))}"
+                                                                  title="{!$ObjectType.Contact.label} - {!$Label.fscore__new_record_tooltip}"
+                                                                  reRender="customerAccountContactPanel"
+                                                                  style="color: #ffffff !important;"
+                                                                  styleClass="fs-small-button--brand"/>
+                                                -->
+                                                                  
+                                                <apex:commandLink onclick="OpenModal('/apex/fscore__customerContactEditPage?id={!mCustomerObj.mCustomer.Contact_Name__c}', 'Large');"
+                                                                  rendered="{!AND($ObjectType.Contact.updateable
+                                                                                , NOT(ISBLANK(mCustomerObj.mCustomer.Contact_Name__c)))}"
+                                                                  title="{!$ObjectType.Contact.label} - {!$Label.fscore__edit_record_tooltip}"
+                                                                  type="image/png"
+                                                                  reRender="customerAccountContactPanel"
+                                                                  style="align-self: center;">
+                                                    <apex:image value="{!URLFOR($Resource.fs_slds, 'assets/icons/utility/edit_60.png')}"
+                                                                styleClass="fs-action-icon"/>
+                                                </apex:commandLink>
+                            
+                                            </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <!-- / Contact Field -->   
+                                
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Customer__c.Fields.Customer_Type__c.Label}"></apex:outputLabel>
+                                            <apex:inputField value="{!mCustomerObj.mCustomer.Customer_Type__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                    </apex:pageBlockSection>
+                                </apex:outputPanel>
+
+                                <apex:outputPanel id="customerFinancialsPanel">
+                                    <div class="slds-m-top--small slds-p-bottom--medium">
+                                        <c:sectionHeader label="{!$Label.fscore__customer_financials_summary_section}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                                     
+                                        <apex:pageBlockSection collapsible="false" columns="2">
+                                            <apex:repeat value="{!$ObjectType.Lending_Application_Customer__c.FieldSets.Financials_Summary_Fields}"
+                                                         var="finnSummary">
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:outputLabel value="{!finnSummary.label}">
+                                                        <apex:outputPanel rendered="{!OR(finnSummary.required, finnSummary.dbRequired)}" 
+                                                                          styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                                    </apex:outputLabel>
+                                                    <apex:inputField value="{!mCustomerObj.mCustomer[finnSummary.fieldPath]}" required="false"/>
+                                                </apex:pageBlockSectionItem>
+                                            </apex:repeat>
+                                        </apex:pageBlockSection>
+                                     </div>
+                                </apex:outputPanel>
+
+                                <apex:outputPanel id="customerCommPrefPanel">
+                                    <div class="slds-m-top--small slds-p-bottom--medium">
+                                        <c:sectionHeader label="{!$Label.fscore__communication_preference_section_title}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                                     
+                                        <apex:pageBlockSection collapsible="false" columns="2" rendered="{!(mCustomerObj.isPrimary)}">
+                                            <apex:repeat value="{!$ObjectType.Lending_Application_Customer__c.FieldSets.Primary_Customer_Info_Fields}"
+                                                         var="commPref">
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:outputLabel value="{!commPref.label}">
+                                                        <apex:outputPanel rendered="{!OR(commPref.required, commPref.dbRequired)}" 
+                                                                          styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                                    </apex:outputLabel>
+                                                    <apex:inputField value="{!mCustomerObj.mCustomer[commPref.fieldPath]}" required="false"/>
+                                                </apex:pageBlockSectionItem>
+                                            </apex:repeat>
+                                        </apex:pageBlockSection>
+
+                                        <apex:pageBlockSection collapsible="false" columns="2" rendered="{!NOT(mCustomerObj.isPrimary)}">
+                                            <apex:repeat value="{!$ObjectType.Lending_Application_Customer__c.FieldSets.Customer_Info_Fields}"
+                                                         var="commPref">
+                                                <apex:pageBlockSectionItem >
+                                                    <apex:outputLabel value="{!commPref.label}">
+                                                        <apex:outputPanel rendered="{!OR(commPref.required, commPref.dbRequired)}" 
+                                                                          styleClass="slds-p-left--xxx-small fs-required">*</apex:outputPanel>
+                                                    </apex:outputLabel>
+                                                    <apex:inputField value="{!mCustomerObj.mCustomer[commPref.fieldPath]}" required="false"/>
+                                                </apex:pageBlockSectionItem>
+                                           </apex:repeat>
+                                        </apex:pageBlockSection>
+
+                                     </div>
+                                </apex:outputPanel>
+                            
+                            </apex:pageBlock>
+                        </div>
+                        
+                        <!-- Commented by SSingh
+                        <apex:outputPanel id="customerBankAccountPanel" rendered="{!$ObjectType.Bank_Account__c.accessible}">
+                            <div class="slds-m-top--small">
+                                <c:bankAccountViewList accountId="{!mCustomerObj.mCustomer.Account_Name__c}"
+                                                       contactId="{!mCustomerObj.mCustomer.Contact_Name__c}" />
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel id="customerFinancialPanel" rendered="{!$ObjectType.Financial__c.accessible}">
+                            <div class="slds-m-top--small">
+                                <c:financialViewList accountId="{!mCustomerObj.mCustomer.Account_Name__c}"
+                                                     contactId="{!mCustomerObj.mCustomer.Contact_Name__c}" />
+                            </div>
+                        </apex:outputPanel>
+
+                        <apex:outputPanel id="customerEmploymentPanel" rendered="{!$ObjectType.Employment__c.accessible}">
+                            <div class="slds-m-top--small">
+                                <c:employmentViewList contactId="{!mCustomerObj.mCustomer.Contact_Name__c}" />
+                            </div>
+                        </apex:outputPanel>
+                        -->
+                            
+                    </apex:outputPanel>
+                </div>
+                
+            </apex:form>
+            <c:fsCopyright pageTitle="{!IF(ISBLANK(mCustomerObj.mCustomer.Id)
+                                         , $Label.fscore__new_lending_app_customer_title
+                                         , ($ObjectType.Lending_Application_Customer__c.Fields.Name.Label + mCustomerObj.mCustomer.Name))}"/>
+        </div>
+
+        <c:fsModalWindow /> 
+        <script src="{!URLFOR($Resource.fs_sticky_header, 'fs_sticky_header.js')}"/>
+    </body>
+
+</apex:page>
