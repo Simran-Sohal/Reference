@@ -1,0 +1,203 @@
+<apex:page id="customerContactEditPage" standardController="Contact"
+           extensions="CustomerContactEditController" tabStyle="Contact"
+           showHeader="{!NOT(mIsModalWindow)}" sidebar="{!NOT(mIsModalWindow)}"
+           title="{!$Label.fscore__edit_customer_contact_title}" applyHtmlTag="true" docType="html-5.0" >
+
+    <head>
+        <apex:slds />
+        <apex:stylesheet value="{!URLFOR($Resource.fs_style, 'fs-style.css')}"/>
+        <script src="{!URLFOR($Resource.fs_svg, 'svg4everybody.js')}"></script>
+        <script>svg4everybody();</script>
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" />
+        <script>var $j = jQuery.noConflict();</script>
+    </head>   
+
+    <body>   
+        <div class="slds-scope">
+            <apex:form id="contactEditForm" styleClass="{!IF(mIsModalWindow,'slds-p-horizontal--xx-small','')} slds-form--horizontal fs-data-form slds-m-bottom--large">
+
+                <div id="modal-sticky-anchor"></div>
+                <div id="modal-sticky-header">
+                    <div class="slds-page-header slds-m-bottom--small" role="banner">
+                        <div class="slds-grid slds-grid--align-spread">
+                            <div class="slds-col" align="left">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                       <c:svgIcon iconStyleClass="slds-icon {!IF(mIsModalWindow,'slds-icon--medium','slds-icon--large')} slds-icon-standard-contact"
+                                                  iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/standard-sprite/svg/symbols.svg#contact')}"/>
+                                    </div>
+                                    <div class="slds-media__body slds-align-middle">
+                                        <p class="slds-text-heading--label">{!$ObjectType.Contact.Label}</p>
+                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle">
+                                            {!IF(ISBLANK(mCustomerContact.Id), $Label.fscore__new_customer_contact_title, mCustomerContact.Name)}
+                                        </h1>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col slds-no-flex slds-align-middle">
+                                <apex:commandButton value="{!$Label.fscore__save_button}" 
+                                                    title="{!$Label.fscore__save_button_tooltip}"
+                                                    styleClass="slds-button slds-button--brand"
+                                                    action="{!onSave}" 
+                                                    status="saveRecordStatus"
+                                                    reRender="messagePanel,contactInfoPanel"
+                                                    oncomplete="{!mJavascriptMethod}({!mIsModalWindow}, {!mIsError});"/>
+                                                    
+                                <apex:commandButton immediate="true" action="{!cancel}"
+                                                    value="{!$Label.fscore__cancel_button}" 
+                                                    title="{!$Label.fscore__cancel_button_tooltip}"
+                                                    styleClass="slds-button slds-button--neutral"
+                                                    onclick="closeModalFromModalWindow('cancel',false,{!mIsModalWindow},'');"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <apex:actionStatus id="saveRecordStatus">
+                    <apex:facet name="start">
+                        <c:fsSpinner spinnerSize="medium"/>
+                    </apex:facet>
+                </apex:actionStatus>
+            
+                <apex:outputPanel id="messagePanel" styleClass="fs-message-panel">
+                    <apex:pagemessages />
+                </apex:outputPanel>          
+
+                <div class="slds-m-top--small">
+                    <div class="{!IF(mIsModalWindow,'', 'slds-box slds-box--x-small')}  slds-container--fluid">
+                        <apex:pageBlock id="contactPageBlock" mode="mainDetail"  html-class="fs-data-block">
+ 
+                            <apex:outputPanel id="contactInfoPanel">
+                                <span id="iCustomerContactId" class="slds-hide">{!mCustomerContact.Id}</span>
+                                <span id="iCustomerRecordKey" class="slds-hide">{!mCustomerRecordKey}</span>
+                                
+                                <c:sectionHeader label="{!$Label.fscore__information_block_title}"
+                                                 isEditSectionHeader="true" isModalWindow="true"/>
+                                
+                                <apex:pageBlockSection id="contactInfoSection" columns="2" collapsible="false"
+                                                       html-class="slds-theme--default">
+                                    <apex:pageBlockSectionItem rendered="{!(mHasRecordTypes)}">
+                                        <apex:outputLabel value="{!$Label.fscore__record_type_title}">
+                                             <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
+                                        </apex:outputLabel>
+                                            
+                                        <apex:selectList value="{!mSelectedRecordTypeId}" 
+                                                         multiselect="false" size="1">
+                                            <apex:selectOptions value="{!mContactRecordTypeList}"/>
+                                        </apex:selectList>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem rendered="{!(mHasRecordTypes)}"/> <!-- Blank Space -->
+
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$ObjectType.Contact.Fields.FirstName.Label}">
+                                        </apex:outputLabel>
+
+                                        <apex:inputField value="{!mCustomerContact.FirstName}" required="false"/>                                                
+                                    </apex:pageBlockSectionItem>
+
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$ObjectType.Contact.Fields.LastName.Label}">
+                                            <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
+                                        </apex:outputLabel>
+
+                                        <apex:inputField value="{!mCustomerContact.LastName}" required="false"/>                                                
+                                    </apex:pageBlockSectionItem>
+                                    
+                                    <apex:repeat value="{!$ObjectType.Contact.FieldSets.Customer_Info_Edit_Fields}"
+                                                   var="contactInfo">
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="{!contactInfo.Label}">
+                                                <apex:outputPanel rendered="{!OR(contactInfo.required, contactInfo.dbrequired)}"
+                                                                  styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
+                                            </apex:outputLabel>
+    
+                                            <apex:inputField value="{!mCustomerContact[contactInfo.fieldPath]}" required="false"/>
+                                        </apex:pageBlockSectionItem>
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                                
+                                <apex:outputPanel id="mailingAddressInfoPanel" rendered="{!($ObjectType.Contact.FieldSets.Mailing_Address_Fields.size > 0)}">
+                                    <div class="slds-m-top--small">
+                                        <c:sectionHeader label="{!$ObjectType.Contact.Fields.MailingAddress.Label}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                    </div>
+                                    
+                                    <apex:pageBlockSection id="mailingAddressSection" columns="2" collapsible="false"
+                                                           html-class="slds-theme--default">
+                                        <apex:repeat value="{!$ObjectType.Contact.FieldSets.Mailing_Address_Fields}"
+                                                       var="mailingAddressInfo">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="{!mailingAddressInfo.Label}">
+                                                    <apex:outputPanel rendered="{!OR(mailingAddressInfo.required, mailingAddressInfo.dbrequired)}"
+                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
+                                                </apex:outputLabel>
+        
+                                                <apex:inputField value="{!mCustomerContact[mailingAddressInfo.fieldPath]}" required="false"/>
+                                            </apex:pageBlockSectionItem>
+                                        </apex:repeat>
+                                    </apex:pageBlockSection>
+                                </apex:outputPanel>
+
+                                <apex:outputPanel id="otherAddressInfoPanel" rendered="{!($ObjectType.Contact.FieldSets.Other_Address_Fields.size > 0)}">
+                                    <div class="slds-m-top--small">
+                                        <c:sectionHeader label="{!$ObjectType.Contact.Fields.OtherAddress.Label}"
+                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                    </div>
+                                    
+                                    <apex:pageBlockSection id="otherAddressSection" columns="2" collapsible="false"
+                                                           html-class="slds-theme--default">
+                                        <apex:repeat value="{!$ObjectType.Contact.FieldSets.Other_Address_Fields}"
+                                                       var="otherAddressInfo">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="{!otherAddressInfo.Label}">
+                                                    <apex:outputPanel rendered="{!OR(otherAddressInfo.required, otherAddressInfo.dbrequired)}"
+                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
+                                                </apex:outputLabel>
+        
+                                                <apex:inputField value="{!mCustomerContact[otherAddressInfo.fieldPath]}" required="false"/>
+                                            </apex:pageBlockSectionItem>
+                                        </apex:repeat>
+                                    </apex:pageBlockSection>
+                                </apex:outputPanel>
+                                
+                            </apex:outputPanel>
+                            
+                        </apex:pageBlock>
+                    </div>
+                </div>
+            </apex:form>
+            <div class="{!IF(mIsModalWindow,'slds-hide','')}">
+                <c:fsCopyright pageTitle="{!IF(ISBLANK(mCustomerContact.Id), $Label.fscore__new_customer_contact_title, mCustomerContact.Name)}"/>
+            </div>
+        </div>
+
+        <script src="{!$Resource.fs_modal_window_close_js}"/>
+        <script src="{!URLFOR($Resource.fs_modal_sticky_header, 'fs_modal_sticky_header.js')}"/>
+        <script>
+            /*
+             * SSingh : Do Not rename the following method names
+             */
+            function setContactDetails(isModalWindow, isError){
+                console.log('setting contact details...');
+                closeModalFromModalWindow('save', isError, isModalWindow, 'reloadCustomerContacts');
+            }
+
+            function setNewContactDetails(isModalWindow, isError){
+                if (isModalWindow){
+                    if (!isError){
+                        console.log('adding new contact...');
+                        var newContactId = $j("span[id$=iCustomerContactId]").text();
+                        var customerRecordKey = $j("span[id$=iCustomerRecordKey]").text();
+                        console.log('New Contact Id : ' + newContactId);
+                        console.log('Customer Record key : ' + customerRecordKey);
+                        window.parent.parent.addNewCustomerContact(newContactId, customerRecordKey);
+                        window.parent.parent.closeModal('save');
+                    }
+                }
+            }
+        </script>
+    </body>
+
+</apex:page>
