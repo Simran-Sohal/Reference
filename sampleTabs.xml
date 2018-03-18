@@ -1,0 +1,53 @@
+                            <div id="lendingAppInfoTabPanel" class="slds-tabs_scoped">
+                                <ul class="slds-tabs_scoped__nav" role="tablist">
+                                    <!-- Tab 1 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label slds-active" role="presentation">
+                                        <a id="tab_1_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="0" aria-selected="true" aria-controls="tab_1_Content" >
+                                            {!$Label.Application_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 1 Title -->
+    
+                                    <!-- Tab 2 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_2_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_2_Content" >
+                                            {!$Label.Itemization_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 2 Title -->
+
+                                    <!-- Tab 3 Title -->
+                                    <li class="slds-tabs_scoped__item slds-text-heading_label"
+                                        role="presentation">
+                                        <a id="tab_3_Title" class="slds-tabs_scoped__link" href="#void" role="tab" 
+                                           tabindex="-1" aria-selected="false" aria-controls="tab_3_Content" >
+                                            {!$Label.Itemization_Tab_Title}
+                                        </a>
+                                    </li>
+                                    <!-- / Tab 3 Title -->
+                                </ul>
+    
+                                <!-- Tab 1 Contents -->
+                                <div id="tab_1_Content" class="slds-tabs_scoped__content slds-show"
+                                     role="tabpanel" aria-labelledby="tab_1_Title">
+
+                                </div>
+                                <!-- / Tab 1 Contents -->
+                                
+                                <!-- Tab 2 Contents -->
+                                <div id="tab_2_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_2_Title">
+
+                                </div>
+                                <!-- / Tab 2 Contents -->
+                                
+                                <!-- Tab 3 Contents -->
+                                <div id="tab_3_Content" class="slds-tabs_scoped__content slds-hide"
+                                     role="tabpanel" aria-labelledby="tab_3_Title">
+
+                                </div>
+                                <!-- / Tab 3 Contents -->
+                            </div>                                
