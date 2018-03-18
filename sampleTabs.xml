@@ -50,4 +50,15 @@
 
                                 </div>
                                 <!-- / Tab 3 Contents -->
-                            </div>                                
+                             </div>
+
+                             <div class="slds-grid slds-wrap slds-m-horizontal_small">
+                                  <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                      <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                          <span class="slds-truncate">{!$ObjectType.Lending_Application__c.Fields.Application_Date__c.Label}</span>
+                                          <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                      </p>
+                                      <apex:inputField value="{!mApplication.Application_Date__c}" rendered="{!(mIsMainDetailChangedAllowed)}">
+                                      </apex:inputField>
+                                  </div>
+                              </div>
