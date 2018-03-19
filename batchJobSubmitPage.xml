@@ -104,15 +104,17 @@
                                     <apex:outputText value="{!mBatchJob.namespacePrefix}"></apex:outputText>
                                 </apex:pageBlockSectionItem>
 
-                               <apex:pageBlockSectionItem rendered="{!AND(mBatchJob.branchSelectionAllowedFlag, NOT(mIsBatchJobSubmitted))}"
-                                                           helpText="{!$Label.fscore__batch_job_select_branch_help_text}">
+                               <apex:pageBlockSectionItem rendered="{!AND(mBatchJob.branchSelectionAllowedFlag, NOT(mIsBatchJobSubmitted))}">
                                     <apex:outputLabel value="{!$ObjectType.Branch_Setup__c.Fields.Name.Label}">
                                         <apex:outputPanel rendered="{!mBatchJob.branchMandatoryFlag}" 
                                                           styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
                                     </apex:outputLabel>
-                                    <apex:selectList value="{!mSelectedBranch}" multiselect="false" size="1">
-                                        <apex:selectOptions value="{!mBranchSelectList}"/>
-                                    </apex:selectList>
+                                    <apex:outputPanel>
+                                        <apex:selectList value="{!mSelectedBranch}" multiselect="false" size="1">
+                                            <apex:selectOptions value="{!mBranchSelectList}"/>
+                                        </apex:selectList>
+                                        <p class="slds-text-body_small slds-text-color_weak">{!$Label.fscore__batch_job_select_branch_help_text}"</p>
+                                    </apex:outputPanel
                                 </apex:pageBlockSectionItem>
 
                                 <apex:pageBlockSectionItem rendered="{!NOT(mIsBatchJobSubmitted)}">
@@ -197,13 +199,15 @@
                                     </apex:outputpanel>
                                 </apex:pageBlockSectionItem>
                             
-                                <apex:pageBlockSectionItem rendered="{!NOT(mIsBatchJobSubmitted)}"
-                                                           helpText="{!$Label.fscore__batch_job_select_branch_help_text}">
+                                <apex:pageBlockSectionItem rendered="{!NOT(mIsBatchJobSubmitted)}">
                                     <apex:outputLabel value="{!$ObjectType.Branch_Setup__c.Fields.Name.Label}"></apex:outputLabel>
-                                    <apex:selectList value="{!mSelectedBranch}" multiselect="false" size="1" 
-                                                     style="width: auto !important;">
-                                        <apex:selectOptions value="{!mBranchSelectList}"/>
-                                    </apex:selectList>
+                                    <apex:outputPanel>
+                                        <apex:selectList value="{!mSelectedBranch}" multiselect="false" size="1" 
+                                                         style="width: auto !important;">
+                                            <apex:selectOptions value="{!mBranchSelectList}"/>
+                                        </apex:selectList>
+                                        <p class="slds-text-body_small slds-text-color_weak">{!$Label.fscore__batch_job_select_branch_help_text}"</p>
+                                    </apex:outputPanel>
                                 </apex:pageBlockSectionItem>
 
                                 <apex:pageBlockSectionItem rendered="{!mIsBatchJobSubmitted}">
