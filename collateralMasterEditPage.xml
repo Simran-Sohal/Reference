@@ -73,107 +73,145 @@
                             <c:sectionHeader label="{!$Label.fscore__information_block_title}"
                                              isEditSectionHeader="true" isModalWindow="true"/>
 
-                            <apex:pageBlockSection id="generalInfoSection" columns="2" collapsible="false"  html-class="slds-theme--default">
-                                <apex:pageBlockSectionItem rendered="{!ISBLANK(mCollateral.Id)}">
-                                    <apex:outputLabel value="{!$ObjectType.Collateral__c.Fields.Name.Label}"></apex:outputLabel>
-                                    <apex:outputText value="{!$Label.fscore__new_record_title}"/>
-                                </apex:pageBlockSectionItem>
-                                <apex:outputField value="{!mCollateral.Name}" rendered="{!NOT(ISBLANK(mCollateral.Id))}"/>
+                            <div id="generalInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Name.Label}</span>
+                                         <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Name}" required="false"/>
+                                </div>
                                 
-                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Collateral__c.Fields.Status__c.inlineHelpText}" >
-                                    <apex:outputLabel value="{!$ObjectType.Collateral__c.Fields.Status__c.Label}">
-                                        <apex:outputPanel styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
-                                    </apex:outputLabel>
-                                    <apex:inputField value="{!mCollateral.Status__c}" required="false"/>
-                                </apex:pageBlockSectionItem>
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Collateral_Family__c.Label}</span>
+                                         <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Collateral_Family__c}" required="false"/>
+                                </div>
 
-                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Collateral__c.Fields.Collateral_Family__c.inlineHelpText}" >
-                                    <apex:outputLabel value="{!$ObjectType.Collateral__c.Fields.Collateral_Family__c.Label}">
-                                        <apex:outputPanel styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
-                                    </apex:outputLabel>
-                                    <apex:inputField value="{!mCollateral.Collateral_Family__c}" required="false"/>
-                                </apex:pageBlockSectionItem>
-                                
-                                <apex:inputField value="{!mCollateral.Collateral_Sub_Family__c}"/>                    
-                                
-                                <apex:inputField value="{!mCollateral.Description__c}"/>
-                                <apex:inputField value="{!mCollateral.Is_Active__c}"/>                    
-                            </apex:pageBlockSection>
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Collateral_Sub_Family__c.Label}</span>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Collateral_Sub_Family__c}" required="false"/>
+                                </div>
+
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Status__c.Label}</span>
+                                         <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Status__c}" required="false"/>
+                                </div>
+
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Description__c.Label}</span>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Description__c}"/>
+                                </div>
+
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Is_Active__c.Label}</span>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Is_Active__c}"/>
+                                </div>
+                            </div>
                             
-                            <div class="slds-m-top--small">
+                            <div class="slds-m-top_small">
                                 <c:sectionHeader label="{!$Label.fscore__contract_collateral_info_block_title}"
                                                  isEditSectionHeader="true" isModalWindow="true"/>
                             </div>
                             
                             <!-- Auto -->
-                            <apex:pageBlockSection id="autoInfoSection" columns="2" collapsible="false" html-class="slds-theme--default"
-                                                   rendered="{!(mCollateralRecordTypeName == 'Auto')}" >
-                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Auto_Fields}"
-                                               var="autoInfo">
-                                    <apex:pageBlockSectionItem >
-                                        <apex:outputLabel value="{!autoInfo.label}">
-                                            <apex:outputPanel rendered="{!OR(autoInfo.required, autoInfo.dbRequired)}" 
-                                                              styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
-                                        </apex:outputLabel>
-                                        <apex:inputField value="{!mCollateral[autoInfo.fieldPath]}" required="false"/>
-                                    </apex:pageBlockSectionItem>
-                                </apex:repeat>
-                            </apex:pageBlockSection>
+                            <apex:outputPanel rendered="{!(mCollateralRecordTypeName == 'Auto')}">
+	                            <div id="autoInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+	                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Auto_Fields}"
+	                                               var="autoInfo">
+		                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+		                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                         <span class="slds-truncate">{!autoInfo.label}</span>
+		                                         <apex:outputPanel rendered="{!OR(autoInfo.required, autoInfo.dbRequired)}"
+		                                                           styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                     </p>
+		                                     <apex:inputField value="{!mCollateral[autoInfo.fieldPath]}" required="false"/>
+		                                </div>
+	                                </apex:repeat>
+	                            </div>
+                            </apex:outputPanel>
 
                             <!-- Equipment -->
-                            <apex:pageBlockSection id="equipmentInfoSection" columns="2" collapsible="false" html-class="slds-theme--default"
-                                                   rendered="{!(mCollateralRecordTypeName == 'Equipment')}" >
-                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Equipment_Fields}"
-                                               var="equipmentInfo">
-                                    <apex:pageBlockSectionItem >
-                                        <apex:outputLabel value="{!equipmentInfo.label}">
-                                            <apex:outputPanel rendered="{!OR(equipmentInfo.required, equipmentInfo.dbRequired)}" 
-                                                              styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
-                                        </apex:outputLabel>
-                                        <apex:inputField value="{!mCollateral[equipmentInfo.fieldPath]}" required="false"/>
-                                    </apex:pageBlockSectionItem>
-                                </apex:repeat>
-                            </apex:pageBlockSection>
-                            
+                            <apex:outputPanel rendered="{!(mCollateralRecordTypeName == 'Equipment')}">
+	                            <div id="equipmentInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+	                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Equipment_Fields}"
+	                                               var="equipmentInfo">
+		                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+		                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                         <span class="slds-truncate">{!equipmentInfo.label}</span>
+		                                         <apex:outputPanel rendered="{!OR(equipmentInfo.required, equipmentInfo.dbRequired)}"
+		                                                           styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                     </p>
+		                                     <apex:inputField value="{!mCollateral[equipmentInfo.fieldPath]}" required="false"/>
+		                                </div>
+	                                </apex:repeat>
+	                            </div>
+                            </apex:outputPanel>
+
                             <!-- Home -->
-                            <apex:pageBlockSection id="homeInfoSection" columns="2" collapsible="false" html-class="slds-theme--default"
-                                                   rendered="{!(mCollateralRecordTypeName == 'Home')}" >
-                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Home_Fields}"
-                                             var="homeInfo">
-                                    <apex:pageBlockSectionItem >
-                                        <apex:outputLabel value="{!homeInfo.label}">
-                                            <apex:outputPanel rendered="{!OR(homeInfo.required, homeInfo.dbRequired)}" 
-                                                              styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
-                                        </apex:outputLabel>
-                                        <apex:inputField value="{!mCollateral[homeInfo.fieldPath]}" required="false"/>
-                                    </apex:pageBlockSectionItem>
-                                </apex:repeat>
-                            </apex:pageBlockSection>
-                            
+                            <apex:outputPanel rendered="{!(mCollateralRecordTypeName == 'Home')}">
+	                            <div id="homeInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+	                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Home_Fields}"
+	                                             var="homeInfo">
+		                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+		                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                         <span class="slds-truncate">{!homeInfo.label}</span>
+		                                         <apex:outputPanel rendered="{!OR(homeInfo.required, homeInfo.dbRequired)}"
+		                                                           styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                     </p>
+		                                     <apex:inputField value="{!mCollateral[homeInfo.fieldPath]}" required="false"/>
+		                                </div>
+	                                </apex:repeat>
+	                            </div>
+                            </apex:outputPanel>
+
                             <!-- Other -->
-                            <apex:pageBlockSection id="otherInfoSection" columns="2" collapsible="false" html-class="slds-theme--default"
-                                                   rendered="{!(mCollateralRecordTypeName == 'Other')}" >
-                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Other_Fields}"
-                                             var="otherInfo">
-                                    <apex:pageBlockSectionItem >
-                                        <apex:outputLabel value="{!otherInfo.label}">
-                                            <apex:outputPanel rendered="{!OR(otherInfo.required, otherInfo.dbRequired)}" 
-                                                              styleClass="slds-m-left--xxx-small fs-required">*</apex:outputPanel>
-                                        </apex:outputLabel>
-                                        <apex:inputField value="{!mCollateral[otherInfo.fieldPath]}" required="false"/>
-                                    </apex:pageBlockSectionItem>
-                                </apex:repeat>
-                            </apex:pageBlockSection>                                
+                            <apex:outputPanel rendered="{!(mCollateralRecordTypeName == 'Other')}">
+	                            <div id="otherInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+	                                <apex:repeat value="{!$ObjectType.Collateral__c.FieldSets.Collateral_Other_Fields}"
+	                                             var="otherInfo">
+		                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+		                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                         <span class="slds-truncate">{!otherInfo.label}</span>
+		                                         <apex:outputPanel rendered="{!OR(otherInfo.required, otherInfo.dbRequired)}"
+		                                                           styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                     </p>
+		                                     <apex:inputField value="{!mCollateral[otherInfo.fieldPath]}" required="false"/>
+		                                </div>
+	                                </apex:repeat>
+	                            </div>                                
+                            </apex:outputPanel>
                             
-                            <div class="slds-m-top--small">
+                            <div class="slds-m-top_small">
                                 <c:sectionHeader label="{!$Label.fscore__collateral_lien_info_section_title}"
                                                  isEditSectionHeader="true" isModalWindow="true"/>
                             </div>
 
-                            <apex:pageBlockSection id="lienInfoSection" columns="2" collapsible="false" html-class="slds-theme--default">
-                                <apex:inputField value="{!mCollateral.Lien_Date__c}"/>                    
-                                <apex:inputField value="{!mCollateral.Lien_Notes__c}"/>
-                            </apex:pageBlockSection>
+                            <div id="lienInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Lien_Date__c.Label}</span>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Lien_Date__c}"/> 
+                                </div>
+                                <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                     <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                         <span class="slds-truncate">{!$ObjectType.Collateral__c.Fields.Lien_Notes__c.Label}</span>
+                                     </p>
+                                     <apex:inputField value="{!mCollateral.Lien_Notes__c}"/> 
+                                </div>
+                            </div>
                             
                         </apex:outputPanel>
                         
