@@ -147,14 +147,6 @@
 	                                            </div>
 	                                            
 	                                            <div class="slds-col slds-no-flex slds-align-middle">
-	                                                <apex:commandLink action="{!onAddItemization}" 
-	                                                                  value="{!$Label.fscore__add_button}"
-	                                                                  title="{!$Label.fscore__add_button}"
-	                                                                  reRender="messagePanel,iItemizationContentPanel" 
-	                                                                  status="waitActionStatus"
-	                                                                  style="padding: 4px 8px !important;"
-	                                                                  styleClass="fs-small-button--brand"/>&nbsp;
-	
 	                                                <apex:commandLink action="{!onCalculateItemizations}" 
 	                                                                  value="{!$Label.fscore__calculate_button}"
 	                                                                  title="{!$Label.fscore__calculate_all_itemization_button_toolip}"
@@ -169,8 +161,20 @@
 	                                                                  reRender="messagePanel,iContractParamDetailPanel,iItemizationContentPanel" 
 	                                                                  status="waitActionStatus"
 	                                                                  style="padding: 4px 8px !important;"
-	                                                                  styleClass="fs-small-button--brand"/>
-	                                            </div>
+	                                                                  styleClass="fs-small-button--brand"/>&nbsp;
+							    
+	                                                <apex:commandLink action="{!onAddItemization}"
+                                                                          rendered="{!$ObjectType.Lending_Application_Itemization__c.createable}"
+                                                                          reRender="messagePanel,iItemizationContentPanel" 
+                                                                          title="{!$Label.fscore__add_button_tooltip}"
+                                                                          status="waitActionStatus"
+                                                                          style="color: #ffffff !important;align-self: center;" 
+                                                                          type="image/png">
+                                                           <apex:image value="{!URLFOR($Resource.fs_slds, 'assets/icons/action/new_60.png')}"
+                                                                       styleClass="fs-small-button--brand" height="24px" width="24px" 
+                                                                       style="padding: 2px !important;" />
+                                                       </apex:commandLink>
+						    </div>
 	                                        </div>
 
                                             <c:lendingAppItemizationEditList itemizationObjectList="{!mItemizationObjectList}" 
