@@ -63,66 +63,86 @@
                     <apex:pagemessages />
                 </apex:outputPanel>          
 
-                <div class="slds-m-top--small">
-                    <div class="slds-box slds-box--x-small slds-container--fluid">
-                        <apex:outputPanel id="stipulationBlockPanel">
-                            <apex:pageBlock id="stipulationBlock" mode="mainDetail" html-class="fs-data-block">
-                                
-                                <apex:outputPanel id="stipulationInfoPanel">
-                                    <c:sectionHeader label="{!$Label.fscore__information_block_title}"
-                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                <div class="slds-box slds-box_x-small slds-container_fluid slds-m-top_small">
+                    <apex:outputPanel id="stipulationBlockPanel">
+                        <apex:pageBlock id="stipulationBlock" mode="mainDetail" html-class="fs-data-block">
+                            <apex:outputPanel id="stipulationInfoPanel">
+                                <c:sectionHeader label="{!$Label.fscore__information_block_title}"
+                                                 isEditSectionHeader="true" isModalWindow="true"/>
                                     
-                                    <apex:pageBlockSection id="stipulationInfoSection" columns="2" collapsible="false" html-class="slds-theme--default">
-             
-                                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Stipulation_Name__c.inlineHelpText}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Stipulation_Name__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:selectList value="{!mStipulation.Stipulation_Name__c}"
-                                                             multiselect="false" size="1">
-                                                <apex:selectOptions value="{!mStipulationSelectList}"/>
-                                            </apex:selectList>
-                                        </apex:pageBlockSectionItem>
+                                <div id="stipulationInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Stipulation_Name__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:selectList value="{!mStipulation.Stipulation_Name__c}"
+                                                         multiselect="false" size="1">
+                                            <apex:selectOptions value="{!mStipulationSelectList}"/>
+                                        </apex:selectList>
+                                    </div>             
 
-                                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Lending_Application_Number__c.inlineHelpText}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Lending_Application_Number__c.Label}">
-                                                <apex:outputPanel rendered="{!NOT(mHasParentApplication)}" styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Lending_Application_Number__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:outputPanel>
+                                            <apex:inputField value="{!mStipulation.Lending_Application_Number__c}" 
+                                                             required="false" rendered="{!NOT(mHasParentApplication)}">
+                                                <apex:actionSupport action="{!onSelectApplication}" event="onchange"
+                                                                    reRender="stipulationEditForm" status="waitStatus"/>
+                                            </apex:inputField>
                                             
-                                            <apex:outputPanel >
-                                                <apex:inputField value="{!mStipulation.Lending_Application_Number__c}" 
-                                                                 required="false" rendered="{!NOT(mHasParentApplication)}">
-                                                    <apex:actionSupport action="{!onSelectApplication}" event="onchange"
-                                                                        reRender="stipulationEditForm" status="waitStatus"/>
-                                                </apex:inputField>
-                                                
-                                                <apex:outputField value="{!mStipulation.Lending_Application_Number__c}" 
-                                                                  rendered="{!mHasParentApplication}"/>
-                                            </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-                                                          
+                                            <apex:outputField value="{!mStipulation.Lending_Application_Number__c}" 
+                                                              rendered="{!mHasParentApplication}"/>
+                                        </apex:outputPanel>
+                                    </div>             
+
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Decision_Reference_Number__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:inputField value="{!mStipulation.Decision_Reference_Number__c}" required="false"/>
+                                    </div>             
+
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Comments__c.Label}</span>
+                                        </p>
                                         <apex:inputField value="{!mStipulation.Comments__c}"/>
-
-                                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Decision_Reference_Number__c.inlineHelpText}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Decision_Reference_Number__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:inputField value="{!mStipulation.Decision_Reference_Number__c}" required="false"/>
-                                        </apex:pageBlockSectionItem>
+                                    </div>             
+                                </div>
+                                                          
+                                <div class="slds-m-top_small">
+	                                <c:sectionHeader label="{!$Label.fscore__fulfilled_info_block_title}"
+	                                                 isEditSectionHeader="true" isModalWindow="true"/>
+                                </div>
                                         
+                                <div id="stipulationFulfillSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Is_Fulfilled__c.Label}</span>
+                                        </p>
                                         <apex:inputField value="{!mStipulation.Is_Fulfilled__c}" />
-                                        <apex:pageBlockSectionItem /> <!-- Blank Space -->
+                                    </div>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Fulfilled_By__c.Label}</span>
+                                        </p>
                                         <apex:inputField value="{!mStipulation.Fulfilled_By__c}" />
+                                    </div>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Decision_Stipulation__c.Fields.Fulfilled_On__c.Label}</span>
+                                        </p>
                                         <apex:inputField value="{!mStipulation.Fulfilled_On__c}" />
-                                        
-                                    </apex:pageBlockSection>
-                                </apex:outputPanel>                            
-    
-                            </apex:pageBlock>
-                        </apex:outputPanel>
-                    </div>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>                            
+                        </apex:pageBlock>
+                    </apex:outputPanel>
                 </div>
             </apex:form>
         </div>
