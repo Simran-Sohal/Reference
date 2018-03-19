@@ -129,7 +129,17 @@
                                         </apex:outputPanel>
                                     </div>
                                     
-                                    <div id="iInvestmentPercent" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                    <div id="iInvestmentServiceRate" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Investment__c.Fields.Service_Rate__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:outputPanel id="iInvestmentServiceRatePanel">
+                                            <apex:inputField id="iInvestmentServiceRateValue" value="{!mAppInvestmentObj.mInvestment.Service_Rate__c}" required="false"/>
+                                        </apex:outputPanel>
+                                    </div>
+
+				    <div id="iInvestmentPercent" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
                                         <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
                                             <span class="slds-truncate">{!$ObjectType.Lending_Application_Investment__c.Fields.Contribution_Percent__c.Label}</span>
                                             <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
@@ -156,16 +166,6 @@
                                         </p>
                                         <apex:outputPanel id="iInvestmentRatePanel">
                                             <apex:inputField id="iInvestmentRateValue" value="{!mAppInvestmentObj.mInvestment.Rate__c}" required="false"/>
-                                        </apex:outputPanel>
-                                    </div>
-
-                                    <div id="iInvestmentServiceRate" class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
-                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
-                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Investment__c.Fields.Service_Rate__c.Label}</span>
-                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
-                                        </p>
-                                        <apex:outputPanel id="iInvestmentServiceRatePanel">
-                                            <apex:inputField id="iInvestmentServiceRateValue" value="{!mAppInvestmentObj.mInvestment.Service_Rate__c}" required="false"/>
                                         </apex:outputPanel>
                                     </div>
                                 </div>
