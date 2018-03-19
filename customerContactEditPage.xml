@@ -65,8 +65,8 @@
                     <apex:pagemessages />
                 </apex:outputPanel>          
 
-                <div class="slds-m-top--small">
-                    <div class="{!IF(mIsModalWindow,'', 'slds-box slds-box--x-small')}  slds-container--fluid">
+                <div class="slds-m-top_small">
+                    <div class="{!IF(mIsModalWindow,'', 'slds-box slds-box_x-small')}  slds-container_fluid">
                         <apex:pageBlock id="contactPageBlock" mode="mainDetail"  html-class="fs-data-block">
  
                             <apex:outputPanel id="contactInfoPanel">
@@ -76,90 +76,76 @@
                                 <c:sectionHeader label="{!$Label.fscore__information_block_title}"
                                                  isEditSectionHeader="true" isModalWindow="true"/>
                                 
-                                <apex:pageBlockSection id="contactInfoSection" columns="2" collapsible="false"
-                                                       html-class="slds-theme--default">
-                                    <apex:pageBlockSectionItem rendered="{!(mHasRecordTypes)}">
-                                        <apex:outputLabel value="{!$Label.fscore__record_type_title}">
-                                             <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                        </apex:outputLabel>
-                                            
-                                        <apex:selectList value="{!mSelectedRecordTypeId}" 
-                                                         multiselect="false" size="1">
-                                            <apex:selectOptions value="{!mContactRecordTypeList}"/>
-                                        </apex:selectList>
-                                    </apex:pageBlockSectionItem>
-                                    <apex:pageBlockSectionItem rendered="{!(mHasRecordTypes)}"/> <!-- Blank Space -->
+                                <div id="contactInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
 
-                                    <apex:pageBlockSectionItem >
-                                        <apex:outputLabel value="{!$ObjectType.Contact.Fields.FirstName.Label}">
-                                        </apex:outputLabel>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Contact.Fields.FirstName.Label}</span>
+                                        </p>
+                                        <apex:inputField value="{!mCustomerContact.FirstName}"/>
+                                    </div>
 
-                                        <apex:inputField value="{!mCustomerContact.FirstName}" required="false"/>                                                
-                                    </apex:pageBlockSectionItem>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Contact.Fields.LastName.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:inputField value="{!mCustomerContact.LastName}"/>
+                                    </div>
 
-                                    <apex:pageBlockSectionItem >
-                                        <apex:outputLabel value="{!$ObjectType.Contact.Fields.LastName.Label}">
-                                            <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                        </apex:outputLabel>
-
-                                        <apex:inputField value="{!mCustomerContact.LastName}" required="false"/>                                                
-                                    </apex:pageBlockSectionItem>
-                                    
                                     <apex:repeat value="{!$ObjectType.Contact.FieldSets.Customer_Info_Edit_Fields}"
                                                    var="contactInfo">
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!contactInfo.Label}">
-                                                <apex:outputPanel rendered="{!OR(contactInfo.required, contactInfo.dbrequired)}"
-                                                                  styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-    
-                                            <apex:inputField value="{!mCustomerContact[contactInfo.fieldPath]}" required="false"/>
-                                        </apex:pageBlockSectionItem>
+	                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-truncate">
+	                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                            <span class="slds-truncate">{!contactInfo.Label}</span>
+	                                            <apex:outputPanel rendered="{!OR(contactInfo.required, contactInfo.dbrequired)}"
+	                                                              styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                        </p>
+	                                        <apex:inputField value="{!mCustomerContact[contactInfo.fieldPath]}" required="false"/>
+	                                    </div>
                                     </apex:repeat>
-                                </apex:pageBlockSection>
+                                </div>
                                 
                                 <apex:outputPanel id="mailingAddressInfoPanel" rendered="{!($ObjectType.Contact.FieldSets.Mailing_Address_Fields.size > 0)}">
-                                    <div class="slds-m-top--small">
+                                    <div class="slds-m-top_small">
                                         <c:sectionHeader label="{!$ObjectType.Contact.Fields.MailingAddress.Label}"
                                                          isEditSectionHeader="true" isModalWindow="true"/>
                                     </div>
                                     
-                                    <apex:pageBlockSection id="mailingAddressSection" columns="2" collapsible="false"
-                                                           html-class="slds-theme--default">
+                                    <div id="mailingAddressSection" class="slds-grid slds-wrap slds-m-horizontal_small">
                                         <apex:repeat value="{!$ObjectType.Contact.FieldSets.Mailing_Address_Fields}"
                                                        var="mailingAddressInfo">
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!mailingAddressInfo.Label}">
-                                                    <apex:outputPanel rendered="{!OR(mailingAddressInfo.required, mailingAddressInfo.dbrequired)}"
-                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                                </apex:outputLabel>
-        
-                                                <apex:inputField value="{!mCustomerContact[mailingAddressInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
+		                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-truncate">
+		                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                            <span class="slds-truncate">{!mailingAddressInfo.Label}</span>
+		                                            <apex:outputPanel rendered="{!OR(mailingAddressInfo.required, mailingAddressInfo.dbrequired)}"
+		                                                              styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                        </p>
+		                                        <apex:inputField value="{!mCustomerContact[mailingAddressInfo.fieldPath]}" required="false"/>
+		                                    </div>
                                         </apex:repeat>
-                                    </apex:pageBlockSection>
+                                    </div>
                                 </apex:outputPanel>
 
                                 <apex:outputPanel id="otherAddressInfoPanel" rendered="{!($ObjectType.Contact.FieldSets.Other_Address_Fields.size > 0)}">
-                                    <div class="slds-m-top--small">
+                                    <div class="slds-m-top_small">
                                         <c:sectionHeader label="{!$ObjectType.Contact.Fields.OtherAddress.Label}"
                                                          isEditSectionHeader="true" isModalWindow="true"/>
                                     </div>
                                     
-                                    <apex:pageBlockSection id="otherAddressSection" columns="2" collapsible="false"
-                                                           html-class="slds-theme--default">
+                                    <div id="otherAddressSection" class="slds-grid slds-wrap slds-m-horizontal_small">
                                         <apex:repeat value="{!$ObjectType.Contact.FieldSets.Other_Address_Fields}"
                                                        var="otherAddressInfo">
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!otherAddressInfo.Label}">
-                                                    <apex:outputPanel rendered="{!OR(otherAddressInfo.required, otherAddressInfo.dbrequired)}"
-                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                                </apex:outputLabel>
-        
-                                                <apex:inputField value="{!mCustomerContact[otherAddressInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
+		                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-truncate">
+		                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+		                                            <span class="slds-truncate">{!otherAddressInfo.Label}</span>
+		                                            <apex:outputPanel rendered="{!OR(otherAddressInfo.required, otherAddressInfo.dbrequired)}"
+		                                                              styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+		                                        </p>
+		                                        <apex:inputField value="{!mCustomerContact[otherAddressInfo.fieldPath]}" required="false"/>
+		                                    </div>
                                         </apex:repeat>
-                                    </apex:pageBlockSection>
+                                    </div>
                                 </apex:outputPanel>
                                 
                             </apex:outputPanel>
@@ -199,5 +185,4 @@
             }
         </script>
     </body>
-
 </apex:page>
