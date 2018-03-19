@@ -74,8 +74,8 @@
                     <apex:pagemessages />
                 </apex:outputPanel>          
 
-                <div class="slds-m-top--small">
-                    <div class="{!IF(mIsModalWindow,'', 'slds-box slds-box--x-small')} slds-container--fluid">
+                <div class="slds-m-top_small">
+                    <div class="{!IF(mIsModalWindow,'', 'slds-box slds-box_x-small')} slds-container_fluid">
                         <apex:outputPanel id="bankAccountBlockPanel">
                             <apex:pageBlock id="bankAccountPageBlock" mode="mainDetail" html-class="fs-data-block">
                                 
@@ -83,12 +83,12 @@
                                     <c:sectionHeader label="{!$Label.fscore__information_block_title}"
                                                      isEditSectionHeader="true" isModalWindow="true"/>
 
-                                    <apex:pageBlockSection id="bankAccountInfoSection" columns="2" collapsible="false" html-class="slds-theme--default">
-             
+                                    <div id="bankAccountInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
                                         <!-- Account Field -->
-                                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Bank_Account__c.Fields.Account_Name__c.inlineHelpText}">
-                                            <apex:outputLabel value="{!$ObjectType.Bank_Account__c.Fields.Account_Name__c.Label}"></apex:outputLabel>
-                                                
+                                        <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                <span class="slds-truncate">{!$ObjectType.Bank_Account__c.Fields.Account_Name__c.Label}</span>
+                                            </p>
                                             <apex:outputPanel id="iAccountPanel">
                                                 <apex:actionRegion >
                                                 <apex:inputField value="{!mBankAccount.Account_Name__c}">
@@ -104,13 +104,13 @@
                                                 </apex:actionStatus>
                                                 </apex:actionRegion>
                                             </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-                                        <!-- / Account Field -->   
+                                        </div>
              
                                         <!-- Contact Field -->
-                                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Bank_Account__c.Fields.Contact_Name__c.inlineHelpText}">
-                                            <apex:outputLabel value="{!$ObjectType.Bank_Account__c.Fields.Contact_Name__c.Label}"></apex:outputLabel>
-                                                                    
+                                        <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                            <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                <span class="slds-truncate">{!$ObjectType.Bank_Account__c.Fields.Contact_Name__c.Label}</span>
+                                            </p>
                                             <apex:outputPanel id="iContactPanel">
                                                 <!-- Lookup Field -->
                                                 <apex:inputField value="{!mBankAccount.Contact_Name__c}"
@@ -127,41 +127,39 @@
                                                 <!-- / List Field -->
                                                                             
                                             </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-                                        <!-- / Contact Field -->   
+                                        </div>
                                  
                                         <apex:repeat value="{!$ObjectType.Bank_Account__c.FieldSets.Bank_Account_Edit_Fields}" var="editInfo">
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!editInfo.Label}">
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!editInfo.Label}</span>
                                                     <apex:outputPanel rendered="{!OR(editInfo.required, editInfo.dbrequired)}"
-                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                                </apex:outputLabel>
+                                                                      styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                                </p>
                                                 <apex:inputField value="{!mBankAccount[editInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
+                                            </div>
                                         </apex:repeat>
-
-                                    </apex:pageBlockSection>
+                                    </div>
                                 </apex:outputPanel>                            
 
                                 <apex:outputPanel id="additionalInfoPanel" rendered="{!($ObjectType.Bank_Account__c.FieldSets.Additional_Info_Fields.size > 0)}">
-                                    <div class="slds-m-top--small">
+                                    <div class="slds-m-top_small">
                                         <c:sectionHeader label="{!$Label.fscore__additional_information_block_title}"
                                                          isEditSectionHeader="true" isModalWindow="true"/>
                                     </div>
                                     
-                                    <apex:pageBlockSection id="additionalInfoSection" columns="2" collapsible="false" html-class="slds-theme--default">
+                                    <div id="additionalInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
                                         <apex:repeat value="{!$ObjectType.Bank_Account__c.FieldSets.Additional_Info_Fields}" var="addlInfo">
-
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!addlInfo.Label}">
+                                            <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                                <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                                    <span class="slds-truncate">{!addlInfo.Label}</span>
                                                     <apex:outputPanel rendered="{!OR(addlInfo.required, addlInfo.dbrequired)}"
-                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                                </apex:outputLabel>
+                                                                      styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                                </p>
                                                 <apex:inputField value="{!mBankAccount[addlInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
-
+                                            </div>
                                         </apex:repeat>
-                                    </apex:pageBlockSection>
+                                    </div>
                                 </apex:outputPanel>                            
 
                             </apex:pageBlock>
