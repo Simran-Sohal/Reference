@@ -67,19 +67,17 @@
                     <apex:pagemessages />
                 </apex:outputPanel>          
     
-                <div class="slds-m-top--small">
-                    <div class="slds-box slds-box--x-small slds-container--fluid">
-                        <apex:outputPanel id="directDebitBlockPanel">
-                            <apex:pageBlock id="directDebitPageBlock" mode="mainDetail" html-class="fs-data-block">
-                                <apex:outputPanel id="directDebitInfoPanel">
-                                    <c:sectionHeader label="{!$Label.fscore__information_block_title}"
-                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                <div class="slds-box slds-box_x-small slds-container_fluid slds-m-top_small">
+                    <apex:outputPanel id="directDebitBlockPanel">
+                        <apex:pageBlock id="directDebitPageBlock" mode="mainDetail" html-class="fs-data-block">
+                            <apex:outputPanel id="directDebitInfoPanel">
+                                <c:sectionHeader label="{!$Label.fscore__information_block_title}"
+                                                 isEditSectionHeader="true" isModalWindow="true"/>
     
-                                    <c:lendingAppDirectDebitEdit directDebit="{!mAppDirectDebitObject}"/>     
-                                </apex:outputPanel>                            
-                            </apex:pageBlock>
-                        </apex:outputPanel>
-                    </div>
+                                <c:lendingAppDirectDebitEdit directDebit="{!mAppDirectDebitObject}"/>     
+                            </apex:outputPanel>                            
+                        </apex:pageBlock>
+                    </apex:outputPanel>
                 </div>
 
                 <apex:actionStatus id="reloadStatus">
