@@ -67,207 +67,203 @@
                     <apex:pagemessages />
                 </apex:outputPanel>          
     
-                <div class="slds-m-top--small">
-                    <div class="slds-box slds-box--x-small slds-container--fluid">
-                        <apex:outputPanel id="disbursementBlockPanel">
-                            <apex:pageBlock id="disbursementPageBlock" mode="mainDetail" html-class="fs-data-block">
-                                <apex:outputPanel id="partyInfoPanel">
-                                    <c:sectionHeader label="{!$Label.fscore__party_info_section_title}"
-                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                <div class="slds-box slds-box_x-small slds-container_fluid slds-m-top_small">
+                    <apex:outputPanel id="disbursementBlockPanel">
+                        <apex:pageBlock id="disbursementPageBlock" mode="mainDetail" html-class="fs-data-block">
+                            <apex:outputPanel id="partyInfoPanel">
+                                <c:sectionHeader label="{!$Label.fscore__party_info_section_title}"
+                                                 isEditSectionHeader="true" isModalWindow="true"/>
+                                
+                                <div id="partyInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Party_Type__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Disbursement_Party_Type__c}"
+                                                         onchange="handlePartyTypeChange();"/>
+                                    </div>
                                     
-                                    <apex:pageBlockSection id="partyInfoSection" columns="2" collapsible="false">
-                                        
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Party_Type__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:outputPanel >
-                                                <apex:inputField value="{!mAppDisbObject.mDisbursement.Disbursement_Party_Type__c}"
-                                                                 onchange="handlePartyTypeChange();"/>
-                                                
-                                           </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$Label.fscore__customer_field_label}</span>
+                                            <apex:outputPanel rendered="{!(mAppDisbObject.isCustomer)}" styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:outputText value="--" rendered="{!NOT(mAppDisbObject.isCustomer)}"/>
+                                        <apex:outputPanel rendered="{!(mAppDisbObject.isCustomer)}">
+	                                        <apex:selectList value="{!mAppDisbObject.mDisbursement.Customer_Reference_Number__c}"
+	                                                         multiselect="false" size="1"
+	                                                         onchange="handleCustomerChange();">
+	                                            <apex:selectOptions value="{!mAppDisbObject.customerList}"/>
+	                                        </apex:selectList>
+                                        </apex:outputPanel>
+                                    </div>
 
-                                        <apex:pageBlockSectionItem rendered="{!(mAppDisbObject.isCustomer)}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Account_Name__c.Label}"></apex:outputLabel>
-                                            <apex:outputField value="{!mAppDisbObject.mDisbursement.Account_Name__c}"/>
-                                        </apex:pageBlockSectionItem>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Account_Name__c.Label}</span>
+                                        </p>
+                                        <apex:outputField value="{!mAppDisbObject.mDisbursement.Account_Name__c}" rendered="{!(mAppDisbObject.isCustomer)}"/>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Account_Name__c}" rendered="{!NOT(mAppDisbObject.isCustomer)}"
+                                                         onchange="handleAccountChange();"/>
+                                    </div>
 
-                                        <apex:pageBlockSectionItem rendered="{!(mAppDisbObject.isCustomer)}">
-                                            <apex:outputLabel value="{!$Label.fscore__customer_field_label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:selectList value="{!mAppDisbObject.mDisbursement.Customer_Reference_Number__c}"
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Contact_Name__c.Label}</span>
+                                        </p>
+                                        <apex:outputField value="{!mAppDisbObject.mDisbursement.Contact_Name__c}" rendered="{!(mAppDisbObject.isCustomer)}"/>
+                                        <apex:outputPanel rendered="{!NOT(mAppDisbObject.isCustomer)}">
+                                            <apex:selectList value="{!mAppDisbObject.mDisbursement.Contact_Name__c}"
                                                              multiselect="false" size="1"
-                                                             onchange="handleCustomerChange();">
-                                                <apex:selectOptions value="{!mAppDisbObject.customerList}"/>
+                                                             onchange="handleContactChange();"
+                                                             rendered="{!NOT(ISBLANK(mAppDisbObject.mDisbursement.Account_Name__c))}">
+                                                <apex:selectOptions value="{!mAppDisbObject.accountContactList}"/>
                                             </apex:selectList>
-                                        </apex:pageBlockSectionItem>
+                
+                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Contact_Name__c}"
+                                                             rendered="{!ISBLANK(mAppDisbObject.mDisbursement.Account_Name__c)}"
+                                                             onchange="handleContactChange();"/>
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>                            
 
-                                        <apex:pageBlockSectionItem rendered="{!(mAppDisbObject.isCustomer)}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Contact_Name__c.Label}"></apex:outputLabel>
-                                            <apex:outputField value="{!mAppDisbObject.mDisbursement.Contact_Name__c}"/>
-                                        </apex:pageBlockSectionItem>
+                            <apex:outputPanel id="disbursementInfoPanel">
+                                <div class="slds-m-top_small">
+                                    <c:sectionHeader label="{!$Label.fscore__disbursement_info_section_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                                </div>
 
-                                        <apex:pageBlockSectionItem rendered="{!NOT(mAppDisbObject.isCustomer)}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Account_Name__c.Label}"></apex:outputLabel>
-                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Account_Name__c}"
-                                                             onchange="handleAccountChange();"/>
-                                        </apex:pageBlockSectionItem>
-
-                                        <apex:pageBlockSectionItem rendered="{!NOT(mAppDisbObject.isCustomer)}">
-                                            <!-- Blank Space -->
-                                        </apex:pageBlockSectionItem>
-
-                                        <apex:pageBlockSectionItem rendered="{!NOT(mAppDisbObject.isCustomer)}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Contact_Name__c.Label}"></apex:outputLabel>
-                                            
-                                            <apex:outputPanel >
-                                                <apex:selectList value="{!mAppDisbObject.mDisbursement.Contact_Name__c}"
-                                                                 multiselect="false" size="1"
-                                                                 onchange="handleContactChange();"
-                                                                 rendered="{!NOT(ISBLANK(mAppDisbObject.mDisbursement.Account_Name__c))}">
-                                                    <apex:selectOptions value="{!mAppDisbObject.accountContactList}"/>
-                                                </apex:selectList>
-                    
-                                                <apex:inputField value="{!mAppDisbObject.mDisbursement.Contact_Name__c}"
-                                                                 rendered="{!ISBLANK(mAppDisbObject.mDisbursement.Account_Name__c)}"
-                                                                 onchange="handleContactChange();"/>
-                                            </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-
-                                    </apex:pageBlockSection>
-                                </apex:outputPanel>                            
-
-                                <apex:outputPanel id="disbursementInfoPanel">
-                                    <div class="slds-m-top--small">
-                                        <c:sectionHeader label="{!$Label.fscore__disbursement_info_section_title}"
-                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                <div id="disbursementInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Amount__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Disbursement_Amount__c}"/>
                                     </div>
 
-                                    <apex:pageBlockSection id="disbursementInfoSection" columns="2" collapsible="false">
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Amount__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Disbursement_Amount__c}"/>
-                                        </apex:pageBlockSectionItem>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Payment_Method__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Payment_Method__c}"
+                                                         onchange="handlePaymentMethodChange();"/>
+                                    </div>
 
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Payment_Method__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Payment_Method__c}"
-                                                             onchange="handlePaymentMethodChange();"/>
-                                        </apex:pageBlockSectionItem>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Reference__c.Label}</span>
+                                        </p>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Reference__c}"/>
+                                    </div>
 
-                                        <apex:pageBlockSectionItem rendered="{!mApplication.Is_Funding_In_Tranches_Allowed__c}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Is_Future_Disbursement__c.Label}">
-                                            </apex:outputLabel>
-                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Is_Future_Disbursement__c}"
-                                                             onchange="handleFutureFlagChange();"/>
-                                        </apex:pageBlockSectionItem>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Is_Future_Disbursement__c.Label}</span>
+                                        </p>
+                                        <apex:outputText value="--" rendered="{!NOT(mApplication.Is_Funding_In_Tranches_Allowed__c)}"/>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Is_Future_Disbursement__c}"
+                                                         rendered="{!mApplication.Is_Funding_In_Tranches_Allowed__c}"
+                                                         onchange="handleFutureFlagChange();"/>
+                                    </div>
+
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Date_Formula__c.Label}</span>
+                                            <apex:outputPanel rendered="{!mAppDisbObject.mDisbursement.Is_Future_Disbursement__c}" 
+                                                              styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
+                                        <apex:outputText value="--" rendered="{!NOT(mAppDisbObject.mDisbursement.Is_Future_Disbursement__c)}"/>
+                                        <apex:inputField value="{!mAppDisbObject.mDisbursement.Future_Disbursement_Date__c}"
+                                                         rendered="{!mAppDisbObject.mDisbursement.Is_Future_Disbursement__c}"
+                                                         onchange="handlePaymentMethodChange();"/>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>                            
+
+                            <apex:outputPanel id="electonicPaymentInfoPanel" rendered="{!mAppDisbObject.isElectronicPayment}">
+                                <div class="slds-m-top_small">
+                                    <c:sectionHeader label="{!$Label.fscore__bank_account_section_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                                </div>
+
+                                <div id="ePmtInfoSectionInternal" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$ObjectType.Lending_Application_Disbursement__c.Fields.Bank_Account_Name__c.Label}</span>
+                                            <apex:outputPanel styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+                                        </p>
                                         
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Reference__c.Label}">
-                                            </apex:outputLabel>
-                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Reference__c}"/>
-                                        </apex:pageBlockSectionItem>
-
-                                        <apex:pageBlockSectionItem rendered="{!mAppDisbObject.mDisbursement.Is_Future_Disbursement__c}">
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Date_Formula__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:inputField value="{!mAppDisbObject.mDisbursement.Future_Disbursement_Date__c}"/>
-                                        </apex:pageBlockSectionItem>
-
-                                    </apex:pageBlockSection>
-                                </apex:outputPanel>                            
-
-                                <apex:outputPanel id="electonicPaymentInfoPanel" rendered="{!mAppDisbObject.isElectronicPayment}">
-                                    <div class="slds-m-top--small">
-                                        <c:sectionHeader label="{!$Label.fscore__bank_account_section_title}"
-                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                        <apex:selectList value="{!mAppDisbObject.mDisbursement.Bank_Account_Name__c}"
+                                                         multiselect="false" size="1" 
+                                                         onchange="handleBankAccountChange();">
+                                            <apex:selectOptions value="{!mAppDisbObject.bankAccountList}"/>
+                                        </apex:selectList>
                                     </div>
 
-                                    <apex:pageBlockSection id="ePmtInfoSectionInternal" columns="2" collapsible="false">
-
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Bank_Account_Name__c.Label}">
-                                                <apex:outputPanel styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                            </apex:outputLabel>
-                                            
-                                            <apex:selectList value="{!mAppDisbObject.mDisbursement.Bank_Account_Name__c}"
-                                                             multiselect="false" size="1" 
-                                                             onchange="handleBankAccountChange();">
-                                                <apex:selectOptions value="{!mAppDisbObject.bankAccountList}"/>
-                                            </apex:selectList>
-                                        </apex:pageBlockSectionItem>
-
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$Label.fscore__bank_account_details_title}"></apex:outputLabel>
-                                            <apex:outputPanel >
-                                                <apex:repeat value="{!$ObjectType.Bank_Account__c.FieldSets.Bank_Account_View_Fields}"
-                                                             var="bankAccountField">
-                                                    <div class="slds-text-body--small">
-                                                        <p><span class="slds-text-color--weak">{!bankAccountField.Label}:</span>&nbsp;
-                                                        <apex:outputField value="{!mAppDisbObject.selectedBankAccount[bankAccountField.fieldPath]}"/></p>
-                                                    </div>
-                                                </apex:repeat>
-                                            </apex:outputPanel>
-                                        </apex:pageBlockSectionItem>
-                                    </apex:pageBlockSection>
-                                 </apex:outputPanel>                            
-
-                                <apex:outputPanel id="nonElectonicPaymentInfoPanel" rendered="{!NOT(mAppDisbObject.isElectronicPayment)}">
-                                    <div class="slds-m-top--small">
-                                        <c:sectionHeader label="{!$Label.fscore__disbursement_info_section_title}"
-                                                         isEditSectionHeader="true" isModalWindow="true"/>
+                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+                                            <span class="slds-truncate">{!$Label.fscore__bank_account_details_title}</span>
+                                        </p>
+                                        
+                                        <apex:outputPanel >
+                                            <apex:repeat value="{!$ObjectType.Bank_Account__c.FieldSets.Bank_Account_View_Fields}"
+                                                         var="bankAccountField">
+                                                <div class="slds-text-body_small">
+                                                    <p><span class="slds-text-color_weak">{!bankAccountField.Label}:</span>&nbsp;
+                                                    <apex:outputField value="{!mAppDisbObject.selectedBankAccount[bankAccountField.fieldPath]}"/></p>
+                                                </div>
+                                            </apex:repeat>
+                                        </apex:outputPanel>
                                     </div>
+                                </div>
+                             </apex:outputPanel>                            
 
-                                    <apex:pageBlockSection id="nonEPmtInfoSection" columns="2" collapsible="false">
-                                        <apex:repeat value="{!$ObjectType.Lending_Application_Disbursement__c.FieldSets.Disbursement_Non_Electronic_Fields}" var="nonEPmtInfo">
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!nonEPmtInfo.Label}">
-                                                    <apex:outputPanel rendered="{!OR(nonEPmtInfo.required, nonEPmtInfo.dbRequired)}" 
-                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                                </apex:outputLabel>
-                                                
-                                                <apex:inputField value="{!mAppDisbObject.mDisbursement[nonEPmtInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
-                                        </apex:repeat>
-                                    </apex:pageBlockSection>
-                                </apex:outputPanel>                            
+                            <apex:outputPanel id="nonElectonicPaymentInfoPanel" rendered="{!NOT(mAppDisbObject.isElectronicPayment)}">
+                                <div class="slds-m-top_small">
+                                    <c:sectionHeader label="{!$Label.fscore__disbursement_info_section_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                                </div>
 
-                                <apex:outputPanel id="additionalInfoPanel" 
-                                                  rendered="{!($ObjectType.Lending_Application_Disbursement__c.FieldSets.Additional_Info_Fields.size > 0)}">
-                                    <div class="slds-m-top--small">
-                                        <c:sectionHeader label="{!$Label.fscore__additional_information_block_title}"
-                                                         isEditSectionHeader="true" isModalWindow="true"/>
-                                    </div>
-                                    
-                                    <apex:pageBlockSection id="additionalInfoSection" columns="2" collapsible="false">
-                                        <apex:repeat value="{!$ObjectType.Lending_Application_Disbursement__c.FieldSets.Additional_Info_Fields}" var="addlInfo">
-                                            <apex:pageBlockSectionItem >
-                                                <apex:outputLabel value="{!$ObjectType.Lending_Application_Disbursement__c.Fields.Disbursement_Amount__c.Label}">
-                                                    <apex:outputPanel rendered="{!OR(addlInfo.required, addlInfo.dbRequired)}" 
-                                                                      styleClass="fs-required slds-m-left--xxx-small">*</apex:outputPanel>
-                                                </apex:outputLabel>
-                                                
-                                                <apex:inputField value="{!mAppDisbObject.mDisbursement[addlInfo.fieldPath]}" required="false"/>
-                                            </apex:pageBlockSectionItem>
-                                        </apex:repeat>
-                                    </apex:pageBlockSection>
-                                </apex:outputPanel>                            
+                                <div id="nonEPmtInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <apex:repeat value="{!$ObjectType.Lending_Application_Disbursement__c.FieldSets.Disbursement_Non_Electronic_Fields}" var="nonEPmtInfo">
+	                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                            <span class="slds-truncate">{!nonEPmtInfo.Label}</span>
+                                                <apex:outputPanel rendered="{!OR(nonEPmtInfo.required, nonEPmtInfo.dbRequired)}" 
+                                                                  styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                        </p>
+                                            <apex:inputField value="{!mAppDisbObject.mDisbursement[nonEPmtInfo.fieldPath]}" required="false"/>
+                                        </div>
+                                    </apex:repeat>
+                                </div>
+                            </apex:outputPanel>                            
 
-                            </apex:pageBlock>
-                        </apex:outputPanel>
-                    </div>
+                            <apex:outputPanel id="additionalInfoPanel" rendered="{!($ObjectType.Lending_Application_Disbursement__c.FieldSets.Additional_Info_Fields.size > 0)}">
+                                <div class="slds-m-top_small">
+                                    <c:sectionHeader label="{!$Label.fscore__additional_information_block_title}"
+                                                     isEditSectionHeader="true" isModalWindow="true"/>
+                                </div>
+                                
+                                <div id="additionalInfoSection" class="slds-grid slds-wrap slds-m-horizontal_small">
+                                    <apex:repeat value="{!$ObjectType.Lending_Application_Disbursement__c.FieldSets.Additional_Info_Fields}" var="addlInfo">
+	                                    <div class="slds-p-horizontal_x-small slds-p-bottom_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-truncate">
+	                                        <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_xx-small">
+	                                            <span class="slds-truncate">{!addlInfo.Label}</span>
+                                                <apex:outputPanel rendered="{!OR(addlInfo.required, addlInfo.dbRequired)}" 
+                                                                  styleClass="fs-required slds-m-left_xx-small">*</apex:outputPanel>
+	                                        </p>
+                                            <apex:inputField value="{!mAppDisbObject.mDisbursement[addlInfo.fieldPath]}" required="false"/>
+                                        </div>
+                                    </apex:repeat>
+                                </div>
+                            </apex:outputPanel>                            
+
+                        </apex:pageBlock>
+                    </apex:outputPanel>
                 </div>
             
                 <!-- Action Functions -->
