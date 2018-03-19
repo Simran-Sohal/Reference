@@ -78,44 +78,21 @@
                     <apex:pagemessages />
                 </apex:outputPanel>          
 
-                <div class="slds-m-top--small">
-                    <div class="slds-box slds-box--x-small slds-container--fluid">
-                        <apex:outputPanel id="appCollateralBlockPanel">
-                            <apex:pageBlock id="appCollateralPageBlock" mode="mainDetail" html-class="fs-data-block">
+                <div class="slds-box slds-box_x-small slds-container_fluid slds-m-top_small">
+                    <apex:outputPanel id="appCollateralBlockPanel">
+                        <apex:pageBlock id="appCollateralPageBlock" mode="mainDetail" html-class="fs-data-block">
 
-                                <!-- Hidden field for holding value required for adding a new collateral -->
-                                <apex:inputHidden id="iNewCollateralId" value="{!mNewCollateralId}"/>
-                                
-                                <apex:outputPanel id="applicationInfoPanel">
-                                    <c:sectionHeader label="{!$Label.fscore__information_block_title}"
-                                                     isEditSectionHeader="true" isModalWindow="true"/>
-    
-                                    <apex:pageBlockSection columns="2" collapsible="false" html-class="slds-theme--default">
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Collateral__c.Fields.Collateral_Family__c.Label}"></apex:outputLabel>
-                                            <apex:outputField value="{!mAppCollateralObj.mApplicationCollateral.Collateral_Family__c}"/>
-                                        </apex:pageBlockSectionItem>
+                            <!-- Hidden field for holding value required for adding a new collateral -->
+                            <apex:inputHidden id="iNewCollateralId" value="{!mNewCollateralId}"/>
+                            
+                            <apex:outputPanel id="appCollateralInfoPanel">
+                                <c:sectionHeader label="{!$Label.fscore__information_block_title}"
+                                                 isEditSectionHeader="true" isModalWindow="true"/>
 
-                                        <apex:pageBlockSectionItem >
-                                            <apex:outputLabel value="{!$ObjectType.Lending_Application_Collateral__c.Fields.Collateral_Sub_Family__c.Label}"></apex:outputLabel>
-                                            <apex:outputField value="{!mAppCollateralObj.mApplicationCollateral.Collateral_Sub_Family__c}"/>
-                                        </apex:pageBlockSectionItem>
-                                    </apex:pageBlockSection>
- 
-                                </apex:outputPanel>
-
-                                <apex:outputPanel id="appCollateralInfoPanel">
-                                    <div class="slds-m-top--small">
-                                        <c:sectionHeader label="{!$Label.fscore__contract_collateral_info_block_title}"
-                                                         isEditSectionHeader="true" isModalWindow="true"/>
-                                    </div>
-                                    
-                                    <c:lendingAppCollateralEdit applicationCollateral="{!mAppCollateralObj}"/>
- 
-                                </apex:outputPanel>
-                            </apex:pageBlock>
-                        </apex:outputPanel>
-                    </div>
+                                <c:lendingAppCollateralEdit applicationCollateral="{!mAppCollateralObj}"/>
+                            </apex:outputPanel>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
                 </div>
                 
                 <apex:actionFunction name="addNewCollateralToApplication"
