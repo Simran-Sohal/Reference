@@ -1,0 +1,119 @@
+<apex:component id="contractCustomerList" allowDML="true"
+                controller="ContractCustomerListController">
+
+    <apex:attribute id="contractId" name="contractId"
+                    required="true" type="Id" assignTo="{!mcontractId}"
+                    description="Id of lending contract whose customers are to be displayed" />
+    <apex:attribute id="readOnly" name="readOnly"
+                    required="false" type="Boolean" default="false"
+                    description="Determines whether the to render the component as read-only or not." />
+
+    <!-- Component Definition -->
+    <apex:outputPanel id="iCustomerPanel" rendered="{!$ObjectType.Contract_Customer__c.accessible}">
+
+        <div class="slds-box slds-box_x-small slds-theme_shade slds-container_fluid">
+
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                <div class="slds-col slds-align-middle">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                           <fsCore:svgIcon iconStyleClass="slds-icon slds-icon_small slds-icon-standard-account"
+                                           iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/standard-sprite/svg/symbols.svg#person_account')}"/>
+                        </div>
+                        <div class="slds-media__body slds-align-middle">
+                            <h3 class="slds-text-heading_small">
+                                <strong>{!$Label.fsserv__contract_customer_section_title}</strong>
+                            </h3>
+                        </div>
+                    </div>
+
+                </div>
+        
+                <div class="slds-col slds-no-flex">
+                    <!-- Commented by SSingh
+                    <apex:outputLink value="{!URLFOR($Action.fsServ__Contract_Customer__c.New,null,['parentId'=contractId])}"
+                                     rendered="{!AND($ObjectType.Contract_Customer__c.createable, NOT(readOnly))}"
+                                     styleClass="slds-button slds-button_neutral" >
+                        {!$Label.fscore__new_button}
+                    </apex:outputLink>
+                    -->
+                </div>
+            </div>
+
+            <apex:actionStatus id="waitActionStatus">
+                <apex:facet name="start">
+                    <fsCore:fsSpinner spinnerSize="medium"/>
+                </apex:facet>
+            </apex:actionStatus>
+
+            <apex:outputPanel id="iCustomerTablePanel">
+                <div class="slds-m-top_x-small">
+                    <apex:dataTable id="iCustomerTable" value="{!customerList}" var="customer"
+                                    rendered="{!(customerList.size > 0)}"
+                                    styleClass="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal">  
+
+                        <apex:repeat value="{!$ObjectType.Contract_Customer__c.FieldSets.List_View_Fields}" var="listField">
+                            <apex:column >
+                                <apex:facet name="header">
+                                    <span class="slds-text-heading_x-small slds-truncate slds-cell-wrap">
+                                        <strong>{!listField.Label}</strong>
+                                    </span>
+                                </apex:facet>
+                                
+                                <apex:outputField value="{!customer[listField.fieldPath]}" html-class="slds-cell-wrap" 
+                                                  rendered="{!NOT(listField.fieldPath=='Name')}"/>
+                                
+                                <apex:outputLink value="{!URLFOR($Action.fsServ__Contract_Customer__c.View, customer.Id)}"
+                                                 html-class="slds-cell-wrap" rendered="{!(listField.fieldPath=='Name')}">
+                                    {!customer[listField.fieldPath]}
+                                </apex:outputLink>
+                            </apex:column>
+                        </apex:repeat>
+
+                        <apex:column width="5%" rendered="{!NOT(readOnly)}">
+                            <div class="slds-dropdown-trigger" aria-expanded="true">
+                                <a class="slds-button slds-button_icon slds-button_icon-border-filled slds-button_icon-small"
+                                   style="padding: 4px;" aria-haspopup="false">
+                                    <fsCore:svgIcon iconStyleClass="slds-button__icon"
+                                                    iconPath="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#down')}" />
+                                    <span class="slds-assistive-text">{!$Label.fscore__action_column_title}</span>
+                                </a>
+    
+                                <div class="slds-dropdown slds-dropdown_right slds-dropdown_actions slds-dropdown_menu slds-nubbin_top-right">
+                                    <ul class="dropdown__list" role="menu">
+                                        <li class="slds-dropdown__item {!IF($ObjectType.Contract_Customer__c.updateable, '','slds-hide')}">
+                                            <apex:outputLink value="{!URLFOR($Action.fsServ__Contract_Customer__c.Edit, customer.Id)}"
+                                                             rendered="{!$ObjectType.Contract_Customer__c.updateable}">
+                                                {!$Label.fscore__edit_button}
+                                            </apex:outputLink>
+                                        </li>
+                                        <li class="slds-dropdown__item {!IF($ObjectType.Contract_Customer__c.deletable, '','slds-hide')}">
+                                            <apex:commandLink action="{!onDelete}" value="{!$Label.fscore__delete_button}" reRender="iCustomerTablePanel"
+                                                              rendered="{!$ObjectType.Contract_Customer__c.deletable}"
+                                                              status="waitActionStatus">
+                                                <apex:param name="recordId" assignTo="{!mSelectedRecordId}" value="{!customer.Id}"/>
+                                            </apex:commandLink>
+                                       </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </apex:column>
+
+                    </apex:dataTable>
+                </div>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!(customerList.size == 0)}">
+                <div class="slds-box slds-box_x-small slds-container_fluid"
+                     style="border-radius: 0; border-left: 0; border-right: 0;">
+                    <div align="center">
+                        <span class="slds-text-body_regular">{!$Label.fsCore__No_Record_To_Display}</span>
+                    </div>
+                </div>
+            </apex:outputPanel>
+
+        </div>
+    </apex:outputPanel>
+    <!-- / Component Definition -->
+
+</apex:component>
