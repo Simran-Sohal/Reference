@@ -1,0 +1,115 @@
+<apex:component id="contractFeeList" controller="ContractFeeListController">
+
+    <apex:attribute id="contractId" name="contractId"
+                    required="true" type="Id" assignTo="{!mcontractId}"
+                    description="Id of lending contract whose fees are to be displayed" />
+
+    <!-- Component Definition -->
+    <apex:outputPanel id="iFeePanel" rendered="{!$ObjectType.Contract_Fee__c.accessible}">
+
+        <div class="slds-box slds-box_x-small slds-theme_shade slds-container_fluid">
+
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                <div class="slds-col slds-align-middle">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                           <fsCore:svgIcon iconStyleClass="slds-icon slds-icon_small slds-icon-standard-report"
+                                           iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/custom-sprite/svg/symbols.svg#custom41')}"/>
+                        </div>
+                        <div class="slds-media__body slds-align-middle">
+                            <h3 class="slds-text-heading_small">
+                                <strong>{!$Label.fsserv__contract_fee_section_title}</strong>
+                            </h3>
+                        </div>
+                    </div>
+
+                </div>
+        
+                <div class="slds-col slds-no-flex">
+                    <!-- no action -->
+                </div>
+            </div>
+
+            <apex:outputPanel id="iFeeTablePanel">
+                <div class="slds-m-top_x-small">
+                    <apex:dataTable id="iFeeTable" value="{!feeList}" var="fee"
+                                    rendered="{!(feeList.size > 0)}"
+                                    styleClass="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal">  
+
+                        <apex:repeat value="{!$ObjectType.Contract_Fee__c.FieldSets.List_View_Fields}" var="listField">
+                            <apex:column >
+                                <apex:facet name="header">
+                                    <span class="slds-text-heading_x-small slds-truncate slds-cell-wrap">
+                                        <strong>{!listField.Label}</strong>
+                                    </span>
+                                </apex:facet>
+                                
+                                <apex:outputField value="{!fee[listField.fieldPath]}" html-class="slds-cell-wrap" 
+                                                  rendered="{!NOT(listField.fieldPath=='Name')}"/>
+                                
+                                <apex:outputLink value="{!URLFOR($Action.fsServ__Contract_Fee__c.View, fee.Id)}"
+                                                 html-class="slds-cell-wrap" rendered="{!(listField.fieldPath=='Name')}">
+                                    {!fee[listField.fieldPath]}
+                                </apex:outputLink>
+                            </apex:column>
+                        </apex:repeat>
+
+                        <apex:column width="5%">
+                            <apex:facet name="header">
+                                <span class="slds-text-heading--x-small slds-truncate slds-cell-wrap">
+                                    <strong>{!$Label.fscore__tiers_title}</strong>
+                                </span>
+                            </apex:facet>
+                            <!--
+                            <apex:outputPanel rendered="{!feeObject.feeTierViewList.size > 0}" html-class="slds-cell-wrap">
+                                <div class="slds-dropdown-trigger" aria-expanded="true">
+                                    <a class="slds-button slds-button--icon slds-button--icon-border-filled slds-button--icon-small"
+                                       style="padding: 4px;" aria-haspopup="false">
+                                        <c:svgIcon iconStyleClass="slds-button__icon"
+                                                   iconPath="{!URLFOR($Resource.fs_slds, '/assets/icons/utility-sprite/svg/symbols.svg#down')}" />
+                                        <span class="slds-assistive-text">{!$Label.fscore__tiers_title}</span>
+                                    </a>
+                                    
+                                    <div class="slds-dropdown slds-dropdown--right slds-dropdown--menu slds-nubbin--top-right" style="max-width: 30rem !important;">
+                                        <div class="slds-p-horizontal--x-small">
+                                            <apex:dataTable id="iFeeTierTable" value="{!feeObject.feeTierViewList}" var="feeTier"
+                                                            styleClass="slds-table slds-table--bordered slds-table--compact">
+                                                <apex:column >
+                                                    <apex:facet name="header">
+                                                        <span class="slds-text-heading--x-small"><strong>{!$Label.fscore__tier_range_title}</strong></span>
+                                                    </apex:facet>
+                                                    <apex:outputText value="{!feeTier.mTierRange}"/>
+                                                </apex:column>
+                                                <apex:column >
+                                                    <apex:facet name="header">
+                                                        <span class="slds-text-heading--x-small"><strong>{!$Label.fscore__tier_value_title}</strong></span>
+                                                    </apex:facet>
+                                                    <apex:outputText value="{!feeTier.mTierValue}"/>
+                                                </apex:column>
+                                            </apex:dataTable>
+                                        </div>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            -->
+                        </apex:column>
+
+
+                    </apex:dataTable>
+                </div>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!(feeList.size == 0)}">
+                <div class="slds-box slds-box_x-small slds-container_fluid"
+                     style="border-radius: 0; border-left: 0; border-right: 0;">
+                    <div align="center">
+                        <span class="slds-text-body_regular">{!$Label.fsCore__No_Record_To_Display}</span>
+                    </div>
+                </div>
+            </apex:outputPanel>
+
+        </div>
+    </apex:outputPanel>
+    <!-- / Component Definition -->
+
+</apex:component>
