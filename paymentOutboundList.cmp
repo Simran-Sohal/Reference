@@ -1,0 +1,163 @@
+<apex:component id="paymentOutboundList" controller="PaymentOutboundListController">
+
+    <apex:attribute id="contractId" name="contractId"
+                    required="true" type="Id" assignTo="{!mContractId}"
+                    description="Id of lending contract whose Outbound payments are to be displayed" />
+    <apex:attribute id="readOnly" name="readOnly"
+                    required="false" type="Boolean" default="false"
+                    description="Determines whether the to render the component as read-only or not." />
+
+    <!-- Component Definition -->
+    <apex:outputPanel id="iOutboundPmtPanel" rendered="{!$ObjectType.fsCore__Outbound_Payment__c.accessible}">
+
+        <div class="slds-box slds-box_x-small slds-theme_shade slds-container_fluid">
+
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                <div class="slds-col slds-align-middle">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                           <fsCore:svgIcon iconStyleClass="slds-icon slds-icon_small slds-icon-standard-quotes"
+                                           iconPath="{!URLFOR($Asset.SLDS, 'assets/icons/custom-sprite/svg/symbols.svg#custom17')}"/>
+                        </div>
+                        <div class="slds-media__body slds-align-middle">
+                            <h3 class="slds-text-heading_small">
+                                <strong>{!$Label.fsserv__Outbound_payment_section_title}</strong>
+                            </h3>
+                        </div>
+                    </div>
+
+                </div>
+        
+                <div class="slds-col slds-no-flex">
+                    <!-- Future Development -->
+                </div>
+            </div>
+
+            <apex:actionStatus id="outPmtPaginationStatus">
+                <apex:facet name="start">
+                    <fsCore:fsSpinner spinnerSize="medium"/>
+                </apex:facet>
+            </apex:actionStatus>
+
+            <apex:outputPanel id="iOutboundPmtTablePanel" rendered="{!(outboundPmtList.size > 0)}">
+
+                <div class="slds-m-top_x-small">
+                    <apex:dataTable id="iTransactionTable" value="{!outboundPmtDisplayList}" var="outboundPmt"
+                                    rendered="{!(outboundPmtList.size > 0)}"
+                                    styleClass="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal">  
+
+                        <apex:repeat value="{!$ObjectType.fsCore__Outbound_Payment__c.FieldSets.Contract_List_View_Fields}" var="listField">
+                            <apex:column >
+                                <apex:facet name="header">
+                                    <span class="slds-text-heading_x-small slds-truncate slds-cell-wrap">
+                                        <strong>{!listField.Label}</strong>
+                                    </span>
+                                </apex:facet>
+                                
+                                <apex:outputField value="{!outboundPmt[listField.fieldPath]}" html-class="slds-cell-wrap" 
+                                                  rendered="{!NOT(listField.fieldPath=='Name')}"/>
+                                
+                                <apex:outputLink value="{!URLFOR($Action.fsCore__Outbound_Payment__c.View, outboundPmt.Id)}"
+                                                 html-class="slds-cell-wrap" rendered="{!(listField.fieldPath=='Name')}">
+                                    {!outboundPmt[listField.fieldPath]}
+                                </apex:outputLink>
+                            </apex:column>
+                        </apex:repeat>
+
+                        <apex:column width="5%" rendered="{!NOT(readOnly)}">
+                            <div class="slds-dropdown-trigger" aria-expanded="true">
+                                <a class="slds-button slds-button_icon slds-button_icon-border-filled slds-button_icon-small"
+                                   style="padding: 4px;" aria-haspopup="false">
+                                    <fsCore:svgIcon iconStyleClass="slds-button__icon"
+                                                    iconPath="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#down')}" />
+                                    <span class="slds-assistive-text">{!$Label.fscore__action_column_title}</span>
+                                </a>
+    
+                                <div class="slds-dropdown slds-dropdown_right slds-dropdown_actions slds-dropdown_menu slds-nubbin_top-right">
+                                    <ul class="dropdown__list" role="menu">
+                                        <li class="slds-dropdown__item {!IF($ObjectType.fsCore__Outbound_Payment__c.updateable, '','slds-hide')}">
+                                            <apex:outputLink value="{!URLFOR($Action.fsCore__Outbound_Payment__c.Edit, outboundPmt.Id)}"
+                                                             rendered="{!AND($ObjectType.fsCore__Outbound_Payment__c.updateable, NOT(readOnly))}">
+                                                {!$Label.fscore__edit_button}
+                                            </apex:outputLink>
+                                        </li>
+                                        <!--
+                                        <li class="slds-dropdown__item {!IF($ObjectType.fsCore__Outbound_Payment__c.deletable, '','slds-hide')}">
+                                            <apex:commandLink action="{!onDelete}" value="{!$Label.fscore__delete_button}" reRender="contractOutboundPmtTable"
+                                                              rendered="{!AND($ObjectType.Contract_Direct_Debit__c.deletable, NOT(readOnly))}"
+                                                              status="outPmtPaginationStatus">
+                                                <apex:param name="recordId" assignTo="{!mSelectedRecordId}" value="{!outboundPmt.Id}"/>
+                                            </apex:commandLink>
+                                        </li>
+                                        -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </apex:column>
+
+                    </apex:dataTable>
+                </div>
+                
+                <div class="slds-grid slds-grid_align-spread slds-m-top_x-small">
+                    <div class="slds-col slds-align-middle">
+                        <p class="slds-text-body_small" style="color: #16325c;">
+                            {!$Label.fsCore__Display_Title}&nbsp;
+                            <apex:selectList id="iRecordSize" value="{!recordSize}"
+                                             multiselect="false" size="1"
+                                             style="width: auto !important;">
+                                <apex:selectOptions value="{!recordSizeList}"/>
+                                <apex:actionSupport event="onchange" action="{!onRecordSizeChange}" status="outPmtPaginationStatus"
+                                                    reRender="outPmtPaginationPanel,iOutboundPmtTablePanel"/>
+                            </apex:selectList>&nbsp;
+                            {!$Label.fscore__Records_Per_Page_Title}     
+                        </p>
+                    </div>
+
+                    <div class="slds-col slds-no-flex">
+                        <apex:outputPanel id="outPmtPaginationPanel" rendered="{!(outboundPmtList.size > 0)}">
+                            <span class="slds-text-body_small" style="color: #16325c;">
+                                <apex:commandButton id="outPmtPreviousButton" value="<" 
+                                                    action="{!onPrevious}" disabled="{!disablePrevious}"
+                                                    styleClass="slds-button {!IF(disablePrevious, 'fs-small-button--disabled', 'fs-small-button--neutral')}"
+                                                    reRender="outPmtPaginationPanel,iOutboundPmtTablePanel"
+                                                    onclick="disableOutPmtPaginationButton('previous');"
+                                                    status="outPmtPaginationStatus" />
+                                &nbsp;{!displayedRecordText}&nbsp;
+                                <apex:commandButton id="outPmtNextButton" value=">"
+                                                    action="{!onNext}" disabled="{!disableNext}" 
+                                                    styleClass="slds-button {!IF(disableNext, 'fs-small-button--disabled', 'fs-small-button--neutral')}"
+                                                    reRender="outPmtPaginationPanel,iOutboundPmtTablePanel"
+                                                    onclick="disableOutPmtPaginationButton('next');"
+                                                    status="outPmtPaginationStatus"/>
+                            </span>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel rendered="{!(outboundPmtList.size == 0)}">
+                <div class="slds-box slds-box_x-small slds-container_fluid"
+                     style="border-radius: 0; border-left: 0; border-right: 0;">
+                    <div align="center">
+                        <span class="slds-text-body_regular">{!$Label.fsCore__No_Record_To_Display}</span>
+                    </div>
+                </div>
+            </apex:outputPanel>
+
+        </div>
+    </apex:outputPanel>
+
+    <script>
+        function disableOutPmtPaginationButton(buttonName){
+            console.log(buttonName)
+            if (buttonName == "previous"){
+                $j("input[id$=outPmtPreviousButton]").attr("disabled", true);
+            }
+            else if (buttonName == "next"){
+                $j("input[id$=outPmtNextButton]").attr("disabled", true);
+            }
+        }
+    </script>
+    <!-- / Component Definition -->
+
+</apex:component>
