@@ -1,0 +1,25 @@
+<aura:component access="global" implements="flexipage:availableForRecordHome,force:hasRecordId" 
+                controller="ApplicationStageInfoController">
+                
+    <aura:attribute access="global" name="layout" type="String" description="Layout style for stage history component. Possible values : FULL,MINI" default="FULL"/>
+    <aura:attribute access="global" name="showTitle" type="Boolean" description="Determines whether to display the section title or not" default="false"/>
+
+    <aura:attribute access="private" name="stages" type="ApplicationStageObject[]" description="List of stages for the stage history"/>
+    <aura:attribute access="private" name="stageHistory" type="Aura.Component[]" description="Placeholder for Stage History component body"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler event="force:refreshView" action="{!c.doInit}" />
+
+    <div class="slds-align_absolute-center">
+        <lightning:spinner aura:id="spinner" variant="brand" size="medium" alternativeText="{!$Label.c.Loading_Action_Status_Title}"/>
+    </div>
+
+    <div class="{! (v.showTitle ? 'slds-box slds-box_x-small ' : '') + ' slds-theme_default'}">
+        <aura:if isTrue="{!v.showTitle}">
+            <p class="slds-text-heading_small slds-m-bottom_small"><strong>{!$Label.c.Stage_History_Section_Title}</strong></p>
+        </aura:if>
+        {!v.stageHistory}
+    </div>
+    
+    
+</aura:component>
