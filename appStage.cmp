@@ -23,3 +23,87 @@
     
     
 </aura:component>
+
+
+        <ul class="slds-timeline">
+            <aura:iteration items="{!v.stages}" var="stageInfo">
+                <li><c:appStageInfo stage="{!stageInfo}" layout="{!v.layout}"/></li>
+            </aura:iteration>
+        </ul>
+
+
+    <div class="{!('slds-timeline__item_expandable ' + (v.stage.isCurrent ? 'slds-timeline__item_call' : 'slds-timeline__item_email'))}">
+        <div class="slds-media">
+            <div class="slds-media__figure">
+                <button class="slds-button slds-button_icon slds-button_icon-small"
+                        title="{!$Label.c.Stage_Info_Expand_Button_Tooltip}" onclick="{!c.toggleResultView}">
+                    <lightning:icon aura:id="toggleIcon" iconName="utility:chevronright" class="slds-button__icon" size="xx-small"/>
+                </button>
+                
+                <div class="slds-icon_container slds-timeline__icon">
+                    <lightning:icon iconName="standard:process" class="{!('slds-icon slds-icon_small ' + (v.stage.isCurrent ? 'slds-icon-standard-log-a-call' : 'slds-icon-standard-email'))}" size="small"/>
+                </div>
+            </div>
+            
+            <div class="slds-media__body">
+                <div class="slds-grid slds-grid_align-spread slds-timeline__trigger">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-truncate_container_75 slds-no-space">
+                        <h3 class="slds-truncate" title="{!v.stage.stageName}">
+                            <a aura:id="stageId" data-record="{!v.stage.stageId}" href="javascript:void(0);" onclick="{!c.navigateToStage}">
+                                <strong>{!v.stage.stageName}</strong>
+                            </a>
+                        </h3>
+
+                        <div class="slds-no-flex">
+                            <aura:if isTrue="{!v.stage.isCurrent}">
+                                <aura:if isTrue="{!v.stage.hasErrors}">
+                                    <lightning:icon iconName="utility:warning" title="{!$Label.c.Stage_Validation_Has_Errors}" class="slds-m-left_x-small" size="xx-small" variant="error"/>
+                                </aura:if>
+                                <aura:if isTrue="{!and(not(v.stage.hasErrors), v.stage.hasRuleResults)}">
+                                    <lightning:icon iconName="utility:success" title="{!$Label.c.Stage_Validation_Success}" class="slds-m-left_x-small" size="x-small"/>
+                                </aura:if>
+                                
+                                <aura:set attribute="else">
+                                    <aura:if isTrue="{!v.stage.hasErrors}">
+                                        <lightning:icon iconName="utility:warning" title="{!$Label.c.Stage_Validation_Had_Errors}" class="slds-m-left_x-small" size="xx-small" variant="error"/>
+                                    </aura:if>
+                                </aura:set>
+                            </aura:if>
+                        </div>
+                    </div>
+
+                    <div class="slds-timeline__actions slds-timeline__actions_inline">
+                        <p class="slds-text-color_weak" title="Stage entry date and time">
+                            <ui:outputDateTime value="{!v.stage.entryTime}" format="MMM dd,yyyy hh:mm a" class="slds-text-body_small" />
+                        </p>
+                        <!-- SSingh : To be implemented in future - add list of stage actions  
+                        <aura:if isTrue="{!v.stage.isCurrent}">
+                            &nbsp;
+                            <button class="slds-button slds-button_icon slds-button_icon-border-filled slds-button_icon-small" 
+                                    aria-haspopup="true" title="Options for this stage">
+                                <lightning:icon iconName="utility:down" class="slds-button__icon" size="xx-small" alternativeText="Options"/>
+                            </button>
+                        </aura:if>
+                        -->
+                    </div>
+                </div>
+                
+                <p class="slds-m-horizontal_xx-small slds-text-body_small">
+                    <ui:outputText value="{!v.stage.status}" title="Stage status"/>
+                    <span class="slds-m-horizontal_xx-small">|</span>
+                    <ui:outputText value="{!v.stage.resultSummary}" title="Stage validation result summary"/>
+                </p>
+
+                <div aura:id="stageRuleResults" class="slds-m-top_x-small slds-m-horizontal_xx-small slds-hide">
+                    <c:appRuleResult ruleResults="{!v.stage.ruleResults}" layout="{!v.layout}"/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+.THIS {
+}
+.THIS.slds-timeline__item_expandable:before{
+    left: 2.75rem !important;
+}
+
