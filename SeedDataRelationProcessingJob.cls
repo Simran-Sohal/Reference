@@ -244,3 +244,15 @@ public class SeedDataRelationProcessingJob extends fsCore.BatchQueryableBase {
     public override void finishJob(Database.BatchableContext pContext) {}
         
 }
+/*
+ * Copyright (c) 2017 FinancialSpectra Pty Ltd
+ * All rights reserved.
+ *
+ * Class Name   - SeedDataRelationProcessingJob 
+ *
+ * Description  - DO NOT RELEASE THIS JOB
+ *                -- This is for the testing 
+ * 
+ * Developer(s) - ADagur
+ *
+ */
