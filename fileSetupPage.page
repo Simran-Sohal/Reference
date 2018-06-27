@@ -1,0 +1,118 @@
+<apex:page id="fileSetupPage" standardController="File_Setup__c" extensions="FileSetupController" 
+           title="{!$Label.fscore__file_setup_page_title}" tabStyle="File_Setup__c">
+
+    <apex:sectionHeader title="{!$Label.fscore__file_setup_page_title}"
+                        subtitle="{!IF(mFileSetup.Id != null
+                                     , mFileSetup.Name
+                                     , $Label.File_Setup_Page_Sub_Title)}"/>
+
+    <apex:form id="fileSetupForm">
+        <apex:pageBlock id="fileSetupPageBlock" mode="edit" title="{!$Label.fscore__file_setup_page_title}">
+            <apex:outputPanel id="messagePanel">
+                <apex:pagemessages />
+            </apex:outputPanel>
+
+            <apex:actionStatus id="waitStatus">
+                <apex:facet name="start"><c:fsWaitMessage /></apex:facet>
+            </apex:actionStatus>
+
+            <apex:pageBlockButtons >
+                <apex:commandButton title="{!$Label.fscore__save_button_tooltip}" value="{!$Label.fscore__save_button}" action="{!onSave}"/>
+                <apex:commandButton title="{!$Label.fscore__save_and_new_button_tooltip}" value="{!$Label.fscore__save_and_new_button}" action="{!onSaveAndNew}"/>
+                <apex:commandButton title="{!$Label.fscore__cancel_button_tooltip}" value="{!$Label.fscore__cancel_button}" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+
+            <apex:outputPanel id="fileSetupInfoPanel">
+                <apex:pageBlockSection id="fileSetupInfoSection" columns="2" 
+                                       title="{!$Label.fscore__information_block_title}" collapsible="false">
+                    <apex:inputField value="{!mFileSetup.Name}" required="true"/>
+                    <apex:inputField value="{!mFileSetup.Is_Active__c}"/>
+                    <apex:inputField value="{!mFileSetup.File_Format_Type__c}" required="true"/>
+                    <apex:inputField value="{!mFileSetup.File_Process_Type__c}" required="true"/>
+                    <!-- <apex:inputField value="{!mFileSetup.Data_Source__c}" required="true"/> -->
+                    <!-- <apex:pageBlockSectionItem /> --> <!-- Blank Space -->
+                    <apex:inputField value="{!mFileSetup.Folder_Unique_Name__c}" required="true"/>
+
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <apex:outputPanel id="fileGenInfoPanel">
+                <apex:pageBlockSection id="fileGenInfoSection" columns="2" 
+                                       title="{!$Label.fscore__file_setup_page_file_gen_block_title}" collapsible="false">
+                    <apex:inputField value="{!mFileSetup.Generation_Method__c}" required="true"/>
+                    <apex:inputField value="{!mFileSetup.Column_Delimiter__c}"/>
+                    <apex:inputField value="{!mFileSetup.File_Maximum_Records__c}"/>
+                    <apex:inputField value="{!mFileSetup.Line_Terminator__c}"/>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+                <apex:outputPanel id="fileNameInfoPanel">
+                    <apex:pageBlockSection id="fileNameDetMethodSection" title="{!$Label.fscore__file_setup_page_file_name_block_title}"
+                                           columns="1" collapsible="false">
+                        <apex:inputField value="{!mFileSetup.File_Name_Determination_Method__c}" required="true">
+                            <apex:actionSupport event="onchange" action="{!onFileNameDetMethodChange}" status="waitStatus"
+                                                reRender="messagePanel,fileSetupInfoPanel,fileGenInfoPanel,fileNameInfoPanel"/>
+                        </apex:inputField>
+                
+                        <!-- Predefined File Name (Segment-Based) Related Fields -->
+                        <apex:pageBlockSectionItem helpText="{!$Label.fscore__file_setup_page_select_segment_help_text}" rendered="{!mRenderFileNameSegments}">
+                            <apex:outputLabel value="{!$Label.fscore__file_setup_page_segment_values_label}"></apex:outputLabel>
+                            <apex:panelGrid columns="7">
+                                <apex:selectList value="{!mFileNameSegment1Value}" size="1">
+                                    <apex:selectOptions value="{!mFileNameSegmentList}"/>
+                                    <apex:actionSupport event="onchange" action="{!onFileNameSegmentChange}" status="waitStatus"
+                                                        reRender="messagePanel,fileSetupInfoPanel,fileGenInfoPanel,fileNameInfoPanel"/>
+                                </apex:selectList>
+                                <apex:outputLabel value="{!mSegmentSeparator}" style="font-weight: bold;"></apex:outputLabel>
+                                <apex:selectList value="{!mFileNameSegment2Value}" size="1">
+                                    <apex:selectOptions value="{!mFileNameSegmentList}"/>
+                                    <apex:actionSupport event="onchange" action="{!onFileNameSegmentChange}" status="waitStatus"
+                                                        reRender="messagePanel,fileSetupInfoPanel,fileGenInfoPanel,fileNameInfoPanel"/>
+                                </apex:selectList>
+                                <apex:outputLabel value="{!mSegmentSeparator}" style="font-weight: bold;"></apex:outputLabel>
+                                <apex:selectList value="{!mFileNameSegment3Value}" size="1">
+                                    <apex:selectOptions value="{!mFileNameSegmentList}"/>
+                                    <apex:actionSupport event="onchange" action="{!onFileNameSegmentChange}" status="waitStatus"
+                                                        reRender="messagePanel,fileSetupInfoPanel,fileGenInfoPanel,fileNameInfoPanel"/>
+                                </apex:selectList>
+                            </apex:panelGrid>
+                        </apex:pageBlockSectionItem>
+                    
+                        <!-- File name -- Display only -->
+                        <apex:outputField value="{!mFileSetup.File_Name__c}" rendered="{!mRenderFileNameSegments}"/>
+                    
+                        <apex:inputField value="{!mFileSetup.File_Name_Segment_Separator__c}" rendered="{!mRenderFileNameSegments}">
+                            <apex:actionSupport event="onchange" action="{!onSegmentSeparatorChange}" status="waitStatus"
+                                                reRender="messagePanel,fileSetupInfoPanel,fileGenInfoPanel,fileNameInfoPanel"/>
+                        </apex:inputField>
+                    
+                        <apex:inputField value="{!mFileSetup.Fixed_Value__c}" rendered="{!mRenderFileNameSegments}"/>
+                        <apex:inputField value="{!mFileSetup.Datetime_Format__c}" rendered="{!mRenderFileNameSegments}"/>
+                        <apex:inputField value="{!mFileSetup.File_Extension__c}" rendered="{!mRenderFileNameSegments}">
+                            <apex:actionSupport event="onchange" action="{!onFileExtensionChange}" status="waitStatus"
+                                                reRender="messagePanel,fileSetupInfoPanel,fileGenInfoPanel,fileNameInfoPanel"/>
+                        </apex:inputField>
+                        <!-- / Predefined File Name (Segment-Based) Related Fields -->
+
+                        <!-- Custom File Name Related Field -->
+                        <apex:inputField value="{!mFileSetup.Custom_Class_Name__c}" rendered="{!NOT(mRenderFileNameSegments)}"/>
+                        <apex:inputField value="{!mFileSetup.File_Extension__c}" rendered="{!NOT(mRenderFileNameSegments)}"/>
+                        <!-- / Custom File Name Related Field -->
+
+                        <apex:inputField value="{!mFileSetup.Incremental_Value_Type__c}"/>
+                        <apex:inputField value="{!mFileSetup.Incremental_Value_Location__c}"/>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+
+            <apex:outputPanel id="fileAddlInfoPanel">
+                <apex:pageBlockSection id="fileAddlInfoSection" columns="1" 
+                                        title="{!$Label.fscore__additional_information_block_title}" collapsible="false">
+                    <apex:repeat value="{!$ObjectType.File_Setup__c.FieldSets.Additional_Information}" var="addInfoField"> 
+                        <apex:inputField value="{!mFileSetup[addInfoField.fieldPath]}" required="{!OR(addInfoField.required, addInfoField.dbrequired)}"/>
+                    </apex:repeat>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+            
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
