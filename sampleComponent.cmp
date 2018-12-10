@@ -1,0 +1,24 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
+	
+    <lightning:button label="Open File" onclick="{! c.openFile }"/>
+    
+    <lightning:fileUpload name="fileUploader"
+                          label= "Upload File"
+                          multiple="true"
+                          disabled="false"
+                          recordId="{!v.recordId}"
+                          onuploadfinished="{! c.uploadFile }"/>
+    
+</aura:component>
+
+({
+    openFile: function(component, event, helper) {
+        $A.get("e.lightning:openFiles").fire({
+		    recordIds: ["06937000002ZocwAAC"]
+		});
+    },
+    uploadFile : function(component, event, helper) {
+        var uploadedFiles = event.getParam("files");
+        alert("Files uploaded : " + uploadedFiles.length);
+    },
+})
