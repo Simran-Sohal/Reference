@@ -1,3 +1,4 @@
+//Component for file upload
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
 	
     <lightning:button label="Open File" onclick="{! c.openFile }"/>
@@ -11,6 +12,7 @@
     
 </aura:component>
 
+//Controller
 ({
     openFile: function(component, event, helper) {
         $A.get("e.lightning:openFiles").fire({
@@ -21,4 +23,66 @@
         var uploadedFiles = event.getParam("files");
         alert("Files uploaded : " + uploadedFiles.length);
     },
+})
+
+//Component for List button
+<aura:component >
+    <aura:attribute name="currentStatus" type="String" default="Pending"/>
+    
+    <div class="slds-grid">
+        <div class="slds-col">
+            <div aura:id="checklistItemStatus" class="slds-box slds-box_x-small" style="width:200px !important;">
+                <div class="slds-align_absolute-center">
+                    {!v.currentStatus}
+                </div>
+            </div>
+        </div>
+        <div class="slds-col">
+            <lightning:buttonMenu variant="container" aura:id="statusOptions" alternativeText="Update Status" onselect="{! c.handleSelect }">
+                <lightning:menuItem value="Verified" label="Mark as verified" />
+                <lightning:menuItem value="Not Verified" label="Mark as not verified" />
+                <lightning:menuItem value="Not Applicable" label="Mark as not applicable" />
+            </lightning:buttonMenu>
+        </div>
+        <div class="slds-col">
+            <span class="slds-text-body_regular">Borrower Identity verified</span>
+        </div>
+    </div>
+    
+</aura:component>
+
+//Controller
+({
+	handleSelect : function(component, event, helper) {
+		var selectedStatusOption = event.getParam("value");
+        component.set("v.currentStatus", selectedStatusOption);
+        
+        var itemStatus = component.find("checklistItemStatus");
+        if(itemStatus){
+            if ($A.util.isUndefinedOrNull(selectedStatusOption)){
+                $A.util.addClass(itemStatus, "slds-theme_deafult");
+                $A.util.removeClass(itemStatus, "slds-theme_success");
+                $A.util.removeClass(itemStatus, "slds-theme_error");
+                $A.util.removeClass(itemStatus, "slds-theme_warning");
+            } 
+            else if (selectedStatusOption == "Verified"){
+                $A.util.removeClass(itemStatus, "slds-theme_deafult");
+                $A.util.addClass(itemStatus, "slds-theme_success");
+                $A.util.removeClass(itemStatus, "slds-theme_error");
+                $A.util.removeClass(itemStatus, "slds-theme_warning");
+            } 
+            else if (selectedStatusOption == "Not Verified"){
+                $A.util.removeClass(itemStatus, "slds-theme_deafult");
+                $A.util.removeClass(itemStatus, "slds-theme_success");
+                $A.util.addClass(itemStatus, "slds-theme_error");
+                $A.util.removeClass(itemStatus, "slds-theme_warning");
+            }
+            else if (selectedStatusOption == "Not Applicable"){
+                $A.util.removeClass(itemStatus, "slds-theme_deafult");
+                $A.util.removeClass(itemStatus, "slds-theme_success");
+                $A.util.removeClass(itemStatus, "slds-theme_error");
+                $A.util.addClass(itemStatus, "slds-theme_warning");
+            }
+        }
+    }
 })
