@@ -1,6 +1,8 @@
 //Component for file upload
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
 	
+    <lightning:fileCard fileId="069XXXXXXXXXXXX" description="Sample Description"/>
+
     <lightning:button label="Open File" onclick="{! c.openFile }"/>
     
     <lightning:fileUpload name="fileUploader"
